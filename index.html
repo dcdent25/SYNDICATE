@@ -1393,7 +1393,7 @@ function nav2Add() {
     if (locations.find(function(r){return r.name===val;})) { toast('⚠ Вже існує'); return; }
     locations.push({ name: val, cells: [] });
     inp.value = '';
-    syncToSheets();
+    forceSyncToSheets();
     toast('✓ Приміщення додано. Тепер додайте комірку.');
     NAV2.room = val;
     NAV2.level = 1;
@@ -1406,7 +1406,7 @@ function nav2Add() {
     if (roomObj.cells.find(function(c){return c.name===val;})) { toast('⚠ Вже існує'); return; }
     roomObj.cells.push({ name: val, containers: [] });
     inp.value = '';
-    syncToSheets();
+    forceSyncToSheets();
     toast('✓ Комірку додано. Тепер додайте контейнер.');
     NAV2.cell = val;
     NAV2.level = 2;
@@ -1423,7 +1423,7 @@ function nav2Add() {
 
   inp.value = '';
   inp.focus();
-  syncToSheets();
+  forceSyncToSheets();
   toast('✓ Додано: ' + val);
   nav2Render();
 }
@@ -1446,7 +1446,7 @@ function nav2Delete(type, ri, ci, coni, name) {
     cel.containers.splice(coni, 1);
   }
 
-  syncToSheets(); renderAll(); toast('Видалено'); nav2Render();
+  forceSyncToSheets(); renderAll(); toast('Видалено'); nav2Render();
 }
 
 /* Перейменувати — inline діалог поверх модалки */
@@ -1502,7 +1502,7 @@ function nav2Rename(type, ri, ci, coni, oldName) {
       stock.forEach(function(s){ if(s.room===r.name&&s.storage===cel.name&&s.sup===oldName) s.sup=newName; });
     }
 
-    syncToSheets(); renderAll(); toast('✓ Перейменовано'); nav2Render();
+    forceSyncToSheets(); renderAll(); toast('✓ Перейменовано'); nav2Render();
   }
 
   document.getElementById('nav2-rename-save').onclick = doSave;
