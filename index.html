@@ -485,6 +485,7 @@ html,body{background:#1c1f26!important;overflow-x:hidden!important}.t-container,
   <button class="modal-close" onclick="closeModal('nav')"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
 </div>
 <div id="nav2-body"></div>
+<input type="file" id="nav2PhotoInput" accept="image/*" style="display:none" onchange="nav2HandlePhoto(event)">
 <div id="nav2-add" style="display:flex;gap:8px;margin-top:14px;align-items:center">
   <input id="nav2-inp" type="text" placeholder="" style="flex:1;height:42px;padding:0 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--font-d);font-size:14px;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'" onkeydown="if(event.key==='Enter')nav2Add()">
   <button onclick="nav2Add()" style="height:42px;padding:0 20px;background:var(--blue);color:#1c1f26;border:none;border-radius:10px;font-family:var(--font-d);font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap">+ Додати</button>
@@ -801,27 +802,48 @@ function saveLocalCache(){} function loadLocalCache(){return null;} function jso
 function postNoCors(payload){
   return new Promise(resolve=>{
     try{
-      // Send via no-cors fetch (works for Google Apps Script)
+      // Send full data via no-cors POST
       fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)}).catch(()=>{});
-      // Also send locations separately via JSONP GET (small payload, guaranteed delivery)
+
+      // Send locations WITHOUT photos via JSONP GET (guaranteed delivery, small payload)
       if(payload.locations){
-        const locData=encodeURIComponent(JSON.stringify({action:'saveLocations',locations:payload.locations}));
-        const url=SCRIPT_URL+(SCRIPT_URL.includes('?')?'&':'?')+'action=saveLocations&data='+locData+'&t='+Date.now();
-        const s=document.createElement('script');
-        const cb='_dsloc_'+Date.now();
-        window[cb]=function(){delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);};
-        s.onerror=function(){delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);};
-        s.src=url+'&callback='+cb;
-        document.head.appendChild(s);
+        const locsClean = payload.locations.map(function(r){
+          const rc = Object.assign({},r);
+          delete rc.photo;
+          if(rc.cells) rc.cells = rc.cells.map(function(c){
+            const cc = Object.assign({},c);
+            delete cc.photo;
+            delete cc.containerPhotos;
+            return cc;
+          });
+          return rc;
+        });
+        const locData=encodeURIComponent(JSON.stringify({action:'saveLocations',locations:locsClean}));
+        if(locData.length < 7000){
+          const s=document.createElement('script');
+          const cb='_dsloc_'+Date.now();
+          const url=SCRIPT_URL+(SCRIPT_URL.includes('?')?'&':'?')+'action=saveLocations&data='+locData+'&callback='+cb+'&t='+Date.now();
+          window[cb]=function(){delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);};
+          s.onerror=function(){delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);};
+          s.src=url;
+          document.head.appendChild(s);
+        }
       }
+
+      // Send nav photos separately via POST (they can be large)
+      if(payload.navPhotos){
+        fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},
+          body:JSON.stringify({action:'saveNavPhotos',navPhotos:payload.navPhotos})}).catch(()=>{});
+      }
+
       setTimeout(resolve,500);
     }catch(e){console.warn('[DS] POST failed:',e.message);resolve();}
   });
 }
 function forceSyncToSheets(){if(!SCRIPT_URL)return;syncPending=false;syncToSheets();}
-async function loadFromSheets(){const cached=loadLocalCache();if(cached){stock=(cached.stock||[]).map(normalizeItem);history=cached.history||[];categories=cached.categories&&cached.categories.length?cached.categories:categories;if(cached.catGroups)Object.assign(catGroups,cached.catGroups);if(cached.locations&&cached.locations.length)locations=cached.locations;renderAll();renderHistory();}if(!SCRIPT_URL){hidePreloader();return;}showSyncStatus('loading');let data=null;try{data=await jsonp(SCRIPT_URL,15000);}catch(e){console.warn('[DS] JSONP failed:',e.message);try{const r=await fetch(SCRIPT_URL+'?t='+Date.now(),{mode:'cors',redirect:'follow'});const text=await r.text();if(!text||!text.trim())throw new Error('Empty response');data=JSON.parse(text);}catch(e2){console.warn('[DS] fetch also failed:',e2.message);if(!cached){showSyncStatus('error','Не вдалося завантажити');toast('⚠ Немає з\'єднання. Перевірте SCRIPT_URL або CSP сайту.');}else{showSyncStatus('ok');}renderAll();renderHistory();hidePreloader();return;}}if(data&&data.ok){if(Array.isArray(data.stock)&&data.stock.length>=0){stock=data.stock.map(normalizeItem);}if(Array.isArray(data.history))history=data.history;if(Array.isArray(data.categories)&&data.categories.length>0)categories=data.categories;if(data.catGroups)Object.assign(catGroups,data.catGroups);if(data.locations&&data.locations.length)locations=data.locations;showSyncStatus('ok');}else{showSyncStatus('error',data?data.error:'empty');}renderAll();renderHistory();hidePreloader();}
+async function loadFromSheets(){const cached=loadLocalCache();if(cached){stock=(cached.stock||[]).map(normalizeItem);history=cached.history||[];categories=cached.categories&&cached.categories.length?cached.categories:categories;if(cached.catGroups)Object.assign(catGroups,cached.catGroups);if(cached.locations&&cached.locations.length)locations=cached.locations;renderAll();renderHistory();}if(!SCRIPT_URL){hidePreloader();return;}showSyncStatus('loading');let data=null;try{data=await jsonp(SCRIPT_URL,15000);}catch(e){console.warn('[DS] JSONP failed:',e.message);try{const r=await fetch(SCRIPT_URL+'?t='+Date.now(),{mode:'cors',redirect:'follow'});const text=await r.text();if(!text||!text.trim())throw new Error('Empty response');data=JSON.parse(text);}catch(e2){console.warn('[DS] fetch also failed:',e2.message);if(!cached){showSyncStatus('error','Не вдалося завантажити');toast('⚠ Немає з\'єднання. Перевірте SCRIPT_URL або CSP сайту.');}else{showSyncStatus('ok');}renderAll();renderHistory();hidePreloader();return;}}if(data&&data.ok){if(Array.isArray(data.stock)&&data.stock.length>=0){stock=data.stock.map(normalizeItem);}if(Array.isArray(data.history))history=data.history;if(Array.isArray(data.categories)&&data.categories.length>0)categories=data.categories;if(data.catGroups)Object.assign(catGroups,data.catGroups);if(data.locations&&data.locations.length)locations=data.locations;if(data.navPhotos)Object.assign(locationPhotos,data.navPhotos);_loadNavPhotosFromLocations();showSyncStatus('ok');}else{showSyncStatus('error',data?data.error:'empty');}renderAll();renderHistory();hidePreloader();}
 function normalizeItem(i){const n={...i,id:+i.id||0,qty:+i.qty||0,min:+i.min||1,price:+i.price||0};if(n.stockQty==null)n.stockQty=n.qty;else n.stockQty=+n.stockQty;if(!n.marketPrice)n.marketPrice=n.price;if(n.portions!=null&&n.portions>0)n._portionsManual=true;if(!n.mapPhotos&&n.mapPhoto)n.mapPhotos=[n.mapPhoto];return calcItem(n);}
-function syncToSheets(){if(!SCRIPT_URL)return;if(syncPending)return;syncPending=true;showSyncStatus('saving');setTimeout(async()=>{try{const stockClean=stock.map(i=>{const c={...i};delete c.photo;delete c.mapPhotos;delete c.mapPhoto;delete c.mapPhoto2;return c;});const payload={action:'saveAll',stock:stockClean,history:history.slice(0,100),categories,catGroups,locations};await postNoCors(payload);showSyncStatus('ok');}catch(e){showSyncStatus('error',e.message);}syncPending=false;},300);}
+function syncToSheets(){if(!SCRIPT_URL)return;if(syncPending)return;syncPending=true;showSyncStatus('saving');setTimeout(async()=>{try{const stockClean=stock.map(i=>{const c={...i};delete c.photo;delete c.mapPhotos;delete c.mapPhoto;delete c.mapPhoto2;return c;});const payload={action:'saveAll',stock:stockClean,history:history.slice(0,100),categories,catGroups,locations,navPhotos:locationPhotos};await postNoCors(payload);showSyncStatus('ok');}catch(e){showSyncStatus('error',e.message);}syncPending=false;},300);}
 
 // ══════════════════════════════════════════════
 // СТАТИСТИКА
@@ -1238,10 +1260,12 @@ function _esc(str) {
 }
 
 var NAV2 = { level: 0, room: '', cell: '' };
+var locationPhotos = {}; // key: 'room::cell::con' or 'room' or 'room::cell'
 // level: 0=приміщення, 1=комірки, 2=контейнери
 
 function openNavModal() {
-  NAV2.level = 0; NAV2.room = ''; NAV2.cell = '';
+  NAV2.level = 0; NAV2.room = ''; NAV2.cell = ''; NAV2.con = '';
+  _loadNavPhotosFromLocations();
   nav2Render();
   document.getElementById('ov-nav').classList.add('open');
 }
@@ -1263,7 +1287,54 @@ function nav2Render() {
   var placeholders = ['Нове приміщення…', 'Нова комірка…', 'Новий контейнер…'];
   if (inp) inp.placeholder = placeholders[NAV2.level] || '';
 
-  var html = '';
+  /* ── Картки вибору зверху ── */
+  /* фото для кожного рівня */
+  var photoRoom = NAV2.room ? (locationPhotos[NAV2.room]||null) : null;
+  var photoCell = (NAV2.room&&NAV2.cell) ? (locationPhotos[NAV2.room+'::'+NAV2.cell]||null) : null;
+  var photoCon  = (NAV2.room&&NAV2.cell&&NAV2.con) ? (locationPhotos[NAV2.room+'::'+NAV2.cell+'::'+NAV2.con]||null) : null;
+
+  function _nc(label, val, active, selected, navFn, photo, photoKey) {
+    var b = selected ? 'var(--blue)' : 'var(--border)';
+    var op = active ? '1' : '.4';
+    var s = '<div style="background:var(--surface2);border:1.5px solid '+b+';border-radius:12px;overflow:hidden;opacity:'+op+';position:relative">';
+    /* верхня частина — квадратна рамка для фото */
+    s += '<div style="width:100%;aspect-ratio:1;background:var(--bg);position:relative;overflow:hidden">';
+    if(photo){
+      /* фото — натискання збільшує */
+      s += '<img src="'+photo+'" onclick="nav2PhotoZoom(\''+photoKey+'\')" style="width:100%;height:100%;object-fit:cover;cursor:zoom-in;display:block">';
+      /* кнопка редагування поверх */
+      if(active && val){
+        s += '<button onclick="nav2PhotoForKey(\''+photoKey+'\')" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);border:none;border-radius:6px;width:26px;height:26px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">';
+        s += '<svg width="13" height="13" viewBox="0 0 24 24" fill="white"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>';
+        s += '</button>';
+      }
+    } else {
+      /* порожня рамка — натискання завантажує фото */
+      if(active && val){
+        s += '<div onclick="nav2PhotoForKey(\''+photoKey+'\')" style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer">';
+        s += '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="color:var(--muted)"><path d="M12 15.2A3.2 3.2 0 1 1 12 8.8a3.2 3.2 0 0 1 0 6.4zM9 2L7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.17L15 2H9z"/></svg>';
+        s += '<div style="font-size:10px;color:var(--muted);font-family:var(--font-d)">Додати фото</div>';
+        s += '</div>';
+      } else {
+        s += '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="color:var(--border2)"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg></div>';
+      }
+    }
+    s += '</div>';
+    /* нижня частина — назва */
+    s += '<div style="padding:8px 10px;cursor:'+(navFn?'pointer':'default')+'"'+(navFn?' onclick="'+navFn+'"':'')+' >';
+    s += '<div style="font-size:9px;color:var(--sub);font-family:var(--font-d);font-weight:500;margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px">'+label+'</div>';
+    s += '<div style="font-family:var(--font-d);font-size:12px;font-weight:600;color:'+(val?'var(--text)':'var(--muted)')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(val?_esc(val):'—')+'</div>';
+    s += '</div></div>';
+    return s;
+  }
+
+  var levelCards = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px">';
+  levelCards += _nc('Приміщення', NAV2.room, true, NAV2.level===0, NAV2.room?'nav2GoLevel(0)':'', photoRoom, NAV2.room||'');
+  levelCards += _nc('Комірка', NAV2.cell, !!NAV2.room, NAV2.level===1, NAV2.cell?'nav2GoLevel(1)':'', photoCell, NAV2.room&&NAV2.cell?NAV2.room+'::'+NAV2.cell:'');
+  levelCards += _nc('Контейнер', NAV2.con||'', !!NAV2.cell, NAV2.level===2, '', photoCon, NAV2.room&&NAV2.cell&&NAV2.con?NAV2.room+'::'+NAV2.cell+'::'+NAV2.con:'');
+  levelCards += '</div>';
+
+  var html = levelCards;
 
   /* ── РІВЕНЬ 0: Приміщення ── */
   if (NAV2.level === 0) {
@@ -1275,12 +1346,10 @@ function nav2Render() {
       var conCount  = r.cells ? r.cells.reduce(function(a,c){return a+(c.containers?c.containers.length:0);},0) : 0;
       var itemCount = stock.filter(function(s){return s.room===r.name;}).length;
       html += '<div style="display:flex;align-items:center;gap:6px;padding:10px 12px;border-radius:10px;background:var(--surface2);border:1.5px solid var(--border);margin-bottom:6px">';
-      /* клік → перейти */
       html += '<div onclick="nav2Enter(0,' + ri + ')" style="flex:1;cursor:pointer;min-width:0">';
       html += '<div style="font-family:var(--font-d);font-size:14px;font-weight:600;color:var(--text)">' + _esc(r.name) + '</div>';
       html += '<div style="font-size:11px;color:var(--sub);margin-top:2px">' + cellCount + ' комірок · ' + conCount + ' контейнерів' + (itemCount ? ' · <span style="color:var(--blue)">' + itemCount + ' позицій</span>' : '') + '</div>';
       html += '</div>';
-      /* кнопки */
       html += nav2BtnRename('room', ri, -1, -1, r.name);
       html += nav2BtnDelete('room', ri, -1, -1, r.name);
       html += '<span onclick="nav2Enter(0,' + ri + ')" style="cursor:pointer;color:var(--muted);display:flex;align-items:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></span>';
@@ -1320,9 +1389,11 @@ function nav2Render() {
     } else {
       cellObj.containers.forEach(function(cn, coni) {
         var itemCount = stock.filter(function(s){return s.room===NAV2.room&&s.storage===NAV2.cell&&s.sup===cn;}).length;
-        html += '<div style="display:flex;align-items:center;gap:6px;padding:10px 12px;border-radius:10px;background:var(--surface2);border:1.5px solid var(--border);margin-bottom:6px">';
+        var isSelected = NAV2.con === cn;
+        html += '<div style="display:flex;align-items:center;gap:6px;padding:10px 12px;border-radius:10px;background:'+(isSelected?'var(--blue-s)':'var(--surface2)')+';border:1.5px solid '+(isSelected?'var(--blue)':'var(--border)')+';margin-bottom:6px;cursor:pointer" onclick="nav2Enter(2,window[\'_nav2cn_'+coni+'\'])">';
+        window['_nav2cn_'+coni] = cn;
         html += '<div style="flex:1;min-width:0">';
-        html += '<div style="font-family:var(--font-d);font-size:13.5px;font-weight:600;color:var(--text)">' + _esc(cn) + '</div>';
+        html += '<div style="font-family:var(--font-d);font-size:13.5px;font-weight:600;color:'+(isSelected?'var(--blue)':'var(--text)')+';">' + _esc(cn) + '</div>';
         html += '<div style="font-size:11px;color:' + (itemCount?'var(--blue)':'var(--muted)') + ';margin-top:2px">' + (itemCount ? itemCount+' позицій' : 'порожньо') + '</div>';
         html += '</div>';
         html += nav2BtnRename('con', ri, ci, coni, cn);
@@ -1333,6 +1404,91 @@ function nav2Render() {
   }
 
   body.innerHTML = html;
+}
+
+/* Фото навігації */
+var _nav2PhotoTargetKey = '';
+function nav2PhotoZoom(key) {
+  var photo = locationPhotos[key];
+  if (!photo) return;
+  var ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;cursor:zoom-out';
+  ov.onclick = function(){ document.body.removeChild(ov); };
+  var img = document.createElement('img');
+  img.src = photo;
+  img.style.cssText = 'max-width:100%;max-height:90vh;border-radius:12px;object-fit:contain;box-shadow:0 8px 40px rgba(0,0,0,.6)';
+  ov.appendChild(img);
+  document.body.appendChild(ov);
+}
+function nav2PhotoForKey(key) {
+  _nav2PhotoTargetKey = key;
+  var inp = document.getElementById('nav2PhotoInput');
+  if (inp) inp.click();
+}
+function nav2OpenPhoto() { nav2PhotoForKey(''); }
+function nav2HandlePhoto(e) {
+  var file = e.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    var key = _nav2PhotoTargetKey || (!NAV2.room ? '__global__' : (!NAV2.cell ? NAV2.room : (!NAV2.con ? NAV2.room+'::'+NAV2.cell : NAV2.room+'::'+NAV2.cell+'::'+NAV2.con)));
+    // Compress
+    var img = new Image();
+    img.onload = function() {
+      var canvas = document.createElement('canvas');
+      var max = 600;
+      var w = img.width, h = img.height;
+      if (w > max || h > max) { if(w>h){h=Math.round(h*max/w);w=max;}else{w=Math.round(w*max/h);h=max;} }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      locationPhotos[key] = canvas.toDataURL('image/jpeg', 0.7);
+      // Save to locations data
+      _saveNavPhotoToLocations(key, locationPhotos[key]);
+      forceSyncToSheets();
+      nav2Render();
+      toast('✓ Фото додано');
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+function _saveNavPhotoToLocations(key, photo) {
+  if (key === '__global__') return;
+  var parts = key.split('::');
+  if (parts.length === 1) {
+    var r = locations.find(function(l){return l.name===parts[0];});
+    if (r) r.photo = photo;
+  } else if (parts.length === 2) {
+    var r = locations.find(function(l){return l.name===parts[0];});
+    if (r && r.cells) {
+      var c = r.cells.find(function(cl){return cl.name===parts[1];});
+      if (c) c.photo = photo;
+    }
+  } else if (parts.length === 3) {
+    var r = locations.find(function(l){return l.name===parts[0];});
+    if (r && r.cells) {
+      var c = r.cells.find(function(cl){return cl.name===parts[1];});
+      if (c) {
+        if (!c.containerPhotos) c.containerPhotos = {};
+        c.containerPhotos[parts[2]] = photo;
+      }
+    }
+  }
+}
+function _loadNavPhotosFromLocations() {
+  locationPhotos = {};
+  locations.forEach(function(r) {
+    if (r.photo) locationPhotos[r.name] = r.photo;
+    if (r.cells) r.cells.forEach(function(c) {
+      if (c.photo) locationPhotos[r.name+'::'+c.name] = c.photo;
+      if (c.containerPhotos) {
+        Object.keys(c.containerPhotos).forEach(function(cn) {
+          if (c.containerPhotos[cn]) locationPhotos[r.name+'::'+c.name+'::'+cn] = c.containerPhotos[cn];
+        });
+      }
+    });
+  });
 }
 
 /* Іконка-кнопка перейменування */
@@ -1355,27 +1511,31 @@ nav2BtnDelete._c = 0;
 /* Перейти на рівень (breadcrumb) */
 function nav2GoLevel(level) {
   NAV2.level = level;
-  if (level === 0) { NAV2.room = ''; NAV2.cell = ''; }
-  if (level === 1) { NAV2.cell = ''; }
+  if (level === 0) { NAV2.room = ''; NAV2.cell = ''; NAV2.con = ''; }
+  if (level === 1) { NAV2.cell = ''; NAV2.con = ''; }
+  if (level === 2) { NAV2.con = ''; }
   nav2Render();
 }
 
 /* Увійти в елемент */
 function nav2Enter(fromLevel, idx) {
   if (fromLevel === 0) {
-    /* з приміщень → комірки */
     var r = locations[idx];
     if (!r) return;
     NAV2.room = r.name;
+    NAV2.cell = '';
+    NAV2.con = '';
     NAV2.level = 1;
   } else if (fromLevel === 1) {
-    /* з комірок → контейнери */
     var roomObj = locations.find(function(r){return r.name===NAV2.room;});
     if (!roomObj) return;
     var cel = roomObj.cells[idx];
     if (!cel) return;
     NAV2.cell = cel.name;
+    NAV2.con = '';
     NAV2.level = 2;
+  } else if (fromLevel === 2) {
+    NAV2.con = idx; // container name passed as idx
   }
   nav2Render();
 }
