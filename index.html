@@ -538,7 +538,7 @@ function openItemHistory(){const item=stock.find(x=>x.id===currentDetailId);if(!
 function renderItemHistory(itemName){const el=document.getElementById('dItemHistory');if(!el)return;const ops=history.filter(h=>h.name===itemName).slice(0,15);if(!ops.length){el.innerHTML='<div style="font-size:12px;color:var(--muted);padding:4px 0">Операцій ще немає</div>';return;}el.innerHTML=ops.map(h=>{const isIn=h.type==='in';const isGive=h.type==='out'&&(h.note||'').includes('Видано');const color=isIn?'var(--green)':isGive?'var(--blue)':'var(--red)';const sign=isIn?'+':'−';const label=isIn?'Поповнення':isGive?'Видача':'Списання';return'<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--surface2);border-radius:8px;font-size:12px"><div style="flex:1;min-width:0"><div style="font-family:var(--font-d);font-weight:500;color:'+(color)+'">'+(label)+'</div><div style="color:var(--sub);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(h.note||'')+'</div></div><div style="text-align:right;flex-shrink:0"><div style="font-family:var(--font-d);font-weight:700;color:'+(color)+'">'+(sign)+(h.qty)+' '+(h.unit||'шт')+'</div>'+(h.cost?'<div style="font-size:11px;color:var(--amber)">'+(h.cost.toLocaleString('uk'))+' ₴</div>':'')+'<div style="font-size:10px;color:var(--muted)">'+(fmtTime?fmtTime(h.time):h.time||'')+'</div></div></div>';}).join('');}
 
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby_EnEszMKyO70s0FCQfbJ0e_vsdT6ehiZobittb5Z5t2QrGhsLY436fcF_eER_By1oDw/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzJ6EqDGvsL8bbGykQQs5JvgbaOWyqzY95P3Tf6l0mY_FooItEVq-kpyJeYclUz0H79qg/exec';
 let currentDetailId = null;
 let activeFilter = 'all';
 let syncPending = false;
@@ -801,15 +801,20 @@ function saveLocalCache(){} function loadLocalCache(){return null;} function jso
 function postNoCors(payload){
   return new Promise(resolve=>{
     try{
-      const data=encodeURIComponent(JSON.stringify(payload));
-      const url=SCRIPT_URL+(SCRIPT_URL.includes('?')?'&':'?')+'action=saveAll&data='+data+'&t='+Date.now();
-      const s=document.createElement('script');
-      const cb='_dscb_save_'+Date.now();
-      window[cb]=function(){delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);resolve();};
-      s.onerror=function(){delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);resolve();};
-      s.src=url+'&callback='+cb;
-      document.head.appendChild(s);
-      setTimeout(function(){delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);resolve();},8000);
+      // Send via no-cors fetch (works for Google Apps Script)
+      fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)}).catch(()=>{});
+      // Also send locations separately via JSONP GET (small payload, guaranteed delivery)
+      if(payload.locations){
+        const locData=encodeURIComponent(JSON.stringify({action:'saveLocations',locations:payload.locations}));
+        const url=SCRIPT_URL+(SCRIPT_URL.includes('?')?'&':'?')+'action=saveLocations&data='+locData+'&t='+Date.now();
+        const s=document.createElement('script');
+        const cb='_dsloc_'+Date.now();
+        window[cb]=function(){delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);};
+        s.onerror=function(){delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);};
+        s.src=url+'&callback='+cb;
+        document.head.appendChild(s);
+      }
+      setTimeout(resolve,500);
     }catch(e){console.warn('[DS] POST failed:',e.message);resolve();}
   });
 }
