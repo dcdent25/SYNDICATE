@@ -1224,56 +1224,43 @@ function doRenameSupp(){
 }
 
 function openNavModal(){
-  var cont=document.getElementById('navViewContent');
-  if(cont){cont.dataset.room='';cont.dataset.cell='';cont.dataset.con='';}
-  renderNavView();
+  NAV.room=''; NAV.cell=''; NAV.con='';
+  navRender();
   document.getElementById('ov-nav').classList.add('open');
 }
-function _navState(){
-  var cont=document.getElementById('navViewContent');
-  if(!cont)return{room:'',cell:'',con:''};
-  return{room:cont.dataset.room||'',cell:cont.dataset.cell||'',con:cont.dataset.con||''};
-}
-function _navSetState(room,cell,con){
-  var cont=document.getElementById('navViewContent');
-  if(!cont)return;
-  cont.dataset.room=room||'';
-  cont.dataset.cell=cell||'';
-  cont.dataset.con=con||'';
-}
+
+var NAV={room:'',cell:'',con:''};
+
 function _esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
-function renderNavView(){
+/* ─── головний рендер ─── */
+function navRender(){
   var cont=document.getElementById('navViewContent');
   var bc=document.getElementById('navBreadcrumb');
-  if(!cont)return;
-  var st=_navState();
-  var room=st.room,cell=st.cell,con=st.con;
+  if(!cont) return;
 
-  // Breadcrumb
-  var bcParts=[];
-  if(room){
-    bcParts.push('<span onclick="_navSetState(\'\',\'\',\'\');renderNavView()" style="cursor:pointer;color:var(--blue);font-family:var(--font-d);font-size:12px;font-weight:500">Всі приміщення</span>');
-    bcParts.push('<span style="color:var(--muted);font-size:12px">›</span>');
-    if(cell){
-      bcParts.push('<span onclick="_navSetState('+JSON.stringify(room)+',\'\',\'\');renderNavView()" style="cursor:pointer;color:var(--blue);font-family:var(--font-d);font-size:12px;font-weight:500">'+_esc(room)+'</span>');
-      bcParts.push('<span style="color:var(--muted);font-size:12px">›</span>');
-      if(con){
-        bcParts.push('<span onclick="_navSetState('+JSON.stringify(room)+','+JSON.stringify(cell)+',\'\');renderNavView()" style="cursor:pointer;color:var(--blue);font-family:var(--font-d);font-size:12px;font-weight:500">'+_esc(cell)+'</span>');
-        bcParts.push('<span style="color:var(--muted);font-size:12px">›</span>');
-        bcParts.push('<span style="color:var(--text);font-family:var(--font-d);font-size:12px;font-weight:600">'+_esc(con)+'</span>');
+  /* breadcrumb */
+  var parts=[];
+  if(NAV.room){
+    parts.push('<span onclick="NAV.room=\'\';NAV.cell=\'\';NAV.con=\'\';navRender()" style="cursor:pointer;color:var(--blue);font-family:var(--font-d);font-size:12px;font-weight:500">Всі приміщення</span><span style="color:var(--muted);font-size:12px"> › </span>');
+    if(NAV.cell){
+      parts.push('<span onclick="NAV.cell=\'\';NAV.con=\'\';navRender()" style="cursor:pointer;color:var(--blue);font-family:var(--font-d);font-size:12px;font-weight:500">'+_esc(NAV.room)+'</span><span style="color:var(--muted);font-size:12px"> › </span>');
+      if(NAV.con){
+        parts.push('<span onclick="NAV.con=\'\';navRender()" style="cursor:pointer;color:var(--blue);font-family:var(--font-d);font-size:12px;font-weight:500">'+_esc(NAV.cell)+'</span><span style="color:var(--muted);font-size:12px"> › </span>');
+        parts.push('<span style="color:var(--text);font-family:var(--font-d);font-size:12px;font-weight:600">'+_esc(NAV.con)+'</span>');
       } else {
-        bcParts.push('<span style="color:var(--text);font-family:var(--font-d);font-size:12px;font-weight:600">'+_esc(cell)+'</span>');
+        parts.push('<span style="color:var(--text);font-family:var(--font-d);font-size:12px;font-weight:600">'+_esc(NAV.cell)+'</span>');
       }
     } else {
-      bcParts.push('<span style="color:var(--text);font-family:var(--font-d);font-size:12px;font-weight:600">'+_esc(room)+'</span>');
+      parts.push('<span style="color:var(--text);font-family:var(--font-d);font-size:12px;font-weight:600">'+_esc(NAV.room)+'</span>');
     }
   }
-  if(bc){bc.innerHTML=bcParts.join(' ');bc.style.display=bcParts.length?'flex':'none';}
+  if(bc){bc.innerHTML=parts.join('');bc.style.display=parts.length?'flex':'none';}
 
   var html='';
 
-  if(!room){
+  /* === рівень 1: приміщення === */
+  if(!NAV.room){
     html+='<div style="font-size:11px;color:var(--muted);font-family:var(--font-d);font-weight:600;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">Приміщення</div>';
     if(!locations.length){
       html+='<div style="font-size:13px;color:var(--muted);font-family:var(--font-d);padding:8px 0 12px">Немає приміщень. Додайте перше.</div>';
@@ -1281,81 +1268,80 @@ function renderNavView(){
       locations.forEach(function(r,ri){
         var cnt=r.cells.reduce(function(a,c){return a+c.containers.length;},0);
         var items=stock.filter(function(s){return s.room===r.name;}).length;
-        var rj=JSON.stringify(r.name);
         html+='<div style="display:flex;align-items:center;gap:6px;padding:10px 12px;border-radius:10px;background:var(--surface2);border:1.5px solid var(--border);margin-bottom:6px">';
-        html+='<div onclick="_navSetState('+rj+',\'\',\'\');renderNavView()" style="flex:1;cursor:pointer;min-width:0">';
-        html+='<div id="navName_r'+ri+'" style="font-family:var(--font-d);font-size:14px;font-weight:600;color:var(--text)">'+_esc(r.name)+'</div>';
+        html+='<div onclick="NAV.room='+JSON.stringify(r.name)+';NAV.cell=\'\';NAV.con=\'\';navRender()" style="flex:1;cursor:pointer;min-width:0">';
+        html+='<div style="font-family:var(--font-d);font-size:14px;font-weight:600;color:var(--text)">'+_esc(r.name)+'</div>';
         html+='<div style="font-size:11px;color:var(--sub);margin-top:2px;font-family:var(--font-d)">'+r.cells.length+' комірок · '+cnt+' контейнерів'+(items?' · <span style="color:var(--blue)">'+items+' позицій</span>':'')+'</div>';
         html+='</div>';
-        html+='<button onclick="navStartRename(\'room\','+ri+',0,0,'+rj+',\'navName_r'+ri+'\')" title="Перейменувати" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;border-radius:6px;display:flex;align-items:center" onmouseover="this.style.color=\'var(--blue)\'" onmouseout="this.style.color=\'var(--muted)\'"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>';
-        html+='<button onclick="deleteLocRoom('+ri+')" title="Видалити" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;border-radius:6px;display:flex;align-items:center" onmouseover="this.style.color=\'var(--red)\'" onmouseout="this.style.color=\'var(--muted)\'"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>';
-        html+='<span onclick="_navSetState('+rj+',\'\',\'\');renderNavView()" style="cursor:pointer;color:var(--muted);display:flex;align-items:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></span>';
+        html+='<button onclick="navShowRename(\'room\','+ri+',0,0,'+JSON.stringify(r.name)+')" title="Перейменувати" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;border-radius:6px;display:flex;align-items:center" onmouseover="this.style.color=\'var(--blue)\'" onmouseout="this.style.color=\'var(--muted)\'"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>';
+        html+='<button onclick="navDeleteRoom('+ri+')" title="Видалити" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;border-radius:6px;display:flex;align-items:center" onmouseover="this.style.color=\'var(--red)\'" onmouseout="this.style.color=\'var(--muted)\'"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>';
+        html+='<span onclick="NAV.room='+JSON.stringify(r.name)+';NAV.cell=\'\';NAV.con=\'\';navRender()" style="cursor:pointer;color:var(--muted);display:flex;align-items:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></span>';
         html+='</div>';
       });
     }
     html+='<div style="display:flex;gap:6px;align-items:center;margin-top:10px">';
-    html+='<input id="navAddRoomInp" type="text" placeholder="Нове приміщення..." onkeydown="if(event.key===\'Enter\')navInlineAdd(\'room\')" style="flex:1;height:38px;padding:0 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-d);font-size:13px;outline:none;box-sizing:border-box" onfocus="this.style.borderColor=\'var(--blue)\'" onblur="this.style.borderColor=\'var(--border)\'">';
-    html+='<button onclick="navInlineAdd(\'room\')" style="height:38px;padding:0 16px;background:var(--blue);color:#1c1f26;border:none;border-radius:8px;font-family:var(--font-d);font-size:13px;font-weight:600;cursor:pointer">+ Додати</button>';
+    html+='<input id="navAddRoomInp" type="text" placeholder="Нове приміщення..." onkeydown="if(event.key===\'Enter\')navAdd(\'room\')" style="flex:1;height:38px;padding:0 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-d);font-size:13px;outline:none;box-sizing:border-box" onfocus="this.style.borderColor=\'var(--blue)\'" onblur="this.style.borderColor=\'var(--border)\'">';
+    html+='<button onclick="navAdd(\'room\')" style="height:38px;padding:0 16px;background:var(--blue);color:#1c1f26;border:none;border-radius:8px;font-family:var(--font-d);font-size:13px;font-weight:600;cursor:pointer">+ Додати</button>';
     html+='</div>';
 
-  } else if(!cell){
-    var roomObj=locations.find(function(r){return r.name===room;});
+  /* === рівень 2: комірки === */
+  } else if(!NAV.cell){
+    var roomObj=locations.find(function(r){return r.name===NAV.room;});
     var ri=roomObj?locations.indexOf(roomObj):-1;
     html+='<div style="font-size:11px;color:var(--muted);font-family:var(--font-d);font-weight:600;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">Комірки</div>';
     if(!roomObj||!roomObj.cells.length){
       html+='<div style="font-size:13px;color:var(--muted);font-family:var(--font-d);padding:8px 0 12px">Немає комірок. Додайте першу.</div>';
     } else {
       roomObj.cells.forEach(function(cel,ci){
-        var items=stock.filter(function(s){return s.room===room&&s.storage===cel.name;}).length;
-        var cj=JSON.stringify(cel.name);
+        var items=stock.filter(function(s){return s.room===NAV.room&&s.storage===cel.name;}).length;
         html+='<div style="display:flex;align-items:center;gap:6px;padding:10px 12px;border-radius:10px;background:var(--surface2);border:1.5px solid var(--border);margin-bottom:6px">';
-        html+='<div onclick="_navSetState('+JSON.stringify(room)+','+cj+',\'\');renderNavView()" style="flex:1;cursor:pointer;min-width:0">';
-        html+='<div id="navName_c'+ri+'_'+ci+'" style="font-family:var(--font-d);font-size:13.5px;font-weight:600;color:var(--text)">'+_esc(cel.name)+'</div>';
+        html+='<div onclick="NAV.cell='+JSON.stringify(cel.name)+';NAV.con=\'\';navRender()" style="flex:1;cursor:pointer;min-width:0">';
+        html+='<div style="font-family:var(--font-d);font-size:13.5px;font-weight:600;color:var(--text)">'+_esc(cel.name)+'</div>';
         html+='<div style="font-size:11px;color:var(--sub);margin-top:2px;font-family:var(--font-d)">'+cel.containers.length+' контейнерів'+(items?' · <span style="color:var(--blue)">'+items+' позицій</span>':'')+'</div>';
         html+='</div>';
-        html+='<button onclick="navStartRename(\'cell\','+ri+','+ci+',0,'+cj+',\'navName_c'+ri+'_'+ci+'\')" title="Перейменувати" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;border-radius:6px;display:flex;align-items:center" onmouseover="this.style.color=\'var(--blue)\'" onmouseout="this.style.color=\'var(--muted)\'"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>';
-        html+='<button onclick="deleteLocCell('+ri+','+ci+')" title="Видалити" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;border-radius:6px;display:flex;align-items:center" onmouseover="this.style.color=\'var(--red)\'" onmouseout="this.style.color=\'var(--muted)\'"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>';
-        html+='<span onclick="_navSetState('+JSON.stringify(room)+','+cj+',\'\');renderNavView()" style="cursor:pointer;color:var(--muted);display:flex;align-items:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></span>';
+        html+='<button onclick="navShowRename(\'cell\','+ri+','+ci+',0,'+JSON.stringify(cel.name)+')" title="Перейменувати" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;border-radius:6px;display:flex;align-items:center" onmouseover="this.style.color=\'var(--blue)\'" onmouseout="this.style.color=\'var(--muted)\'"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>';
+        html+='<button onclick="navDeleteCell('+ri+','+ci+')" title="Видалити" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;border-radius:6px;display:flex;align-items:center" onmouseover="this.style.color=\'var(--red)\'" onmouseout="this.style.color=\'var(--muted)\'"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>';
+        html+='<span onclick="NAV.cell='+JSON.stringify(cel.name)+';NAV.con=\'\';navRender()" style="cursor:pointer;color:var(--muted);display:flex;align-items:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></span>';
         html+='</div>';
       });
     }
     html+='<div style="display:flex;gap:6px;align-items:center;margin-top:10px">';
-    html+='<input id="navAddCellInp" type="text" placeholder="Нова комірка..." onkeydown="if(event.key===\'Enter\')navInlineAdd(\'cell\')" style="flex:1;height:38px;padding:0 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-d);font-size:13px;outline:none;box-sizing:border-box" onfocus="this.style.borderColor=\'var(--blue)\'" onblur="this.style.borderColor=\'var(--border)\'">';
-    html+='<button onclick="navInlineAdd(\'cell\')" style="height:38px;padding:0 16px;background:var(--blue);color:#1c1f26;border:none;border-radius:8px;font-family:var(--font-d);font-size:13px;font-weight:600;cursor:pointer">+ Додати</button>';
+    html+='<input id="navAddCellInp" type="text" placeholder="Нова комірка..." onkeydown="if(event.key===\'Enter\')navAdd(\'cell\')" style="flex:1;height:38px;padding:0 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-d);font-size:13px;outline:none;box-sizing:border-box" onfocus="this.style.borderColor=\'var(--blue)\'" onblur="this.style.borderColor=\'var(--border)\'">';
+    html+='<button onclick="navAdd(\'cell\')" style="height:38px;padding:0 16px;background:var(--blue);color:#1c1f26;border:none;border-radius:8px;font-family:var(--font-d);font-size:13px;font-weight:600;cursor:pointer">+ Додати</button>';
     html+='</div>';
 
-  } else if(!con){
-    var roomObj=locations.find(function(r){return r.name===room;});
+  /* === рівень 3: контейнери === */
+  } else if(!NAV.con){
+    var roomObj=locations.find(function(r){return r.name===NAV.room;});
     var ri=roomObj?locations.indexOf(roomObj):-1;
-    var cellObj=roomObj?roomObj.cells.find(function(c){return c.name===cell;}):null;
-    var ci2=cellObj&&roomObj?roomObj.cells.indexOf(cellObj):-1;
+    var cellObj=roomObj?roomObj.cells.find(function(c){return c.name===NAV.cell;}):null;
+    var ci=cellObj&&roomObj?roomObj.cells.indexOf(cellObj):-1;
     html+='<div style="font-size:11px;color:var(--muted);font-family:var(--font-d);font-weight:600;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">Контейнери</div>';
     if(!cellObj||!cellObj.containers.length){
       html+='<div style="font-size:13px;color:var(--muted);font-family:var(--font-d);padding:8px 0 12px">Немає контейнерів. Додайте перший.</div>';
     } else {
       cellObj.containers.forEach(function(cn,coni){
-        var items=stock.filter(function(s){return s.room===room&&s.storage===cell&&s.sup===cn;}).length;
-        var knj=JSON.stringify(cn);
+        var items=stock.filter(function(s){return s.room===NAV.room&&s.storage===NAV.cell&&s.sup===cn;}).length;
         html+='<div style="display:flex;align-items:center;gap:6px;padding:10px 12px;border-radius:10px;background:var(--surface2);border:1.5px solid var(--border);margin-bottom:6px">';
-        html+='<div onclick="_navSetState('+JSON.stringify(room)+','+JSON.stringify(cell)+','+knj+');renderNavView()" style="flex:1;cursor:pointer;min-width:0">';
-        html+='<div id="navName_k'+ri+'_'+ci2+'_'+coni+'" style="font-family:var(--font-d);font-size:13.5px;font-weight:600;color:var(--text)">'+_esc(cn)+'</div>';
+        html+='<div onclick="NAV.con='+JSON.stringify(cn)+';navRender()" style="flex:1;cursor:pointer;min-width:0">';
+        html+='<div style="font-family:var(--font-d);font-size:13.5px;font-weight:600;color:var(--text)">'+_esc(cn)+'</div>';
         html+=(items?'<div style="font-size:11px;color:var(--blue);margin-top:2px;font-family:var(--font-d)">'+items+' позицій</div>':'<div style="font-size:11px;color:var(--muted);margin-top:2px;font-family:var(--font-d)">порожньо</div>');
         html+='</div>';
-        html+='<button onclick="navStartRename(\'con\','+ri+','+ci2+','+coni+','+knj+',\'navName_k'+ri+'_'+ci2+'_'+coni+'\')" title="Перейменувати" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;border-radius:6px;display:flex;align-items:center" onmouseover="this.style.color=\'var(--blue)\'" onmouseout="this.style.color=\'var(--muted)\'"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>';
-        html+='<button onclick="deleteLocContainer('+ri+','+ci2+','+coni+')" title="Видалити" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;border-radius:6px;display:flex;align-items:center" onmouseover="this.style.color=\'var(--red)\'" onmouseout="this.style.color=\'var(--muted)\'"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>';
-        html+='<span onclick="_navSetState('+JSON.stringify(room)+','+JSON.stringify(cell)+','+knj+');renderNavView()" style="cursor:pointer;color:var(--muted);display:flex;align-items:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></span>';
+        html+='<button onclick="navShowRename(\'con\','+ri+','+ci+','+coni+','+JSON.stringify(cn)+')" title="Перейменувати" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;border-radius:6px;display:flex;align-items:center" onmouseover="this.style.color=\'var(--blue)\'" onmouseout="this.style.color=\'var(--muted)\'"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>';
+        html+='<button onclick="navDeleteContainer('+ri+','+ci+','+coni+')" title="Видалити" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;border-radius:6px;display:flex;align-items:center" onmouseover="this.style.color=\'var(--red)\'" onmouseout="this.style.color=\'var(--muted)\'"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>';
+        html+='<span onclick="NAV.con='+JSON.stringify(cn)+';navRender()" style="cursor:pointer;color:var(--muted);display:flex;align-items:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></span>';
         html+='</div>';
       });
     }
     html+='<div style="display:flex;gap:6px;align-items:center;margin-top:10px">';
-    html+='<input id="navAddConInp" type="text" placeholder="Новий контейнер..." onkeydown="if(event.key===\'Enter\')navInlineAdd(\'con\')" style="flex:1;height:38px;padding:0 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-d);font-size:13px;outline:none;box-sizing:border-box" onfocus="this.style.borderColor=\'var(--blue)\'" onblur="this.style.borderColor=\'var(--border)\'">';
-    html+='<button onclick="navInlineAdd(\'con\')" style="height:38px;padding:0 16px;background:var(--blue);color:#1c1f26;border:none;border-radius:8px;font-family:var(--font-d);font-size:13px;font-weight:600;cursor:pointer">+ Додати</button>';
+    html+='<input id="navAddConInp" type="text" placeholder="Новий контейнер..." onkeydown="if(event.key===\'Enter\')navAdd(\'con\')" style="flex:1;height:38px;padding:0 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-d);font-size:13px;outline:none;box-sizing:border-box" onfocus="this.style.borderColor=\'var(--blue)\'" onblur="this.style.borderColor=\'var(--border)\'">';
+    html+='<button onclick="navAdd(\'con\')" style="height:38px;padding:0 16px;background:var(--blue);color:#1c1f26;border:none;border-radius:8px;font-family:var(--font-d);font-size:13px;font-weight:600;cursor:pointer">+ Додати</button>';
     html+='</div>';
 
+  /* === рівень 4: позиції у контейнері === */
   } else {
-    // Items in container
-    var items=stock.filter(function(s){return s.room===room&&s.storage===cell&&s.sup===con;});
-    html+='<div style="font-size:11px;color:var(--muted);font-family:var(--font-d);font-weight:600;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">Матеріали · '+_esc(con)+'</div>';
+    var items=stock.filter(function(s){return s.room===NAV.room&&s.storage===NAV.cell&&s.sup===NAV.con;});
+    html+='<div style="font-size:11px;color:var(--muted);font-family:var(--font-d);font-weight:600;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">Матеріали · '+_esc(NAV.con)+'</div>';
     if(!items.length){
       html+='<div style="font-size:13px;color:var(--muted);font-family:var(--font-d);padding:16px 0;text-align:center">Матеріали не знайдені у цьому контейнері</div>';
     } else {
@@ -1377,166 +1363,149 @@ function renderNavView(){
   cont.innerHTML=html;
 }
 
-function navInlineAdd(type){
-  var st=_navState();
-  var room=st.room,cell=st.cell;
+/* ─── додати ─── */
+function navAdd(type){
   if(type==='room'){
     var inp=document.getElementById('navAddRoomInp');
     var val=inp?inp.value.trim():'';
     if(!val){if(inp)inp.focus();return;}
     if(locations.find(function(r){return r.name===val;})){toast('⚠ Вже існує');return;}
     locations.push({name:val,cells:[]});
-    syncToSheets();
     if(inp)inp.value='';
-    toast('✓ Додано: '+val);
+    syncToSheets(); toast('✓ Додано: '+val);
   } else if(type==='cell'){
     var inp=document.getElementById('navAddCellInp');
     var val=inp?inp.value.trim():'';
     if(!val){if(inp)inp.focus();return;}
-    if(!room){toast('⚠ Оберіть приміщення');return;}
-    var roomObj=locations.find(function(r){return r.name===room;});
-    if(!roomObj)return;
+    var roomObj=locations.find(function(r){return r.name===NAV.room;});
+    if(!roomObj){toast('⚠ Оберіть приміщення');return;}
     if(roomObj.cells.find(function(c){return c.name===val;})){toast('⚠ Вже існує');return;}
     roomObj.cells.push({name:val,containers:[]});
-    syncToSheets();
     if(inp)inp.value='';
-    toast('✓ Додано: '+val);
+    syncToSheets(); toast('✓ Додано: '+val);
   } else if(type==='con'){
     var inp=document.getElementById('navAddConInp');
     var val=inp?inp.value.trim():'';
     if(!val){if(inp)inp.focus();return;}
-    if(!room||!cell){toast('⚠ Оберіть комірку');return;}
-    var roomObj=locations.find(function(r){return r.name===room;});
-    if(!roomObj)return;
-    var cellObj=roomObj.cells.find(function(c){return c.name===cell;});
-    if(!cellObj)return;
+    var roomObj=locations.find(function(r){return r.name===NAV.room;});
+    var cellObj=roomObj?roomObj.cells.find(function(c){return c.name===NAV.cell;}):null;
+    if(!cellObj){toast('⚠ Оберіть комірку');return;}
     if(cellObj.containers.includes(val)){toast('⚠ Вже існує');return;}
     cellObj.containers.push(val);
-    syncToSheets();
     if(inp)inp.value='';
-    toast('✓ Додано: '+val);
+    syncToSheets(); toast('✓ Додано: '+val);
   }
-  renderNavView();
+  navRender();
 }
 
-function navStartRename(type,ri,ci,coni,oldName,elemId){
-  var overlay=document.getElementById('ov-nav-rename');
-  if(!overlay){
-    overlay=document.createElement('div');overlay.id='ov-nav-rename';
-    overlay.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
-    overlay.innerHTML='<div style="background:var(--surface);border-radius:16px;padding:24px;width:100%;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,.5)"><div style="font-family:var(--font-d);font-size:16px;font-weight:600;color:var(--text);margin-bottom:16px" id="navRenameTitle">Перейменувати</div><input id="navRenameInp" type="text" style="width:100%;height:46px;padding:0 14px;background:var(--bg);border:2px solid var(--blue);border-radius:10px;color:var(--text);font-family:var(--font-d);font-size:15px;font-weight:600;outline:none;box-sizing:border-box;-webkit-appearance:none"><div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end"><button id="navRenameCancel" style="height:40px;padding:0 20px;border-radius:100px;border:1.5px solid var(--border);background:transparent;color:var(--sub);font-family:var(--font-d);font-size:13.5px;font-weight:500;cursor:pointer">Скасувати</button><button id="navRenameSave" style="height:40px;padding:0 24px;border-radius:100px;border:none;background:var(--blue);color:#1c1f26;font-family:var(--font-d);font-size:13.5px;font-weight:600;cursor:pointer">Зберегти</button></div></div>';
-    document.body.appendChild(overlay);
-  }
+/* ─── видалити ─── */
+function navDeleteRoom(ri){
+  var r=locations[ri];
+  if(!r)return;
+  if(!confirm('Видалити приміщення "'+r.name+'"?'))return;
+  locations.splice(ri,1);
+  if(NAV.room===r.name){NAV.room='';NAV.cell='';NAV.con='';}
+  syncToSheets(); renderAll(); toast('Видалено'); navRender();
+}
+function navDeleteCell(ri,ci){
+  var r=locations[ri]; var cel=r?r.cells[ci]:null;
+  if(!cel)return;
+  if(!confirm('Видалити комірку "'+cel.name+'"?'))return;
+  r.cells.splice(ci,1);
+  if(NAV.cell===cel.name){NAV.cell='';NAV.con='';}
+  syncToSheets(); renderAll(); toast('Видалено'); navRender();
+}
+function navDeleteContainer(ri,ci,coni){
+  var r=locations[ri]; var cel=r?r.cells[ci]:null;
+  if(!cel)return;
+  var cn=cel.containers[coni];
+  if(!confirm('Видалити контейнер "'+cn+'"?'))return;
+  cel.containers.splice(coni,1);
+  if(NAV.con===cn){NAV.con='';}
+  syncToSheets(); renderAll(); toast('Видалено'); navRender();
+}
+
+/* ─── перейменувати ─── */
+function navShowRename(type,ri,ci,coni,oldName){
+  /* щоразу перебудовуємо діалог повністю */
+  var old=document.getElementById('ov-nav-rename');
+  if(old) old.parentNode.removeChild(old);
+
+  var ov=document.createElement('div');
+  ov.id='ov-nav-rename';
+  ov.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
+
+  var label=type==='room'?'приміщення':type==='cell'?'комірку':'контейнер';
+  ov.innerHTML='<div style="background:var(--surface);border-radius:16px;padding:24px;width:100%;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,.5)">'
+    +'<div style="font-family:var(--font-d);font-size:16px;font-weight:600;color:var(--text);margin-bottom:16px">Перейменувати '+label+'</div>'
+    +'<input id="navRenameInp" type="text" value="" style="width:100%;height:46px;padding:0 14px;background:var(--bg);border:2px solid var(--blue);border-radius:10px;color:var(--text);font-family:var(--font-d);font-size:15px;font-weight:600;outline:none;box-sizing:border-box;-webkit-appearance:none">'
+    +'<div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">'
+    +'<button id="navRenameCancel" style="height:40px;padding:0 20px;border-radius:100px;border:1.5px solid var(--border);background:transparent;color:var(--sub);font-family:var(--font-d);font-size:13.5px;font-weight:500;cursor:pointer">Скасувати</button>'
+    +'<button id="navRenameSave" style="height:40px;padding:0 24px;border-radius:100px;border:none;background:var(--blue);color:#1c1f26;font-family:var(--font-d);font-size:13.5px;font-weight:600;cursor:pointer">Зберегти</button>'
+    +'</div></div>';
+
+  document.body.appendChild(ov);
+
   var inp=document.getElementById('navRenameInp');
-  var title=document.getElementById('navRenameTitle');
-  var saveBtn=document.getElementById('navRenameSave');
-  var cancelBtn=document.getElementById('navRenameCancel');
-  title.textContent='Перейменувати '+(type==='room'?'приміщення':type==='cell'?'комірку':'контейнер');
   inp.value=oldName;
-  overlay.style.display='flex';
   setTimeout(function(){inp.focus();inp.select();},50);
-  function doClose(){overlay.style.display='none';}
+
+  function doClose(){
+    var el=document.getElementById('ov-nav-rename');
+    if(el) el.parentNode.removeChild(el);
+  }
   function doSave(){
     var newName=inp.value.trim();
     if(!newName){inp.focus();return;}
     if(newName===oldName){doClose();return;}
-    doClose();navApplyRename(type,ri,ci,coni,oldName,newName);
+    doClose();
+    navApplyRename(type,ri,ci,coni,oldName,newName);
   }
-  var ns=saveBtn.cloneNode(true);var nc=cancelBtn.cloneNode(true);
-  saveBtn.parentNode.replaceChild(ns,saveBtn);
-  cancelBtn.parentNode.replaceChild(nc,cancelBtn);
-  ns.addEventListener('click',doSave);
-  nc.addEventListener('click',doClose);
-  inp.onkeydown=function(e){if(e.key==='Enter'){e.preventDefault();doSave();}if(e.key==='Escape')doClose();};
-  overlay.onclick=function(e){if(e.target===overlay)doClose();};
+
+  document.getElementById('navRenameSave').onclick=doSave;
+  document.getElementById('navRenameCancel').onclick=doClose;
+  inp.onkeydown=function(e){
+    if(e.key==='Enter'){e.preventDefault();doSave();}
+    if(e.key==='Escape') doClose();
+  };
+  ov.onclick=function(e){if(e.target===ov) doClose();};
 }
 
 function navApplyRename(type,ri,ci,coni,oldName,newName){
-  var st=_navState();
   if(type==='room'){
-    var r=locations[ri];if(!r)return;
-    stock.forEach(function(s){if(s.room===oldName)s.room=newName;});
+    var r=locations[ri]; if(!r)return;
+    stock.forEach(function(s){if(s.room===oldName) s.room=newName;});
     r.name=newName;
-    if(st.room===oldName)_navSetState(newName,st.cell,st.con);
+    if(NAV.room===oldName) NAV.room=newName;
   } else if(type==='cell'){
-    var r=locations[ri];if(!r)return;
-    var cel=r.cells[ci];if(!cel)return;
-    stock.forEach(function(s){if(s.room===r.name&&s.storage===oldName)s.storage=newName;});
+    var r=locations[ri]; if(!r)return;
+    var cel=r.cells[ci]; if(!cel)return;
+    stock.forEach(function(s){if(s.room===r.name&&s.storage===oldName) s.storage=newName;});
     cel.name=newName;
-    if(st.cell===oldName)_navSetState(st.room,newName,st.con);
+    if(NAV.cell===oldName) NAV.cell=newName;
   } else if(type==='con'){
-    var r=locations[ri];if(!r)return;
-    var cel=r.cells[ci];if(!cel)return;
-    stock.forEach(function(s){if(s.room===r.name&&s.storage===cel.name&&s.sup===oldName)s.sup=newName;});
+    var r=locations[ri]; if(!r)return;
+    var cel=r.cells[ci]; if(!cel)return;
+    stock.forEach(function(s){if(s.room===r.name&&s.storage===cel.name&&s.sup===oldName) s.sup=newName;});
     cel.containers[coni]=newName;
-    if(st.con===oldName)_navSetState(st.room,st.cell,newName);
+    if(NAV.con===oldName) NAV.con=newName;
   }
-  syncToSheets();renderAll();toast('✓ Перейменовано');renderNavView();
-}
-function _navItem(label,sel,clickCode,delCode){
-  var bg=sel?'var(--blue-s)':'var(--bg)',br=sel?'rgba(138,180,248,.35)':'var(--border)',cl=sel?'var(--blue)':'var(--text)';
-  return '<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:8px;cursor:pointer;font-family:var(--font-d);font-size:13px;font-weight:500;background:'+bg+';border:1.5px solid '+br+';color:'+cl+';box-sizing:border-box" onclick="'+clickCode+'"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">'+label+'</span><button onclick="event.stopPropagation();'+delCode+'" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;padding:0 0 0 4px;flex-shrink:0">×</button></div>';
-}
-function _navPh(t){return '<div style="font-size:12px;color:var(--muted);font-family:var(--font-d);padding:8px 4px">'+t+'</div>';}
-function renderNav3Col(){
-  var selRoom=window._navSelRoom,selCell=window._navSelCell;
-  var rl=document.getElementById('navRoomList'),cl=document.getElementById('navCellList'),col=document.getElementById('navConList');
-  if(!rl)return;
-  rl.innerHTML=locations.length?locations.map(function(r,ri){return _navItem(r.name,selRoom===r.name,'window._navSelRoom='+JSON.stringify(r.name)+';window._navSelCell=null;renderNav3Col()','deleteLocRoom('+ri+')');}).join(''):_navPh('Немає приміщень');
-  var room=selRoom?locations.find(function(r){return r.name===selRoom;}):null;
-  var cells=room?room.cells:[],ri=room?locations.indexOf(room):-1;
-  cl.innerHTML=!selRoom?_navPh('Оберіть приміщення'):cells.length?cells.map(function(c,ci){return _navItem(c.name,selCell===c.name,'window._navSelCell='+JSON.stringify(c.name)+';renderNav3Col()','deleteLocCell('+ri+','+ci+')');}).join(''):_navPh('Немає комірок');
-  var cell2=room&&selCell?room.cells.find(function(c){return c.name===selCell;}):null;
-  var cons=cell2?cell2.containers:[],ci2=cell2?room.cells.indexOf(cell2):-1;
-  col.innerHTML=!selCell?_navPh('Оберіть комірку'):cons.length?cons.map(function(con,coni){return _navItem(con,false,'void(0)','deleteLocContainer('+ri+','+ci2+','+coni+')');}).join(''):_navPh('Немає контейнерів');
-}
-function navAddRoom(){var inp=document.getElementById('navRoomInput'),val=inp?inp.value.trim():'';if(!val)return;if(!locations.find(function(r){return r.name===val;})){locations.push({name:val,cells:[]});syncToSheets();}if(inp)inp.value='';window._navSelRoom=val;window._navSelCell=null;renderNav3Col();}
-function navAddCell(){var inp=document.getElementById('navCellInput'),val=inp?inp.value.trim():'';if(!val||!window._navSelRoom)return;var room=locations.find(function(r){return r.name===window._navSelRoom;});if(!room)return;if(!room.cells.find(function(c){return c.name===val;})){room.cells.push({name:val,containers:[]});syncToSheets();}if(inp)inp.value='';window._navSelCell=val;renderNav3Col();}
-function navAddCon(){var inp=document.getElementById('navConInput'),val=inp?inp.value.trim():'';if(!val||!window._navSelRoom||!window._navSelCell)return;var room=locations.find(function(r){return r.name===window._navSelRoom;});if(!room)return;var cell=room.cells.find(function(c){return c.name===window._navSelCell;});if(!cell)return;if(!cell.containers.includes(val)){cell.containers.push(val);syncToSheets();}if(inp)inp.value='';renderNav3Col();}
-function renderNavModal(){renderNavView();}
-
-function addNavItem(){
-  var val=(document.getElementById('navAddInput')||{}).value;
-  if(!val||!val.trim()){toast('⚠ Введіть назву');return;}
-  val=val.trim();
-  var level=window._navLevel||'rooms';
-  if(level==='rooms'){
-    if(locations.find(function(r){return r.name===val;})){toast('⚠ Вже існує');return;}
-    locations.push({name:val,cells:[]});
-  } else if(level==='cells'){
-    var room=locations.find(function(r){return r.name===window._navRoom;});
-    if(!room)return;
-    if(room.cells.find(function(c){return c.name===val;})){toast('⚠ Вже існує');return;}
-    room.cells.push({name:val,containers:[]});
-  } else if(level==='containers'){
-    var room=locations.find(function(r){return r.name===window._navRoom;});
-    var cell=room?room.cells.find(function(c){return c.name===window._navCell;}):null;
-    if(!cell)return;
-    if(cell.containers.includes(val)){toast('⚠ Вже існує');return;}
-    cell.containers.push(val);
-  }
-  renderNavModal();syncToSheets();toast('✓ Додано: '+val);
+  syncToSheets(); renderAll(); toast('✓ Перейменовано'); navRender();
 }
 
-function deleteLocRoom(ri){
-  var r=locations[ri];if(!r)return;
-  if(!confirm('Видалити приміщення "'+r.name+'"?'))return;
-  locations.splice(ri,1);renderNavModal();syncToSheets();toast('Видалено');
-}
-function deleteLocCell(ri,ci){
-  var room=locations[ri];if(!room)return;
-  if(!confirm('Видалити комірку "'+room.cells[ci].name+'"?'))return;
-  room.cells.splice(ci,1);renderNavModal();syncToSheets();toast('Видалено');
-}
-function deleteLocContainer(ri,ci,coni){
-  var room=locations[ri];var cell=room?room.cells[ci]:null;if(!cell)return;
-  if(!confirm('Видалити контейнер "'+cell.containers[coni]+'"?'))return;
-  cell.containers.splice(coni,1);renderNavModal();syncToSheets();toast('Видалено');
-}
-
-// Keep openLocationsModal as alias
+/* ─── аліаси для сумісності зі старим кодом ─── */
 function openLocationsModal(){openNavModal();}
-function renderLocModal(){renderNavModal();}
+function renderLocModal(){navRender();}
+function renderNavModal(){navRender();}
+function renderNavView(){navRender();}
+function deleteLocRoom(ri){navDeleteRoom(ri);}
+function deleteLocCell(ri,ci){navDeleteCell(ri,ci);}
+function deleteLocContainer(ri,ci,coni){navDeleteContainer(ri,ci,coni);}
+function navInlineAdd(type){navAdd(type);}
+function navStartRename(type,ri,ci,coni,oldName){navShowRename(type,ri,ci,coni,oldName);}
+function _navState(){return{room:NAV.room,cell:NAV.cell,con:NAV.con};}
+function _navSetState(r,c,cn){NAV.room=r||'';NAV.cell=c||'';NAV.con=cn||'';}
+
 
 function _fillLocationSelects(item){
   var rooms=_getRooms();
