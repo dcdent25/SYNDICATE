@@ -532,7 +532,7 @@ function openItemHistory(){const item=stock.find(x=>x.id===currentDetailId);if(!
 function renderItemHistory(itemName){const el=document.getElementById('dItemHistory');if(!el)return;const ops=history.filter(h=>h.name===itemName).slice(0,15);if(!ops.length){el.innerHTML='<div style="font-size:12px;color:var(--muted);padding:4px 0">Операцій ще немає</div>';return;}el.innerHTML=ops.map(h=>{const isIn=h.type==='in';const isGive=h.type==='out'&&(h.note||'').includes('Видано');const color=isIn?'var(--green)':isGive?'var(--blue)':'var(--red)';const sign=isIn?'+':'−';const label=isIn?'Поповнення':isGive?'Видача':'Списання';return'<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--surface2);border-radius:8px;font-size:12px"><div style="flex:1;min-width:0"><div style="font-family:var(--font-d);font-weight:500;color:'+(color)+'">'+(label)+'</div><div style="color:var(--sub);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(h.note||'')+'</div></div><div style="text-align:right;flex-shrink:0"><div style="font-family:var(--font-d);font-weight:700;color:'+(color)+'">'+(sign)+(h.qty)+' '+(h.unit||'шт')+'</div>'+(h.cost?'<div style="font-size:11px;color:var(--amber)">'+(h.cost.toLocaleString('uk'))+' ₴</div>':'')+'<div style="font-size:10px;color:var(--muted)">'+(fmtTime?fmtTime(h.time):h.time||'')+'</div></div></div>';}).join('');}
 
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxk4NgIj8BQKanbmfIF5L2Ygo1UqPjMIW0HIDc7m6TlNr_Ln3aeyp23SC977wu9u7zrvg/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxP_J3XFJXlvo1E_SWNXaM7cFLZDFhhozXeYGyalIFSc5fGK5iaXuAE_fsugoBiabiQog/exec';
 let currentDetailId = null;
 let activeFilter = 'all';
 let syncPending = false;
