@@ -737,7 +737,59 @@ function updateFAB(){}
 updateFAB();window.addEventListener('resize',updateFAB);
 function hidePreloader(){const pre=document.getElementById('preloader');if(!pre)return;setTimeout(()=>pre.classList.add('hidden'),400);}
 function showSyncStatus(state,msg){const el=document.getElementById('syncStatus');if(!el)return;const map={loading:['⟳','Завантаження…','var(--blue)'],saving:['⟳','Збереження…','var(--amber)'],ok:['✓','Синхронізовано','var(--green)'],error:['✕',msg?'Помилка: '+String(msg).substring(0,30):'Помилка','var(--red)']};const[icon,text,color]=map[state]||map.error;el.style.color=color;el.style.opacity='1';el.innerHTML='<span>'+(icon)+'</span>'+(text);if(state==='ok')setTimeout(()=>{el.style.opacity='0';},3000);}
-var _store=(function(){function _ok(s){try{s.setItem('__t','1');s.removeItem('__t');return true;}catch(e){return false;}}var _ls=false,_ss=false;try{_ls=_ok(window.localStorage);}catch(e){}try{_ss=_ok(window.sessionStorage);}catch(e){}function _cget(k){var m=document.cookie.match('(?:^|; )'+k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'=([^;]*)');return m?decodeURIComponent(m[1]):null;}function _cset(k,v){try{document.cookie=k+'='+encodeURIComponent(v)+';expires='+new Date(Date.now()+7*864e5).toUTCString()+';path=/;SameSite=Lax';}catch(e){}}function _cdel(k){document.cookie=k+'=;expires=Thu,01 Jan 1970 00:00:00 GMT;path=/';}return{get:function(k){if(_ls){try{return localStorage.getItem(k);}catch(e){}}if(_ss){try{return sessionStorage.getItem(k);}catch(e){}}return _cget(k);},set:function(k,v){if(_ls){try{localStorage.setItem(k,v);return;}catch(e){}}if(_ss){try{sessionStorage.setItem(k,v);return;}catch(e){}}try{_cset(k,v);}catch(e){}},del:function(k){if(_ls){try{localStorage.removeItem(k);}catch(e){}}if(_ss){try{sessionStorage.removeItem(k);}catch(e){}}try{_cdel(k);}catch(e){}}};})();
+
+// _store: localStorage → sessionStorage → cookie fallback
+var _store=(function(){
+  function _ok(s){try{s.setItem('__t','1');s.removeItem('__t');return true;}catch(e){return false;}}
+  var _ls=false,_ss=false;
+  try{_ls=_ok(window.localStorage);}catch(e){}
+  try{_ss=_ok(window.sessionStorage);}catch(e){}
+  function _cget(k){var m=document.cookie.match('(?:^|; )'+k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'=([^;]*)');return m?decodeURIComponent(m[1]):null;}
+  function _cset(k,v){try{document.cookie=k+'='+encodeURIComponent(v)+';expires='+new Date(Date.now()+7*864e5).toUTCString()+';path=/;SameSite=Lax';}catch(e){}}
+  function _cdel(k){document.cookie=k+'=;expires=Thu,01 Jan 1970 00:00:00 GMT;path=/';}
+  return{
+    get:function(k){if(_ls){try{return localStorage.getItem(k);}catch(e){}}if(_ss){try{return sessionStorage.getItem(k);}catch(e){}}return _cget(k);},
+    set:function(k,v){if(_ls){try{localStorage.setItem(k,v);return;}catch(e){}}if(_ss){try{sessionStorage.setItem(k,v);return;}catch(e){}}try{_cset(k,v);}catch(e){}},
+    del:function(k){if(_ls){try{localStorage.removeItem(k);}catch(e){}}if(_ss){try{sessionStorage.removeItem(k);}catch(e){}}try{_cdel(k);}catch(e){}}
+  };
+})();
+
+// calcPortionsFromQty — рахує порції і ціну при зміні кількості або порцій у картці редагування
+function calcPortionsFromQty(){
+  var qty=parseFloat(document.getElementById('dQtyMatDisplay')?.value)||parseFloat(document.getElementById('dQtyMatEdit')?.value)||0;
+  var portions=parseFloat(document.getElementById('dPortionsEdit')?.value)||0;
+  var price=parseFloat(document.getElementById('dPriceEdit')?.value)||0;
+  var unit=document.querySelector('#dUnitChips .dunit-chip.sel')?.dataset.unit||'шт';
+
+  // Склад порції = qty / portions
+  var portionComp=portions>0&&qty>0?Math.round(qty/portions*100)/100:0;
+  var pcEl=document.getElementById('dPortionCompEdit');
+  if(pcEl&&document.activeElement!==pcEl)pcEl.value=portionComp||'';
+  _setLivePreview('dPortionComp',portionComp?portionComp+' '+unit:'—');
+
+  // Ціна за порцію = price / portions
+  var portionPrice=portions>0&&price>0?Math.round(price/portions*100)/100:0;
+  var ppEl=document.getElementById('dPortionPriceEdit');
+  if(ppEl)ppEl.value=portionPrice||'';
+  _setLivePreview('dPortionPrice',portionPrice?'грн '+portionPrice.toLocaleString('uk',{minimumFractionDigits:2}):'—');
+
+  // Вартість порцій
+  var portionCost=portions*portionPrice;
+  _setLivePreview('dPortionCost',portionCost?'грн '+portionCost.toLocaleString('uk',{minimumFractionDigits:2}):'—');
+
+  // Вартість залишків
+  var item=stock.find(function(x){return x.id===currentDetailId;});
+  if(item&&price>0){
+    var stockCost=((item.stockQty!=null?item.stockQty:item.qty)||0)*price;
+    var sc=document.getElementById('dStockCost');
+    if(sc)sc.textContent=stockCost.toLocaleString('uk',{minimumFractionDigits:2});
+  }
+
+  // Також оновити кількість у превью
+  var _pi=stock.find(function(x){return x.id===currentDetailId;});
+  if(_pi)_updateQtyPreview(_pi);
+}
+
 function saveLocalCache(){
   // Save mapPhotos separately per item to avoid main cache overflow
   stock.forEach(function(i){
