@@ -738,7 +738,6 @@ updateFAB();window.addEventListener('resize',updateFAB);
 function hidePreloader(){const pre=document.getElementById('preloader');if(!pre)return;setTimeout(()=>pre.classList.add('hidden'),400);}
 function showSyncStatus(state,msg){const el=document.getElementById('syncStatus');if(!el)return;const map={loading:['⟳','Завантаження…','var(--blue)'],saving:['⟳','Збереження…','var(--amber)'],ok:['✓','Синхронізовано','var(--green)'],error:['✕',msg?'Помилка: '+String(msg).substring(0,30):'Помилка','var(--red)']};const[icon,text,color]=map[state]||map.error;el.style.color=color;el.style.opacity='1';el.innerHTML='<span>'+(icon)+'</span>'+(text);if(state==='ok')setTimeout(()=>{el.style.opacity='0';},3000);}
 
-// _store: localStorage → sessionStorage → cookie fallback
 var _store=(function(){
   function _ok(s){try{s.setItem('__t','1');s.removeItem('__t');return true;}catch(e){return false;}}
   var _ls=false,_ss=false;
@@ -754,42 +753,44 @@ var _store=(function(){
   };
 })();
 
-// calcPortionsFromQty — рахує порції і ціну при зміні кількості або порцій у картці редагування
 function calcPortionsFromQty(){
-  var qty=parseFloat(document.getElementById('dQtyMatDisplay')?.value)||parseFloat(document.getElementById('dQtyMatEdit')?.value)||0;
-  var portions=parseFloat(document.getElementById('dPortionsEdit')?.value)||0;
-  var price=parseFloat(document.getElementById('dPriceEdit')?.value)||0;
-  var unit=document.querySelector('#dUnitChips .dunit-chip.sel')?.dataset.unit||'шт';
-
-  // Склад порції = qty / portions
+  var qty=parseFloat(document.getElementById('dQtyMatDisplay')&&document.getElementById('dQtyMatDisplay').value)||0;
+  var portions=parseFloat(document.getElementById('dPortionsEdit')&&document.getElementById('dPortionsEdit').value)||0;
+  var price=parseFloat(document.getElementById('dPriceEdit')&&document.getElementById('dPriceEdit').value)||0;
+  var unit=(document.querySelector('#dUnitChips .dunit-chip.sel')||{dataset:{}}).dataset.unit||'шт';
   var portionComp=portions>0&&qty>0?Math.round(qty/portions*100)/100:0;
   var pcEl=document.getElementById('dPortionCompEdit');
   if(pcEl&&document.activeElement!==pcEl)pcEl.value=portionComp||'';
-  _setLivePreview('dPortionComp',portionComp?portionComp+' '+unit:'—');
-
-  // Ціна за порцію = price / portions
+  if(typeof _setLivePreview==='function')_setLivePreview('dPortionComp',portionComp?portionComp+' '+unit:'—');
   var portionPrice=portions>0&&price>0?Math.round(price/portions*100)/100:0;
   var ppEl=document.getElementById('dPortionPriceEdit');
   if(ppEl)ppEl.value=portionPrice||'';
-  _setLivePreview('dPortionPrice',portionPrice?'грн '+portionPrice.toLocaleString('uk',{minimumFractionDigits:2}):'—');
-
-  // Вартість порцій
-  var portionCost=portions*portionPrice;
-  _setLivePreview('dPortionCost',portionCost?'грн '+portionCost.toLocaleString('uk',{minimumFractionDigits:2}):'—');
-
-  // Вартість залишків
+  if(typeof _setLivePreview==='function'){
+    _setLivePreview('dPortionPrice',portionPrice?'грн '+portionPrice.toLocaleString('uk',{minimumFractionDigits:2}):'—');
+    _setLivePreview('dPortionCost',portions&&portionPrice?'грн '+(portions*portionPrice).toLocaleString('uk',{minimumFractionDigits:2}):'—');
+  }
   var item=stock.find(function(x){return x.id===currentDetailId;});
   if(item&&price>0){
-    var stockCost=((item.stockQty!=null?item.stockQty:item.qty)||0)*price;
     var sc=document.getElementById('dStockCost');
-    if(sc)sc.textContent=stockCost.toLocaleString('uk',{minimumFractionDigits:2});
+    var _sq=(item.stockQty!=null?item.stockQty:item.qty)||0;if(sc)sc.textContent=(_sq*price).toLocaleString('uk',{minimumFractionDigits:2});
   }
-
-  // Також оновити кількість у превью
-  var _pi=stock.find(function(x){return x.id===currentDetailId;});
-  if(_pi)_updateQtyPreview(_pi);
 }
 
+function _updateNewCatSelect(){
+  var sel=document.getElementById('newCat');
+  if(!sel)return;
+  var cur=sel.value;
+  var cats;
+  if(typeof _groupFilter!=='undefined'&&_groupFilter==='dental'){
+    cats=categories.filter(function(c){return typeof _catGroup==='function'&&(_catGroup(c)==='dental'||_catGroup(c)==='mixed');});
+  } else if(typeof _groupFilter!=='undefined'&&_groupFilter==='general'){
+    cats=categories.filter(function(c){return typeof _catGroup==='function'&&(_catGroup(c)==='general'||_catGroup(c)==='mixed');});
+  } else {
+    cats=categories.slice();
+  }
+  if(!cats.length)cats=categories.slice();
+  sel.innerHTML=cats.map(function(c){return'<option value="'+c+'"'+(c===cur?' selected':'')+'>'+c+'</option>';}).join('');
+}
 function saveLocalCache(){
   // Save mapPhotos separately per item to avoid main cache overflow
   stock.forEach(function(i){
