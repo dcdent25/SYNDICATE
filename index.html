@@ -1610,39 +1610,53 @@ function nav2Render() {
           addBtn.addEventListener('mouseout',function(){this.style.background='';});
           addBtn.addEventListener('mousedown',function(e){
             e.preventDefault();
-            drop.remove();
-            var name = inp.value.trim() || prompt('Назва нового(ї) '+labels[ft]+':');
-            if(!name || !name.trim()) return;
-            name = name.trim();
+            /* Замінюємо кнопку на поле вводу прямо в дропдауні */
+            addBtn.style.display = 'none';
+            var addRow = document.createElement('div');
+            addRow.style.cssText = 'padding:6px 8px;border-top:1px solid var(--border);display:flex;gap:6px;align-items:center';
+            var addInp = document.createElement('input');
+            addInp.type = 'text';
+            addInp.placeholder = 'Нова назва...';
+            addInp.style.cssText = 'flex:1;height:34px;padding:0 10px;background:var(--bg);border:1.5px solid var(--blue);border-radius:8px;color:var(--text);font-family:var(--font-d);font-size:13px;outline:none;min-width:0';
+            var addOk = document.createElement('button');
+            addOk.textContent = '✓';
+            addOk.style.cssText = 'height:34px;width:34px;background:var(--blue);color:#1c1f26;border:none;border-radius:8px;cursor:pointer;font-size:16px;font-weight:700;flex-shrink:0';
 
-            if(ft==='room') {
-              /* Завжди створити нове приміщення */
-              locations.push({name:name, cells:[]});
-              var newRi = locations.length-1;
-              NAV2.room=name; NAV2.cell=''; NAV2.con=''; NAV2.roomIdx=newRi;
-              forceSyncToSheets(); toast('✓ Приміщення: '+name); nav2Render();
-            } else if(ft==='cell') {
-              /* Створити нову комірку в поточному приміщенні */
-              var ri2 = NAV2.roomIdx>=0?NAV2.roomIdx:locations.findIndex(function(r){return r.name===NAV2.room;});
-              var ro = locations[ri2];
-              if(!ro){toast('⚠ Спочатку виберіть приміщення');return;}
-              if(!ro.cells) ro.cells=[];
-              ro.cells.push({name:name, containers:[]});
-              NAV2.cell = name; NAV2.con = '';
-              forceSyncToSheets(); toast('✓ Комірка: '+name);
-              nav2Render();
-            } else {
-              /* Створити новий контейнер в поточній комірці */
-              var ri2 = NAV2.roomIdx>=0?NAV2.roomIdx:locations.findIndex(function(r){return r.name===NAV2.room;});
-              var ro = locations[ri2];
-              var co = ro&&ro.cells?ro.cells.find(function(c){return c.name===NAV2.cell;}):null;
-              if(!co){toast('⚠ Спочатку виберіть комірку');return;}
-              if(!co.containers) co.containers=[];
-              co.containers.push(name);
-              NAV2.con = name;
-              forceSyncToSheets(); toast('✓ Контейнер: '+name);
-              nav2Render();
+            function doAdd() {
+              var name = addInp.value.trim();
+              if(!name) return;
+              drop.remove();
+
+              if(ft==='room') {
+                locations.push({name:name, cells:[]});
+                var newRi = locations.length-1;
+                NAV2.room=name; NAV2.cell=''; NAV2.con=''; NAV2.roomIdx=newRi;
+              } else if(ft==='cell') {
+                var ri2 = NAV2.roomIdx>=0?NAV2.roomIdx:locations.findIndex(function(r){return r.name===NAV2.room;});
+                var ro = locations[ri2];
+                if(!ro) return;
+                if(!ro.cells) ro.cells=[];
+                ro.cells.push({name:name, containers:[]});
+                NAV2.cell=name; NAV2.con='';
+              } else {
+                var ri2 = NAV2.roomIdx>=0?NAV2.roomIdx:locations.findIndex(function(r){return r.name===NAV2.room;});
+                var ro = locations[ri2];
+                var co = ro&&ro.cells?ro.cells.find(function(c){return c.name===NAV2.cell;}):null;
+                if(!co) return;
+                if(!co.containers) co.containers=[];
+                co.containers.push(name);
+                NAV2.con=name;
+              }
+              forceSyncToSheets(); toast('✓ '+name); nav2Render();
             }
+
+            addOk.addEventListener('mousedown', function(e){ e.preventDefault(); doAdd(); });
+            addInp.addEventListener('keydown', function(e){ if(e.key==='Enter') doAdd(); e.stopPropagation(); });
+            addInp.addEventListener('mousedown', function(e){ e.stopPropagation(); });
+            addRow.appendChild(addInp);
+            addRow.appendChild(addOk);
+            drop.appendChild(addRow);
+            setTimeout(function(){ addInp.focus(); }, 30);
           });
           drop.appendChild(addBtn);
 
