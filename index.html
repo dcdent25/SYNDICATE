@@ -2141,9 +2141,11 @@ function nav2EditCardSimple(ft) {
       nav2SaveOneField(ft, newName);
     } else {
       document.body.removeChild(ov);
+      forceSyncToSheets();
       nav2Render();
     }
     document.body.removeChild(ov);
+    forceSyncToSheets();
     nav2Render();
   });
 
