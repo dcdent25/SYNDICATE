@@ -485,7 +485,7 @@ html,body{background:#1c1f26!important;overflow-x:hidden!important}.t-container,
 </div>
 <div id="nav2-body"></div>
 <input type="file" id="nav2PhotoInput" accept="image/*" style="display:none" onchange="nav2HandlePhoto(event)">
-<div id="nav2-add" style="display:flex;justify-content:flex-end;margin-top:14px">
+<div id="nav2-add" style="position:sticky;bottom:0;background:var(--surface);padding:10px 0 4px;display:flex;justify-content:flex-end;z-index:10">
   <button id="nav2-fab" onclick="nav2FabClick()" style="width:52px;height:52px;border-radius:50%;background:var(--blue);color:#1c1f26;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(138,180,248,.4);flex-shrink:0;transition:all .2s">
     <svg id="nav2-fab-icon-plus" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
     <svg id="nav2-fab-icon-edit" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
@@ -1403,7 +1403,9 @@ function nav2Render() {
   /* ── РЕЖИМ ДЕТАЛІ: показуємо картки + список + позиції ── */
   if (NAV2._detail) {
     if(bc) bc.innerHTML = '<span onclick="nav2BackToList()" style="cursor:pointer;color:var(--blue);display:flex;align-items:center;gap:4px"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg> Назад</span>';
-    if(inp) document.getElementById('nav2-add').style.display = 'none';
+    var addDiv = document.getElementById('nav2-add');
+    if(addDiv) addDiv.style.display = 'flex';
+    nav2SetFabIcon('edit');
 
     var photoRoom = NAV2.room ? (locationPhotos[NAV2.room]||null) : null;
     var photoCell = (NAV2.room&&NAV2.cell) ? (locationPhotos[NAV2.room+'::'+NAV2.cell]||null) : null;
@@ -1688,7 +1690,9 @@ function nav2Render() {
 
   /* ── ПЛОСКИЙ СПИСОК ── */
   if(bc) bc.innerHTML = '';
-  if(inp) document.getElementById('nav2-add').style.display = 'flex';
+  var addDiv = document.getElementById('nav2-add');
+  if(addDiv) addDiv.style.display = 'flex';
+  nav2SetFabIcon('plus');
 
   var rows = [];
   locations.forEach(function(r, ri) {
@@ -1711,6 +1715,24 @@ function nav2Render() {
   }
 
   var html = '<div style="display:flex;flex-direction:column;gap:6px">';
+
+  /* Нова картка якщо режим додавання */
+  if(NAV2._adding) {
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 44px;gap:6px;padding:10px;border-radius:10px;background:var(--surface2);border:1.5px solid var(--blue)">';
+    html += '<div><div style="font-size:9px;color:var(--sub);font-family:var(--font-d);font-weight:500;margin-bottom:4px">Приміщення</div>';
+    html += '<div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;height:36px;display:flex;align-items:center;padding:0 8px">';
+    html += '<input id="nav2-new-room-inp" type="text" placeholder="Назва..." autofocus style="background:transparent;border:none;outline:none;font-family:var(--font-d);font-size:13px;font-weight:600;color:var(--text);width:100%" onkeydown="if(event.key===\'Enter\')nav2ConfirmNewRoom();if(event.key===\'Escape\'){NAV2._adding=false;nav2Render();}">';
+    html += '</div></div>';
+    html += '<div style="opacity:.4"><div style="font-size:9px;color:var(--sub);font-family:var(--font-d);font-weight:500;margin-bottom:4px">Комірка</div>';
+    html += '<div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;height:36px;display:flex;align-items:center;padding:0 8px"><span style="color:var(--muted);font-size:13px">–</span></div></div>';
+    html += '<div style="opacity:.4"><div style="font-size:9px;color:var(--sub);font-family:var(--font-d);font-weight:500;margin-bottom:4px">Контейнер</div>';
+    html += '<div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;height:36px;display:flex;align-items:center;padding:0 8px"><span style="color:var(--muted);font-size:13px">–</span></div></div>';
+    html += '<div><div style="font-size:9px;color:var(--sub);font-family:var(--font-d);font-weight:500;margin-bottom:4px">Мапа</div>';
+    html += '<div style="background:var(--blue-s);border:1.5px solid rgba(138,180,248,.3);border-radius:6px;width:44px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="nav2ConfirmNewRoom()">';
+    html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="color:var(--blue)"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>';
+    html += '</div></div>';
+    html += '</div>';
+  }
 
   rows.forEach(function(row,ri) {
     var rowId='nav2r_'+ri; window[rowId]=row;
@@ -2148,48 +2170,21 @@ function nav2Enter(fromLevel, idx) {
 
 /* Додати елемент */
 function nav2AddNew() {
-  var ov = document.createElement('div');
-  ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box';
+  NAV2._adding = true;
+  nav2Render();
+  setTimeout(function(){
+    var inp = document.getElementById('nav2-new-room-inp');
+    if(inp) inp.focus();
+  }, 50);
+}
 
-  var box = document.createElement('div');
-  box.style.cssText = 'background:var(--surface);border-radius:20px;padding:20px;width:100%;max-width:420px;box-shadow:0 8px 40px rgba(0,0,0,.5)';
-
-  box.innerHTML =
-    '<div style="font-family:var(--font-d);font-size:18px;font-weight:700;margin-bottom:16px;color:var(--text)">Нове приміщення</div>'+
-    /* Картка як в навігації */
-    '<div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px">'+
-      '<div style="width:100%;aspect-ratio:1.6;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px">'+
-        '<svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" style="color:var(--muted)"><path d="M12 15.2A3.2 3.2 0 1 1 12 8.8a3.2 3.2 0 0 1 0 6.4zM9 2L7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.17L15 2H9z"/></svg>'+
-        '<div style="font-size:11px;color:var(--muted);font-family:var(--font-d)">Фото</div>'+
-      '</div>'+
-      '<div style="padding:10px 12px 12px">'+
-        '<div style="font-size:9px;color:var(--sub);font-family:var(--font-d);font-weight:500;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Приміщення</div>'+
-        '<input id="n2name" type="text" placeholder="Введіть назву..." autocomplete="off"'+
-        ' style="width:100%;background:transparent;border:none;border-bottom:1.5px solid var(--blue);outline:none;font-family:var(--font-d);font-size:15px;font-weight:600;color:var(--text);padding:2px 0;box-sizing:border-box">'+
-      '</div>'+
-    '</div>'+
-    '<button id="n2btn" style="width:100%;height:46px;background:var(--blue);color:#1c1f26;border:none;border-radius:12px;font-family:var(--font-d);font-size:15px;font-weight:700;cursor:pointer">+ Додати</button>';
-
-  var inp = box.querySelector('#n2name');
-  var btn = box.querySelector('#n2btn');
-
-  function doSave() {
-    var val = inp ? inp.value.trim() : '';
-    if(!val){ toast('⚠ Введіть назву'); return; }
-    locations.push({name:val, cells:[]});
-    document.body.removeChild(ov);
-    forceSyncToSheets(); toast('✓ ' + val); nav2Render();
-  }
-
-  if(inp) inp.addEventListener('keydown', function(e){ if(e.key==='Enter') doSave(); });
-  if(btn) btn.addEventListener('click', doSave);
-
-  ov.addEventListener('click', function(e){ if(e.target===ov) document.body.removeChild(ov); });
-  box.addEventListener('click', function(e){ e.stopPropagation(); });
-
-  ov.appendChild(box);
-  document.body.appendChild(ov);
-  setTimeout(function(){ if(inp) inp.focus(); }, 50);
+function nav2ConfirmNewRoom() {
+  var inp = document.getElementById('nav2-new-room-inp');
+  var val = inp ? inp.value.trim() : '';
+  if(!val){ toast('⚠ Введіть назву'); return; }
+  locations.push({name:val, cells:[]});
+  NAV2._adding = false;
+  forceSyncToSheets(); toast('✓ '+val); nav2Render();
 }
 
 function nav2Add() { nav2AddNew(); }
