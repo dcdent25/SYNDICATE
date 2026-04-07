@@ -2148,11 +2148,13 @@ function nav2Enter(fromLevel, idx) {
     var r = locations[idx];
     if (!r) return;
     NAV2.room = r.name;
+    NAV2.roomIdx = idx;
     NAV2.cell = '';
     NAV2.con = '';
     NAV2.level = 1;
   } else if (fromLevel === 1) {
-    var roomObj = locations.find(function(r){return r.name===NAV2.room;});
+    var ri = NAV2.roomIdx >= 0 ? NAV2.roomIdx : locations.findIndex(function(r){return r.name===NAV2.room;});
+    var roomObj = locations[ri];
     if (!roomObj) return;
     var cel = roomObj.cells[idx];
     if (!cel) return;
@@ -2160,7 +2162,7 @@ function nav2Enter(fromLevel, idx) {
     NAV2.con = '';
     NAV2.level = 2;
   } else if (fromLevel === 2) {
-    NAV2.con = idx; // container name passed as idx
+    NAV2.con = idx;
   }
   nav2Render();
 }
