@@ -1325,60 +1325,114 @@ function dStoragePick(type) {
   var room = i ? (i.room||'') : '';
   var cell = i ? (i.storage||'') : '';
 
+  if(type==='cell' && !room){ toast('⚠ Спочатку виберіть приміщення'); return; }
+  if(type==='con' && (!room||!cell)){ toast('⚠ Спочатку виберіть приміщення і комірку'); return; }
+
   var items = [];
+  var seen = {};
   if(type==='room') {
-    /* Унікальні приміщення */
-    var seen = {};
     locations.forEach(function(r){ if(!seen[r.name]){seen[r.name]=true;items.push(r.name);} });
   } else if(type==='cell') {
-    if(!room){toast('⚠ Спочатку виберіть приміщення');return;}
-    var seen = {};
     locations.filter(function(r){return r.name===room;}).forEach(function(r){
       (r.cells||[]).forEach(function(c){ if(!seen[c.name]){seen[c.name]=true;items.push(c.name);} });
     });
   } else {
-    if(!room||!cell){toast('⚠ Спочатку виберіть приміщення і комірку');return;}
-    var seen = {};
     locations.filter(function(r){return r.name===room;}).forEach(function(r){
       (r.cells||[]).filter(function(c){return c.name===cell;}).forEach(function(c){
         (c.containers||[]).forEach(function(cn){ if(!seen[cn]){seen[cn]=true;items.push(cn);} });
       });
     });
   }
-
-  if(!items.length){toast('⚠ Немає варіантів для вибору');return;}
   items.sort();
+
+  var labels = {room:'Приміщення', cell:'Комірка', con:'Контейнер'};
+  var labelsAdd = {room:'приміщення', cell:'комірку', con:'контейнер'};
+  var curVal = type==='room' ? room : type==='cell' ? cell : (i&&i.sup&&i.sup!=='—'?i.sup:'');
 
   var ov = document.createElement('div');
   ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box';
   ov.onclick = function(e){ if(e.target===ov) document.body.removeChild(ov); };
 
-  var labels = {room:'Приміщення',cell:'Комірка',con:'Контейнер'};
   var box = document.createElement('div');
-  box.style.cssText = 'background:var(--surface);border-radius:20px;padding:20px;width:100%;max-width:400px;max-height:70vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.5)';
-  box.innerHTML = '<div style="font-family:var(--font-d);font-size:17px;font-weight:600;margin-bottom:14px">'+labels[type]+'</div>'+
-    items.map(function(name){
-      return '<div data-val="'+_esc(name)+'" style="padding:12px 14px;font-family:var(--font-d);font-size:14px;font-weight:500;color:var(--text);cursor:pointer;border-radius:10px;border:1.5px solid var(--border);margin-bottom:8px;background:var(--surface2)">'+_esc(name)+'</div>';
-    }).join('');
+  box.style.cssText = 'background:var(--surface);border-radius:20px;width:100%;max-width:400px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.5);overflow:hidden';
+  box.onclick = function(e){ e.stopPropagation(); };
 
-  box.querySelectorAll('[data-val]').forEach(function(el){
-    el.addEventListener('mouseover',function(){this.style.borderColor='var(--blue)';this.style.background='var(--blue-s)';});
-    el.addEventListener('mouseout',function(){this.style.borderColor='var(--border)';this.style.background='var(--surface2)';});
-    el.addEventListener('click',function(){
-      var val = this.getAttribute('data-val');
-      var it = stock.find(function(x){return x.id===currentDetailId;});
-      if(it){
-        if(type==='room'){ it.room=val; it.storage=''; it.sup='—'; }
-        else if(type==='cell'){ it.storage=val; it.sup='—'; }
-        else { it.sup=val; }
-        updateStorageDisplay(it);
-        forceSyncToSheets();
-      }
-      document.body.removeChild(ov);
+  /* Заголовок */
+  var title = document.createElement('div');
+  title.textContent = labels[type];
+  title.style.cssText = 'font-family:var(--font-d);font-size:20px;font-weight:700;color:var(--text);padding:20px 16px 12px;flex-shrink:0';
+  box.appendChild(title);
+
+  /* Список */
+  var listWrap = document.createElement('div');
+  listWrap.style.cssText = 'flex:1;overflow-y:auto;padding:0 16px';
+  items.forEach(function(name){
+    var item = document.createElement('div');
+    var isSel = name === curVal;
+    item.textContent = name;
+    item.style.cssText = 'padding:14px 16px;font-family:var(--font-d);font-size:15px;font-weight:500;color:var(--text);cursor:pointer;border-radius:12px;border:1.5px solid '+(isSel?'var(--blue)':'var(--border)')+';background:'+(isSel?'var(--blue-s)':'var(--surface2)')+';margin-bottom:8px';
+    item.addEventListener('click', function(){
+      doSelect(name);
     });
+    listWrap.appendChild(item);
   });
+  box.appendChild(listWrap);
 
-  box.onclick = function(e){e.stopPropagation();};
+  /* Поле додавання */
+  var addWrap = document.createElement('div');
+  addWrap.style.cssText = 'display:flex;gap:8px;padding:12px 16px 16px;border-top:1px solid var(--border);flex-shrink:0';
+  var addInp = document.createElement('input');
+  addInp.type = 'text';
+  addInp.placeholder = 'Нова назва '+labelsAdd[type]+'...';
+  addInp.style.cssText = 'flex:1;height:46px;padding:0 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--font-d);font-size:14px;outline:none';
+  addInp.addEventListener('focus',function(){this.style.borderColor='var(--blue)';});
+  addInp.addEventListener('blur',function(){this.style.borderColor='var(--border)';});
+  var addBtn = document.createElement('button');
+  addBtn.textContent = '+ Додати';
+  addBtn.style.cssText = 'height:46px;padding:0 16px;background:var(--blue);color:#1c1f26;border:none;border-radius:10px;font-family:var(--font-d);font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0';
+
+  function doAdd() {
+    var name = addInp.value.trim();
+    if(!name) return;
+    if(type==='room') {
+      if(!locations.find(function(r){return r.name===name;}))
+        locations.push({name:name, cells:[]});
+    } else if(type==='cell') {
+      var ro = locations.find(function(r){return r.name===room;});
+      if(!ro){ ro={name:room,cells:[]}; locations.push(ro); }
+      if(!ro.cells) ro.cells=[];
+      if(!ro.cells.find(function(c){return c.name===name;}))
+        ro.cells.push({name:name, containers:[]});
+    } else {
+      locations.filter(function(r){return r.name===room;}).forEach(function(r){
+        (r.cells||[]).filter(function(c){return c.name===cell;}).forEach(function(c){
+          if(!c.containers) c.containers=[];
+          if(c.containers.indexOf(name)===-1) c.containers.push(name);
+        });
+      });
+    }
+    forceSyncToSheets();
+    doSelect(name);
+  }
+
+  function doSelect(name) {
+    var it = stock.find(function(x){return x.id===currentDetailId;});
+    if(it){
+      if(type==='room'){ it.room=name; it.storage=''; it.sup='—'; }
+      else if(type==='cell'){ it.storage=name; it.sup='—'; }
+      else { it.sup=name; }
+      updateStorageDisplay(it);
+      forceSyncToSheets();
+    }
+    document.body.removeChild(ov);
+  }
+
+  addBtn.addEventListener('click', doAdd);
+  addInp.addEventListener('keydown', function(e){ if(e.key==='Enter') doAdd(); e.stopPropagation(); });
+  addWrap.appendChild(addInp);
+  addWrap.appendChild(addBtn);
+  box.appendChild(addWrap);
+
   ov.appendChild(box);
   document.body.appendChild(ov);
 }
