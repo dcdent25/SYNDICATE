@@ -1996,15 +1996,14 @@ function nav2Enter(fromLevel, idx) {
 /* Додати елемент */
 function nav2AddNew() {
   var ov = document.createElement('div');
-  ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center;box-sizing:border-box';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box';
 
   var box = document.createElement('div');
-  box.style.cssText = 'background:var(--surface);border-radius:24px 24px 0 0;padding:20px 20px 32px;width:100%;max-width:560px;box-shadow:0 -4px 32px rgba(0,0,0,.3);animation:slideUp .22s cubic-bezier(.16,1,.3,1)';
+  box.style.cssText = 'background:var(--surface);border-radius:20px;padding:24px;width:100%;max-width:420px;box-shadow:0 8px 40px rgba(0,0,0,.5)';
 
   var existingRooms = locations.map(function(r){ return r.name; });
 
   box.innerHTML =
-    '<div style="width:32px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 16px"></div>'+
     '<div style="font-family:var(--font-d);font-size:20px;font-weight:700;margin-bottom:16px">Нове приміщення</div>'+
     '<div style="font-size:11px;color:var(--sub);font-family:var(--font-d);margin-bottom:6px">Назва</div>'+
     '<div style="position:relative">'+
@@ -2013,7 +2012,7 @@ function nav2AddNew() {
       (existingRooms.length ?
         '<button id="n2arrow" type="button" style="position:absolute;right:0;top:0;height:46px;width:44px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--sub)">'+
         '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg></button>' : '')+
-      '<div id="n2drop" style="display:none;position:absolute;top:46px;left:0;right:0;background:var(--surface2);border:1.5px solid var(--blue);border-top:none;border-radius:0 0 10px 10px;z-index:10;max-height:180px;overflow-y:auto">'+
+      '<div id="n2drop" style="display:none;position:absolute;bottom:46px;left:0;right:0;background:var(--surface2);border:1.5px solid var(--blue);border-bottom:none;border-radius:10px 10px 0 0;z-index:10;max-height:200px;overflow-y:auto">'+
       existingRooms.map(function(name){
         return '<div data-name="'+_esc(name)+'" style="padding:10px 14px;font-family:var(--font-d);font-size:14px;font-weight:500;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border)">'+_esc(name)+'</div>';
       }).join('')+
