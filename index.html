@@ -1310,8 +1310,7 @@ function renderStorageCards(i) {
   var photoCon  = (room&&cell&&con) ? (locationPhotos[room+'::'+cell+'::'+con]||null) : null;
 
   function card(label, val, photo, type) {
-    var clickable = isEditMode;
-    var s = '<div '+(clickable?'onclick="dStoragePick(\''+type+'\')"':'')+' style="background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color .15s;'+(clickable?'cursor:pointer;':'')+'"'+(clickable?' onmouseover="this.style.borderColor=\'var(--blue)\'" onmouseout="this.style.borderColor=\'var(--border)\'"':'')+'>'; 
+    var s = '<div id="dStorCard_'+type+'" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color .15s'+(isEditMode?';cursor:pointer':'')+'">';
     s += '<div style="width:100%;aspect-ratio:1;background:var(--bg);position:relative;overflow:hidden">';
     if(photo){ s += '<img src="'+photo+'" style="width:100%;height:100%;object-fit:cover;display:block">'; }
     else { s += '<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="color:var(--muted)"><path d="M12 15.2A3.2 3.2 0 1 1 12 8.8a3.2 3.2 0 0 1 0 6.4zM9 2L7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.17L15 2H9z"/></svg><div style="font-size:10px;color:var(--muted);font-family:var(--font-d)">Фото</div></div>'; }
@@ -1331,13 +1330,22 @@ function renderStorageCards(i) {
 
   wrap.innerHTML = card('Приміщення', room, photoRoom, 'room') + card('Комірка', cell, photoCell, 'cell') + conCardHtml;
 
+  if(isEditMode) {
+    ['room','cell'].forEach(function(type) {
+      var el = document.getElementById('dStorCard_'+type);
+      if(el) {
+        el.addEventListener('mouseover', function(){ this.style.borderColor='var(--blue)'; });
+        el.addEventListener('mouseout',  function(){ this.style.borderColor='var(--border)'; });
+        el.addEventListener('click', function(){ dStoragePick(type); });
+      }
+    });
+  }
+
   var conCard = document.getElementById('dConCard');
-  if(conCard) {
+  if(conCard && isEditMode) {
     conCard.addEventListener('mouseover', function(){ this.style.borderColor='var(--blue)'; });
     conCard.addEventListener('mouseout',  function(){ this.style.borderColor='var(--border)'; });
-    conCard.addEventListener('click', function(){
-      if(isEditMode) dStoragePick('con');
-    });
+    conCard.addEventListener('click', function(){ dStoragePick('con'); });
   }
 }
 
