@@ -123,9 +123,9 @@ html,body{background:#1c1f26!important;overflow-x:hidden!important}.t-container,
 <!-- Контрагент -->
 <div class="dfield"><div class="dfield-label">Контрагент</div>
   <div class="dfield-val"><span class="dval-text" id="dSupplier" style="flex:1">—</span></div>
-  <div class="dval-edit" style="margin-top:6px;display:none;flex-direction:row;align-items:center;gap:8px">
-    <input class="dinput" id="dSupplierEdit" type="text" placeholder="Постачальник" style="flex:1;margin-top:0">
-    <button onclick="openSuppPicker()" style="height:36px;padding:0 12px;background:var(--blue-s);border:1.5px solid rgba(138,180,248,.3);border-radius:8px;color:var(--blue);font-family:var(--font-d);font-size:13px;cursor:pointer;white-space:nowrap;flex-shrink:0">Обрати</button>
+  <div class="dval-edit" style="margin-top:6px;display:none">
+    <div id="dSupplierDisplay" onclick="openSuppPicker()" style="width:100%;height:36px;padding:0 10px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-d);font-size:15px;font-weight:500;display:flex;align-items:center;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--border)'">—</div>
+    <input id="dSupplierEdit" type="hidden" value="">
   </div>
 </div>
 
@@ -672,7 +672,7 @@ function preIn(id){openModal('in');document.getElementById('inItem').value=id;}
 function preOut(id){openModal('out');document.getElementById('outItem').value=id;}
 function preGive(id){openModal('give');document.getElementById('giveItem').value=id;}
 function openMetricSheet(type){const cfg={all:{title:'В нормі',sub:'Позиції із залишком вище мінімуму',filter:i=>(i.stockQty!=null?i.stockQty:i.qty)/Math.max(i.min,1)>=1,color:'var(--green)'},low:{title:'Мало залишків',sub:'Залишок нижче мінімуму',filter:i=>{const r=(i.stockQty!=null?i.stockQty:i.qty)/Math.max(i.min,1);return r>=0.5&&r<1;},color:'var(--amber)'},crit:{title:'Критичний',sub:'Залишок критично малий',filter:i=>(i.stockQty!=null?i.stockQty:i.qty)/Math.max(i.min,1)<0.5,color:'var(--red)'},cost:{title:'Всього позицій',sub:'Розбивка по позиціях',filter:()=>true,color:'var(--blue)'}}[type];if(!cfg)return;const rows=stock.filter(cfg.filter).sort((a,b)=>type==='cost'?((b.stockQty!=null?b.stockQty:b.qty)*b.price)-((a.stockQty!=null?a.stockQty:a.qty)*a.price):((a.stockQty!=null?a.stockQty:a.qty)/Math.max(a.min,1))-((b.stockQty!=null?b.stockQty:b.qty)/Math.max(b.min,1)));document.getElementById('msTitle').textContent=cfg.title;document.getElementById('msSubtitle').textContent=rows.length+' позицій · '+cfg.sub;document.getElementById('msBody').innerHTML=rows.length===0?'<div style="text-align:center;padding:32px;color:var(--sub);font-family:var(--font-d)">Позицій не знайдено</div>':rows.map(item=>{const st=getStatus(item);const sq=(item.stockQty!=null?item.stockQty:item.qty);const pct=Math.min(100,Math.round(sq/Math.max(item.min,1)*100));const val=type==='cost'?'₴ '+(sq*item.price).toLocaleString('uk'):sq+' / '+item.min;return'<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px;cursor:pointer;transition:background .12s" onclick="closeModal(\'metric\');setTimeout(()=>openDetail('+(item.id)+'),100)"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px"><div><div style="font-family:var(--font-d);font-weight:600;font-size:14px">'+(item.name)+'</div><div style="font-size:12px;color:var(--sub);margin-top:2px">'+(item.cat)+'</div></div><span class="sbadge '+(st.cls)+'">'+(st.label)+'</span></div><div style="display:flex;align-items:center;gap:12px"><div style="flex:1"><div style="height:4px;background:var(--border2);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+(pct)+'%;background:'+(barColor(item))+';border-radius:2px"></div></div></div><div style="text-align:right;flex-shrink:0"><div style="font-family:var(--font-d);font-size:15px;font-weight:700;color:'+(cfg.color)+'">'+(val)+'</div></div></div></div>';}).join('');document.getElementById('ov-metric').classList.add('open');}
-function openDetail(id){const i=stock.find(x=>x.id===id);if(!i)return;currentDetailId=id;const modal=document.querySelector('#ov-detail .modal');modal.classList.remove('detail-edit-mode');const btn=document.getElementById('dEditBtn');btn.classList.remove('active');btn.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg> Редагувати';const st=getStatus(i);document.getElementById('dTitle').textContent=i.name;document.getElementById('dCatLabel').textContent='Категорія: '+i.cat;const _catSel=document.getElementById('dCatEdit');if(_catSel){_catSel.innerHTML=categories.map(c=>'<option value="'+(c)+'" '+(c===i.cat?'selected':'')+'>'+(c)+'</option>').join('');}document.getElementById('dName').textContent=i.name;document.getElementById('dSupplier').textContent=i.sup||'—';document.getElementById('dPrice').textContent='грн '+(i.price||0).toLocaleString('uk',{minimumFractionDigits:2});var _dQtyMat=document.getElementById('dQtyMat');if(_dQtyMat)_dQtyMat.textContent=String(i.stockQty!=null?i.stockQty:i.qty);document.getElementById('dMinVal').textContent=String(i.min);document.getElementById('dComment').value=i.comment||'';const linkEl=document.getElementById('dLink');linkEl.textContent=i.link||'—';linkEl.href=i.link||'#';const unit=i.unit||'шт';document.getElementById('dUnitText').textContent=unit;document.querySelectorAll('#dUnitChips .dunit-chip').forEach(c=>c.classList.toggle('sel',c.dataset.unit===unit));document.getElementById('dNameEdit').value=i.name;document.getElementById('dSupplierEdit').value=i.sup||'';document.getElementById('dLinkEdit').value=i.link||'';document.getElementById('dPriceEdit').value=i.price||'';const mpEl=document.getElementById('dMarketPrice');if(mpEl)mpEl.textContent=i.marketPrice?'грн '+(i.marketPrice||0).toLocaleString('uk',{minimumFractionDigits:2}):'—';const mpEdit=document.getElementById('dMarketPriceEdit');if(mpEdit)mpEdit.value=i.marketPrice||'';var _qme=document.getElementById('dQtyMatEdit');if(_qme)_qme.value=i.qty;document.getElementById('dMinEdit').value=i.min;calcItem(i);
+function openDetail(id){const i=stock.find(x=>x.id===id);if(!i)return;currentDetailId=id;const modal=document.querySelector('#ov-detail .modal');modal.classList.remove('detail-edit-mode');const btn=document.getElementById('dEditBtn');btn.classList.remove('active');btn.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg> Редагувати';const st=getStatus(i);document.getElementById('dTitle').textContent=i.name;document.getElementById('dCatLabel').textContent='Категорія: '+i.cat;const _catSel=document.getElementById('dCatEdit');if(_catSel){_catSel.innerHTML=categories.map(c=>'<option value="'+(c)+'" '+(c===i.cat?'selected':'')+'>'+(c)+'</option>').join('');}document.getElementById('dName').textContent=i.name;document.getElementById('dSupplier').textContent=i.sup||'—';document.getElementById('dPrice').textContent='грн '+(i.price||0).toLocaleString('uk',{minimumFractionDigits:2});var _dQtyMat=document.getElementById('dQtyMat');if(_dQtyMat)_dQtyMat.textContent=String(i.stockQty!=null?i.stockQty:i.qty);document.getElementById('dMinVal').textContent=String(i.min);document.getElementById('dComment').value=i.comment||'';const linkEl=document.getElementById('dLink');linkEl.textContent=i.link||'—';linkEl.href=i.link||'#';const unit=i.unit||'шт';document.getElementById('dUnitText').textContent=unit;document.querySelectorAll('#dUnitChips .dunit-chip').forEach(c=>c.classList.toggle('sel',c.dataset.unit===unit));document.getElementById('dNameEdit').value=i.name;document.getElementById('dSupplierEdit').value=i.sup||'';var _dsd=document.getElementById('dSupplierDisplay');if(_dsd)_dsd.textContent=i.sup||'—';document.getElementById('dLinkEdit').value=i.link||'';document.getElementById('dPriceEdit').value=i.price||'';const mpEl=document.getElementById('dMarketPrice');if(mpEl)mpEl.textContent=i.marketPrice?'грн '+(i.marketPrice||0).toLocaleString('uk',{minimumFractionDigits:2}):'—';const mpEdit=document.getElementById('dMarketPriceEdit');if(mpEdit)mpEdit.value=i.marketPrice||'';var _qme=document.getElementById('dQtyMatEdit');if(_qme)_qme.value=i.qty;document.getElementById('dMinEdit').value=i.min;calcItem(i);
 if(document.getElementById('dQtyMat')){const _el=document.getElementById('dQtyMat');const _sq=i.stockQty!=null?i.stockQty:i.qty;_el.textContent=String(_sq);const _r=_sq/Math.max(i.min,1);_el.style.color=_r<0.5?'var(--red)':_r<1?'var(--amber)':'var(--green)';}
 if(document.getElementById('dQtyUnit'))document.getElementById('dQtyUnit').textContent=i.unit||'шт';
 if(document.getElementById('dQtyMatEdit'))document.getElementById('dQtyMatEdit').value=i.qty;
@@ -1334,7 +1334,6 @@ function openSuppDetails(name) {
   document.body.appendChild(ov);
 }
 function openSuppPicker() {
-  /* Збираємо унікальних контрагентів */
   var supps = {};
   stock.forEach(function(i){ var s=(i.sup||'').trim(); if(s&&s!=='—') supps[s]=true; });
   var names = Object.keys(supps).sort();
@@ -1353,45 +1352,28 @@ function openSuppPicker() {
   box.appendChild(title);
 
   var list = document.createElement('div');
-  list.style.cssText = 'flex:1;overflow-y:auto;padding:0 16px';
-  names.forEach(function(name){
-    var item = document.createElement('div');
-    item.textContent = name;
-    item.style.cssText = 'padding:14px 16px;font-family:var(--font-d);font-size:15px;font-weight:500;color:var(--text);cursor:pointer;border-radius:12px;border:1.5px solid var(--border);background:var(--surface2);margin-bottom:8px';
-    item.addEventListener('mouseover',function(){this.style.borderColor='var(--blue)';this.style.background='var(--blue-s)';});
-    item.addEventListener('mouseout',function(){this.style.borderColor='var(--border)';this.style.background='var(--surface2)';});
-    item.addEventListener('click',function(){
-      var inp = document.getElementById('dSupplierEdit');
-      if(inp) inp.value = name;
-      document.body.removeChild(ov);
-    });
-    list.appendChild(item);
-  });
+  list.style.cssText = 'flex:1;overflow-y:auto;padding:0 16px 16px';
+
   if(!names.length){
     list.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:12px 0;text-align:center">Контрагентів ще немає</div>';
+  } else {
+    names.forEach(function(name){
+      var item = document.createElement('div');
+      item.textContent = name;
+      item.style.cssText = 'padding:14px 16px;font-family:var(--font-d);font-size:15px;font-weight:500;color:var(--text);cursor:pointer;border-radius:12px;border:1.5px solid var(--border);background:var(--surface2);margin-bottom:8px';
+      item.addEventListener('mouseover',function(){this.style.borderColor='var(--blue)';this.style.background='var(--blue-s)';});
+      item.addEventListener('mouseout',function(){this.style.borderColor='var(--border)';this.style.background='var(--surface2)';});
+      item.addEventListener('click',function(){
+        var disp = document.getElementById('dSupplierDisplay');
+        var inp = document.getElementById('dSupplierEdit');
+        if(disp) disp.textContent = name;
+        if(inp) inp.value = name;
+        document.body.removeChild(ov);
+      });
+      list.appendChild(item);
+    });
   }
   box.appendChild(list);
-
-  /* Поле для нового */
-  var addWrap = document.createElement('div');
-  addWrap.style.cssText = 'display:flex;gap:8px;padding:12px 16px 16px;border-top:1px solid var(--border);flex-shrink:0';
-  var addInp = document.createElement('input');
-  addInp.type='text'; addInp.placeholder='Новий контрагент...';
-  addInp.style.cssText='flex:1;height:46px;padding:0 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--font-d);font-size:14px;outline:none';
-  addInp.addEventListener('focus',function(){this.style.borderColor='var(--blue)';});
-  addInp.addEventListener('blur',function(){this.style.borderColor='var(--border)';});
-  var addBtn = document.createElement('button');
-  addBtn.textContent='+ Додати';
-  addBtn.style.cssText='height:46px;padding:0 16px;background:var(--blue);color:#1c1f26;border:none;border-radius:10px;font-family:var(--font-d);font-size:14px;font-weight:600;cursor:pointer;flex-shrink:0';
-  addBtn.addEventListener('click',function(){
-    var name=addInp.value.trim(); if(!name) return;
-    var inp=document.getElementById('dSupplierEdit');
-    if(inp) inp.value=name;
-    document.body.removeChild(ov);
-  });
-  addInp.addEventListener('keydown',function(e){ if(e.key==='Enter') addBtn.click(); });
-  addWrap.appendChild(addInp); addWrap.appendChild(addBtn);
-  box.appendChild(addWrap);
   ov.appendChild(box);
   document.body.appendChild(ov);
 }
