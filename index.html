@@ -2170,21 +2170,85 @@ function nav2Enter(fromLevel, idx) {
 
 /* Додати елемент */
 function nav2AddNew() {
-  NAV2._adding = true;
-  nav2Render();
-  setTimeout(function(){
-    var inp = document.getElementById('nav2-new-room-inp');
-    if(inp) inp.focus();
-  }, 50);
-}
+  var ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center';
 
-function nav2ConfirmNewRoom() {
-  var inp = document.getElementById('nav2-new-room-inp');
-  var val = inp ? inp.value.trim() : '';
-  if(!val){ toast('⚠ Введіть назву'); return; }
-  locations.push({name:val, cells:[]});
-  NAV2._adding = false;
-  forceSyncToSheets(); toast('✓ '+val); nav2Render();
+  var modal = document.createElement('div');
+  modal.style.cssText = 'background:var(--surface);border-radius:28px 28px 0 0;padding:0 16px 32px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 -4px 32px rgba(0,0,0,.3);animation:slideUp .22s cubic-bezier(.16,1,.3,1)';
+
+  var vals = {room:'', cell:'', con:''};
+
+  function cardHtml(fieldType, label) {
+    var val = vals[fieldType];
+    return '<div style="background:var(--surface2);border:1.5px solid '+(val?'var(--blue)':'var(--border)')+';border-radius:12px;overflow:hidden" id="nadd_card_'+fieldType+'">'
+      +'<div style="width:100%;aspect-ratio:1;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px">'
+      +'<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="color:var(--muted)"><path d="M12 15.2A3.2 3.2 0 1 1 12 8.8a3.2 3.2 0 0 1 0 6.4zM9 2L7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.17L15 2H9z"/></svg>'
+      +'<div style="font-size:10px;color:var(--muted);font-family:var(--font-d)">Фото</div>'
+      +'</div>'
+      +'<div style="padding:8px 10px">'
+      +'<div style="font-size:9px;color:var(--sub);font-family:var(--font-d);font-weight:500;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">'+label+'</div>'
+      +'<input id="nadd_'+fieldType+'" type="text" placeholder="—" value="'+_esc(val)+'"'
+      +' style="width:100%;background:transparent;border:none;border-bottom:1.5px solid var(--border);outline:none;font-family:var(--font-d);font-size:13px;font-weight:600;color:var(--text);padding:2px 0;box-sizing:border-box">'
+      +'</div></div>';
+  }
+
+  modal.innerHTML =
+    '<div style="width:32px;height:4px;background:var(--border2);border-radius:2px;margin:10px auto 16px"></div>'
+    +'<div style="font-family:var(--font-d);font-size:18px;font-weight:600;margin-bottom:16px;color:var(--text)">Нова локація</div>'
+    +'<div id="nadd_grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:20px">'
+    +cardHtml('room','Приміщення')
+    +cardHtml('cell','Комірка')
+    +cardHtml('con','Контейнер')
+    +'</div>'
+    +'<button id="nadd_btn" style="width:100%;height:46px;background:var(--blue);color:#1c1f26;border:none;border-radius:12px;font-family:var(--font-d);font-size:15px;font-weight:700;cursor:pointer">+ Додати</button>';
+
+  /* Bind inputs */
+  ['room','cell','con'].forEach(function(ft){
+    var inp = modal.querySelector('#nadd_'+ft);
+    var card = modal.querySelector('#nadd_card_'+ft);
+    if(!inp) return;
+    inp.addEventListener('input', function(){
+      vals[ft] = this.value;
+      if(card) card.style.borderColor = this.value ? 'var(--blue)' : 'var(--border)';
+      if(inp) inp.style.borderBottomColor = this.value ? 'var(--blue)' : 'var(--border)';
+    });
+    inp.addEventListener('focus', function(){
+      if(card) card.style.borderColor = 'var(--blue)';
+    });
+    inp.addEventListener('blur', function(){
+      if(card) card.style.borderColor = vals[ft] ? 'var(--blue)' : 'var(--border)';
+    });
+    inp.addEventListener('keydown', function(e){ if(e.key==='Enter') doSave(); });
+  });
+
+  function doSave() {
+    var room = vals.room.trim();
+    if(!room){ toast('⚠ Введіть назву приміщення'); modal.querySelector('#nadd_room').focus(); return; }
+    /* Знайти або створити приміщення */
+    var roomObj = locations.find(function(r){return r.name===room;});
+    if(!roomObj){ roomObj={name:room,cells:[]}; locations.push(roomObj); }
+    /* Знайти або створити комірку */
+    if(vals.cell.trim()){
+      var cellObj = roomObj.cells&&roomObj.cells.find(function(c){return c.name===vals.cell.trim();});
+      if(!cellObj){ cellObj={name:vals.cell.trim(),containers:[]}; if(!roomObj.cells)roomObj.cells=[]; roomObj.cells.push(cellObj); }
+      /* Знайти або створити контейнер */
+      if(vals.con.trim()){
+        if(!cellObj.containers)cellObj.containers=[];
+        if(cellObj.containers.indexOf(vals.con.trim())===-1) cellObj.containers.push(vals.con.trim());
+      }
+    }
+    document.body.removeChild(ov);
+    NAV2._adding = false;
+    forceSyncToSheets(); toast('✓ Додано'); nav2Render();
+  }
+
+  modal.querySelector('#nadd_btn').addEventListener('click', doSave);
+  modal.addEventListener('click', function(e){ e.stopPropagation(); });
+  ov.addEventListener('click', function(e){ if(e.target===ov) document.body.removeChild(ov); });
+
+  ov.appendChild(modal);
+  document.body.appendChild(ov);
+  setTimeout(function(){ var inp=modal.querySelector('#nadd_room'); if(inp) inp.focus(); }, 80);
 }
 
 function nav2Add() { nav2AddNew(); }
