@@ -1580,15 +1580,16 @@ function nav2Render() {
         function showDrop() {
           document.querySelectorAll('.nav2-edit-drop').forEach(function(d){d.remove();});
           var opts = getOptions();
-          if(!opts.length) return;
           var drop = document.createElement('div');
           drop.className = 'nav2-edit-drop';
           drop.id = 'nav2drop_'+ft;
-          drop.style.cssText = 'position:fixed;background:var(--surface2);border:1.5px solid var(--blue);border-radius:10px;z-index:9999;max-height:200px;overflow-y:auto;box-shadow:0 4px 24px rgba(0,0,0,.5);min-width:120px';
+          drop.style.cssText = 'position:fixed;background:var(--surface2);border:1.5px solid var(--blue);border-radius:10px;z-index:9999;max-height:240px;overflow-y:auto;box-shadow:0 4px 24px rgba(0,0,0,.5);min-width:120px';
+
+          /* Існуючі варіанти */
           opts.forEach(function(o){
             var item = document.createElement('div');
             item.textContent = o;
-            item.style.cssText = 'padding:10px 14px;font-family:var(--font-d);font-size:13px;font-weight:500;color:var(--text);cursor:pointer';
+            item.style.cssText = 'padding:10px 14px;font-family:var(--font-d);font-size:13px;font-weight:500;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border)';
             item.addEventListener('mouseover',function(){this.style.background='var(--blue-s)';});
             item.addEventListener('mouseout',function(){this.style.background='';});
             item.addEventListener('mousedown',function(e){
@@ -1599,8 +1600,33 @@ function nav2Render() {
             });
             drop.appendChild(item);
           });
+
+          /* Кнопка "+ Додати нове" */
+          var labels = {room:'приміщення',cell:'комірку',con:'контейнер'};
+          var addBtn = document.createElement('div');
+          addBtn.style.cssText = 'padding:10px 14px;font-family:var(--font-d);font-size:13px;font-weight:600;color:var(--blue);cursor:pointer;display:flex;align-items:center;gap:6px';
+          addBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Додати '+labels[ft];
+          addBtn.addEventListener('mouseover',function(){this.style.background='var(--blue-s)';});
+          addBtn.addEventListener('mouseout',function(){this.style.background='';});
+          addBtn.addEventListener('mousedown',function(e){
+            e.preventDefault();
+            drop.remove();
+            var cur = inp.value.trim();
+            if(cur) {
+              /* Якщо введено текст — одразу зберегти як нове */
+              nav2SaveOneField(ft, cur);
+            } else {
+              /* Промпт для нової назви */
+              var name = prompt('Назва нового(ї) '+labels[ft]+':');
+              if(name && name.trim()) {
+                inp.value = name.trim();
+                nav2SaveOneField(ft, name.trim());
+              }
+            }
+          });
+          drop.appendChild(addBtn);
+
           document.body.appendChild(drop);
-          /* Позиціонуємо під інпутом */
           var rect = inp.getBoundingClientRect();
           drop.style.left = rect.left+'px';
           drop.style.top = (rect.bottom+4)+'px';
