@@ -1452,40 +1452,82 @@ function nav2Render() {
     var cellObj = roomObj&&roomObj.cells?roomObj.cells.find(function(c){return c.name===NAV2.cell;}):null;
     var ci = cellObj&&roomObj?roomObj.cells.indexOf(cellObj):-1;
 
-    if(cellObj&&cellObj.containers&&cellObj.containers.length){
-      cellObj.containers.forEach(function(cn,coni) {
-        var ic = stock.filter(function(s){return s.room===NAV2.room&&s.storage===NAV2.cell&&s.sup===cn;}).length;
-        var isSel = NAV2.con===cn;
-        var cnId = 'ncn_'+coni; window[cnId]=cn;
-        var total = cellObj.containers.length;
-        html += '<div style="display:flex;align-items:center;gap:6px;padding:10px 12px;border-radius:10px;background:'+(isSel?'var(--blue-s)':'var(--surface2)')+';border:1.5px solid '+(isSel?'var(--blue)':'var(--border)')+';margin-bottom:6px">';
-        html += '<div onclick="nav2Enter(2,window[\''+cnId+'\'])" style="flex:1;min-width:0;cursor:pointer"><div style="font-family:var(--font-d);font-size:13.5px;font-weight:600;color:'+(isSel?'var(--blue)':'var(--text)')+'">'+_esc(cn)+'</div>';
-        html += '<div style="font-size:11px;color:'+(ic?'var(--blue)':'var(--muted)')+';margin-top:2px">'+(ic?ic+' позицій':'порожньо')+'</div></div>';
-        /* сортування */
-        html += '<div style="display:flex;flex-direction:column;gap:1px">';
-        html += '<button onclick="event.stopPropagation();nav2MoveCon('+ri+','+ci+','+coni+',-1)" style="background:none;border:none;cursor:'+(coni>0?'pointer':'default')+';color:'+(coni>0?'var(--sub)':'var(--border)')+';padding:2px;line-height:1;font-size:14px" '+(coni===0?'disabled':'')+'>↑</button>';
-        html += '<button onclick="event.stopPropagation();nav2MoveCon('+ri+','+ci+','+coni+',1)" style="background:none;border:none;cursor:'+(coni<total-1?'pointer':'default')+';color:'+(coni<total-1?'var(--sub)':'var(--border)')+';padding:2px;line-height:1;font-size:14px" '+(coni===total-1?'disabled':'')+'>↓</button>';
-        html += '</div>';
-        html += nav2BtnRename('con',ri,ci,coni,cn)+nav2BtnDelete('con',ri,ci,coni,cn);
-        html += '</div>';
-      });
-    } else {
-      html += '<div style="font-size:13px;color:var(--muted);padding:12px 0;text-align:center">Ще немає контейнерів</div>';
+    /* Список контейнерів */
+    var ri = NAV2.roomIdx >= 0 ? NAV2.roomIdx : locations.findIndex(function(r){return r.name===NAV2.room;});
+    var roomObj = locations[ri] || null;
+    var cellObj = roomObj&&roomObj.cells?roomObj.cells.find(function(c){return c.name===NAV2.cell;}):null;
+    var ci = cellObj&&roomObj?roomObj.cells.indexOf(cellObj):-1;
+
+    /* Якщо немає комірки — показуємо комірки приміщення */
+    if(!NAV2.cell && roomObj) {
+      var cells = roomObj.cells||[];
+      if(cells.length) {
+        html += '<div style="font-size:11px;font-weight:600;color:var(--sub);font-family:var(--font-d);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Комірки</div>';
+        cells.forEach(function(c,ci2){
+          var ic = stock.filter(function(s){return s.room===NAV2.room&&s.storage===c.name;}).length;
+          var cid='ncel_'+ci2; window[cid]=c.name;
+          html += '<div onclick="nav2Enter(1,'+ci2+')" style="display:flex;align-items:center;gap:6px;padding:10px 12px;border-radius:10px;background:var(--surface2);border:1.5px solid var(--border);margin-bottom:6px;cursor:pointer">';
+          html += '<div style="flex:1;min-width:0"><div style="font-family:var(--font-d);font-size:13.5px;font-weight:600">'+_esc(c.name)+'</div>';
+          html += '<div style="font-size:11px;color:'+(ic?'var(--blue)':'var(--muted)')+';margin-top:2px">'+(ic?ic+' позицій':'порожньо')+'</div></div>';
+          html += '<div style="display:flex;flex-direction:column;gap:1px">';
+          html += '<button onclick="event.stopPropagation();nav2MoveCell('+ri+','+ci2+',-1)" style="background:none;border:none;cursor:'+(ci2>0?'pointer':'default')+';color:'+(ci2>0?'var(--sub)':'var(--border)')+';padding:2px;line-height:1;font-size:14px" '+(ci2===0?'disabled':'')+'>↑</button>';
+          html += '<button onclick="event.stopPropagation();nav2MoveCell('+ri+','+ci2+',1)" style="background:none;border:none;cursor:'+(ci2<cells.length-1?'pointer':'default')+';color:'+(ci2<cells.length-1?'var(--sub)':'var(--border)')+';padding:2px;line-height:1;font-size:14px" '+(ci2===cells.length-1?'disabled':'')+'>↓</button>';
+          html += '</div>';
+          html += nav2BtnRename('cell',ri,ci2,-1,c.name)+nav2BtnDelete('cell',ri,ci2,-1,c.name);
+          html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="color:var(--muted)"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>';
+          html += '</div>';
+        });
+      } else {
+        html += '<div style="font-size:13px;color:var(--muted);padding:12px 0;text-align:center">Ще немає комірок</div>';
+      }
+
+    /* Якщо є комірка але немає контейнера — показуємо контейнери */
+    } else if(NAV2.cell && !NAV2.con) {
+      if(cellObj&&cellObj.containers&&cellObj.containers.length) {
+        html += '<div style="font-size:11px;font-weight:600;color:var(--sub);font-family:var(--font-d);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Контейнери</div>';
+        cellObj.containers.forEach(function(cn,coni) {
+          var ic = stock.filter(function(s){return s.room===NAV2.room&&s.storage===NAV2.cell&&s.sup===cn;}).length;
+          var isSel = NAV2.con===cn;
+          var cnId = 'ncn_'+coni; window[cnId]=cn;
+          var total = cellObj.containers.length;
+          html += '<div style="display:flex;align-items:center;gap:6px;padding:10px 12px;border-radius:10px;background:'+(isSel?'var(--blue-s)':'var(--surface2)')+';border:1.5px solid '+(isSel?'var(--blue)':'var(--border)')+';margin-bottom:6px">';
+          html += '<div onclick="nav2Enter(2,window[\''+cnId+'\'])" style="flex:1;min-width:0;cursor:pointer"><div style="font-family:var(--font-d);font-size:13.5px;font-weight:600;color:'+(isSel?'var(--blue)':'var(--text)')+'">'+_esc(cn)+'</div>';
+          html += '<div style="font-size:11px;color:'+(ic?'var(--blue)':'var(--muted)')+';margin-top:2px">'+(ic?ic+' позицій':'порожньо')+'</div></div>';
+          html += '<div style="display:flex;flex-direction:column;gap:1px">';
+          html += '<button onclick="event.stopPropagation();nav2MoveCon('+ri+','+ci+','+coni+',-1)" style="background:none;border:none;cursor:'+(coni>0?'pointer':'default')+';color:'+(coni>0?'var(--sub)':'var(--border)')+';padding:2px;line-height:1;font-size:14px" '+(coni===0?'disabled':'')+'>↑</button>';
+          html += '<button onclick="event.stopPropagation();nav2MoveCon('+ri+','+ci+','+coni+',1)" style="background:none;border:none;cursor:'+(coni<total-1?'pointer':'default')+';color:'+(coni<total-1?'var(--sub)':'var(--border)')+';padding:2px;line-height:1;font-size:14px" '+(coni===total-1?'disabled':'')+'>↓</button>';
+          html += '</div>';
+          html += nav2BtnRename('con',ri,ci,coni,cn)+nav2BtnDelete('con',ri,ci,coni,cn);
+          html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="color:var(--muted)"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>';
+          html += '</div>';
+        });
+      } else {
+        html += '<div style="font-size:13px;color:var(--muted);padding:12px 0;text-align:center">Ще немає контейнерів</div>';
+      }
     }
 
-    /* Позиції */
-    var items = stock.filter(function(s){return s.room===NAV2.room&&s.storage===NAV2.cell&&(NAV2.con?s.sup===NAV2.con:true);});
-    if(items.length){
-      html += '<div style="margin-top:12px;font-size:11px;font-weight:600;color:var(--sub);font-family:var(--font-d);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">'+items.length+' позицій</div>';
-      items.forEach(function(it){
-        var st=getStatus(it);
-        var itId='nit_'+it.id;window[itId]=it.id;
-        html += '<div onclick="(function(){closeModal(\'nav\');setTimeout(function(){openDetail(window[\''+itId+'\']);},200);})()" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);margin-bottom:6px;cursor:pointer">';
-        html += '<div style="flex:1;min-width:0"><div style="font-family:var(--font-d);font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+_esc(it.name)+'</div>';
-        html += '<div style="font-size:11px;color:var(--sub);margin-top:2px">'+_esc(it.cat)+'</div></div>';
-        html += '<span class="sbadge '+st.cls+'">'+st.label+'</span>';
-        html += '</div>';
-      });
+    /* Позиції/список — ієрархічно */
+    if(NAV2.con) {
+      /* Вибрано контейнер → товари */
+      var items = stock.filter(function(s){return s.room===NAV2.room&&s.storage===NAV2.cell&&s.sup===NAV2.con;});
+      html += '<div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">';
+      html += '<div style="font-size:11px;font-weight:600;color:var(--sub);font-family:var(--font-d);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">'+NAV2.con+' · '+items.length+' позицій</div>';
+      if(items.length) {
+        items.forEach(function(it){
+          var st=getStatus(it);
+          var sq=it.stockQty!=null?it.stockQty:it.qty;
+          var itId='nit_'+it.id; window[itId]=it.id;
+          html += '<div onclick="(function(){closeModal(\'nav\');setTimeout(function(){openDetail(window[\''+itId+'\']);},200);})()" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);margin-bottom:6px;cursor:pointer">';
+          if(it.photo) html += '<img src="'+it.photo+'" style="width:36px;height:36px;border-radius:8px;object-fit:cover;flex-shrink:0">';
+          html += '<div style="flex:1;min-width:0"><div style="font-family:var(--font-d);font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+_esc(it.name)+'</div>';
+          html += '<div style="font-size:11px;color:var(--sub);margin-top:1px">'+_esc(it.cat)+' · '+sq+' '+_esc(it.unit||'шт')+'</div></div>';
+          html += '<span class="sbadge '+st.cls+'">'+st.label+'</span>';
+          html += '</div>';
+        });
+      } else {
+        html += '<div style="font-size:13px;color:var(--muted);text-align:center;padding:12px 0">Порожньо</div>';
+      }
+      html += '</div>';
     }
 
     /* Кнопка вибору (тільки в режимі вибору місця) */
