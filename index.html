@@ -1673,8 +1673,6 @@ function nav2Render() {
           box.addEventListener('click', function(e){ e.stopPropagation(); });
           ov.appendChild(box);
           document.body.appendChild(ov);
-          _skipBlur = true;
-          setTimeout(function(){ addInp.focus(); }, 100);
         }
 
         var _skipBlur = false;
