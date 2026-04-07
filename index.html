@@ -854,6 +854,8 @@ function normalizeItem(i){const n={...i,id:+i.id||0,qty:+i.qty||0,min:+i.min||1,
     });
     if(isContainer){ n.con=n.sup; n.sup='—'; }
   }
+  /* Якщо con і sup однакові — sup це контейнер, очищуємо */
+  if(n.con && n.sup === n.con) { n.sup = '—'; }
   return calcItem(n);}
 function syncToSheets(){if(!SCRIPT_URL)return;if(syncPending)return;syncPending=true;showSyncStatus('saving');setTimeout(async()=>{try{const stockClean=stock.map(i=>{const c={...i};delete c.photo;delete c.mapPhotos;delete c.mapPhoto;delete c.mapPhoto2;return c;});const payload={action:'saveAll',stock:stockClean,history:history.slice(0,100),categories,catGroups,locations,navPhotos:locationPhotos};await postNoCors(payload);showSyncStatus('ok');}catch(e){showSyncStatus('error',e.message);}syncPending=false;},300);}
 
