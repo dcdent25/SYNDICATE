@@ -1295,10 +1295,10 @@ function openSuppDetails(name) {
   var foot = document.createElement('div');
   foot.style.cssText = 'padding:12px 20px 16px;border-top:1px solid var(--border);display:flex;gap:10px;flex-shrink:0';
   var cancelBtn = document.createElement('button');
-  cancelBtn.textContent = 'Cancel';
+  cancelBtn.textContent = 'Скасувати';
   cancelBtn.style.cssText = 'flex:1;height:46px;background:transparent;border:1.5px solid var(--border);border-radius:12px;font-family:var(--font-d);font-size:15px;color:var(--sub);cursor:pointer';
   var saveBtn = document.createElement('button');
-  saveBtn.textContent = 'Save';
+  saveBtn.textContent = 'Зберегти';
   saveBtn.style.cssText = 'flex:1;height:46px;background:var(--blue);border:none;border-radius:12px;font-family:var(--font-d);font-size:15px;font-weight:700;color:#1c1f26;cursor:pointer';
 
   cancelBtn.addEventListener('click', function(){ document.body.removeChild(ov); });
