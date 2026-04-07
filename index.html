@@ -1454,31 +1454,33 @@ function nav2Render() {
     /* Список контейнерів */
     var ri = NAV2.roomIdx >= 0 ? NAV2.roomIdx : locations.findIndex(function(r){return r.name===NAV2.room;});
     var roomObj = locations[ri] || null;
-    var cellObj = roomObj&&roomObj.cells?roomObj.cells.find(function(c){return c.name===NAV2.cell;}):null;
-    var ci = cellObj&&roomObj?roomObj.cells.indexOf(cellObj):-1;
 
-    /* Список контейнерів */
-    var ri = NAV2.roomIdx >= 0 ? NAV2.roomIdx : locations.findIndex(function(r){return r.name===NAV2.room;});
-    var roomObj = locations[ri] || null;
-    var cellObj = roomObj&&roomObj.cells?roomObj.cells.find(function(c){return c.name===NAV2.cell;}):null;
-    var ci = cellObj&&roomObj?roomObj.cells.indexOf(cellObj):-1;
+    /* Збираємо комірки з УСІХ приміщень з однаковою назвою */
+    var allCells = [];
+    locations.forEach(function(r, rIdx) {
+      if(r.name === NAV2.room) {
+        (r.cells||[]).forEach(function(c, cIdx) {
+          allCells.push({cell:c, ri:rIdx, ci:cIdx});
+        });
+      }
+    });
 
-    /* Якщо немає комірки — показуємо комірки приміщення */
-    if(!NAV2.cell && roomObj) {
-      var cells = roomObj.cells||[];
-      if(cells.length) {
+    var cellObj = null; var cellRi = ri; var ci = -1;
+    allCells.forEach(function(item) {
+      if(item.cell.name === NAV2.cell){ cellObj=item.cell; cellRi=item.ri; ci=item.ci; }
+    });
+
+    /* Якщо немає комірки — показуємо комірки з усіх однойменних приміщень */
+    if(!NAV2.cell) {
+      if(allCells.length) {
         html += '<div style="font-size:11px;font-weight:600;color:var(--sub);font-family:var(--font-d);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Комірки</div>';
-        cells.forEach(function(c,ci2){
+        allCells.forEach(function(item){
+          var c=item.cell, rIdx=item.ri, cIdx=item.ci;
           var ic = stock.filter(function(s){return s.room===NAV2.room&&s.storage===c.name;}).length;
-          var cid='ncel_'+ci2; window[cid]=c.name;
-          html += '<div onclick="nav2Enter(1,'+ci2+')" style="display:flex;align-items:center;gap:6px;padding:10px 12px;border-radius:10px;background:var(--surface2);border:1.5px solid var(--border);margin-bottom:6px;cursor:pointer">';
+          html += '<div onclick="nav2EnterCell('+rIdx+','+cIdx+')" style="display:flex;align-items:center;gap:6px;padding:10px 12px;border-radius:10px;background:var(--surface2);border:1.5px solid var(--border);margin-bottom:6px;cursor:pointer">';
           html += '<div style="flex:1;min-width:0"><div style="font-family:var(--font-d);font-size:13.5px;font-weight:600">'+_esc(c.name)+'</div>';
           html += '<div style="font-size:11px;color:'+(ic?'var(--blue)':'var(--muted)')+';margin-top:2px">'+(ic?ic+' позицій':'порожньо')+'</div></div>';
-          html += '<div style="display:flex;flex-direction:column;gap:1px">';
-          html += '<button onclick="event.stopPropagation();nav2MoveCell('+ri+','+ci2+',-1)" style="background:none;border:none;cursor:'+(ci2>0?'pointer':'default')+';color:'+(ci2>0?'var(--sub)':'var(--border)')+';padding:2px;line-height:1;font-size:14px" '+(ci2===0?'disabled':'')+'>↑</button>';
-          html += '<button onclick="event.stopPropagation();nav2MoveCell('+ri+','+ci2+',1)" style="background:none;border:none;cursor:'+(ci2<cells.length-1?'pointer':'default')+';color:'+(ci2<cells.length-1?'var(--sub)':'var(--border)')+';padding:2px;line-height:1;font-size:14px" '+(ci2===cells.length-1?'disabled':'')+'>↓</button>';
-          html += '</div>';
-          html += nav2BtnRename('cell',ri,ci2,-1,c.name)+nav2BtnDelete('cell',ri,ci2,-1,c.name);
+          html += nav2BtnRename('cell',rIdx,cIdx,-1,c.name)+nav2BtnDelete('cell',rIdx,cIdx,-1,c.name);
           html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="color:var(--muted)"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>';
           html += '</div>';
         });
@@ -2143,6 +2145,18 @@ function nav2GoLevel(level) {
 }
 
 /* Увійти в елемент */
+function nav2EnterCell(rIdx, cIdx) {
+  var r = locations[rIdx];
+  if(!r) return;
+  var c = (r.cells||[])[cIdx];
+  if(!c) return;
+  NAV2.roomIdx = rIdx;
+  NAV2.room = r.name;
+  NAV2.cell = c.name;
+  NAV2.con = '';
+  nav2Render();
+}
+
 function nav2Enter(fromLevel, idx) {
   if (fromLevel === 0) {
     var r = locations[idx];
