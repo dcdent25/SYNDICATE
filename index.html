@@ -1242,13 +1242,15 @@ function renderSuppList(){
     wrap.innerHTML='<div style="color:var(--sub);font-size:13px;padding:8px 0">Контрагентів ще немає</div>';
     return;
   }
-  wrap.innerHTML = entries.map(([name, count]) =>
-    '<div style="display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px">'+
-    '<span style="font-family:var(--font-d);font-size:13px;font-weight:500;flex:1;color:var(--text)">'+(name)+'</span>'+
+  wrap.innerHTML = entries.map(([name, count]) => {
+    var esc = name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return '<div style="display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px">'+
+    '<span style="font-family:var(--font-d);font-size:13px;font-weight:500;flex:1;color:var(--text)">'+_esc(name)+'</span>'+
     '<span style="font-family:var(--font-d);font-size:11px;color:var(--sub);background:var(--bg);padding:2px 8px;border-radius:100px;border:1px solid var(--border)">'+(count)+' поз.</span>'+
-    '<button onclick="openSuppDetails(\''+name.replace(/'/g,"\\'")+'\')" style="height:28px;width:28px;border-radius:50%;border:1.5px solid var(--border);background:transparent;color:var(--sub);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center" onmouseover="this.style.color=\'var(--blue)\';this.style.borderColor=\'var(--blue)\'" onmouseout="this.style.color=\'var(--sub)\';this.style.borderColor=\'var(--border)\'">⚙</button>'+
-    '</div>'
-  ).join('');
+    '<button onclick="openSuppDetails(\''+esc+'\')" title="Налаштування" style="height:28px;width:28px;border-radius:50%;border:1.5px solid var(--border);background:transparent;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0" onmouseover="this.style.color=\'var(--blue)\';this.style.borderColor=\'var(--blue)\'" onmouseout="this.style.color=\'var(--sub)\';this.style.borderColor=\'var(--border)\'"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96a7.01 7.01 0 0 0-1.62-.94l-.36-2.54A.48.48 0 0 0 14 2h-4a.48.48 0 0 0-.48.41l-.36 2.54a7.38 7.38 0 0 0-1.62.94l-2.39-.96a.48.48 0 0 0-.59.22L2.64 8.47a.47.47 0 0 0 .12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.47.47 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.36 1.04.67 1.62.94l.36 2.54c.06.27.29.47.57.47h4c.28 0 .5-.2.56-.47l.36-2.54a7.38 7.38 0 0 0 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.47.47 0 0 0-.12-.61l-2.03-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"/></svg></button>'+
+    '<button onclick="deleteSuppConfirm(\''+esc+'\')" title="Видалити" style="height:28px;width:28px;border-radius:50%;border:1.5px solid var(--border);background:transparent;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0" onmouseover="this.style.color=\'var(--red)\';this.style.borderColor=\'var(--red)\'" onmouseout="this.style.color=\'var(--sub)\';this.style.borderColor=\'var(--border)\'"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>'+
+    '</div>';
+  }).join('');
 }
 
 function openSuppDetails(name) {
@@ -1328,6 +1330,16 @@ function openSuppDetails(name) {
   ov.appendChild(box);
   document.body.appendChild(ov);
 }
+function deleteSuppConfirm(name) {
+  if(!confirm('Видалити контрагента "'+name+'"?\nУ всіх товарів цей постачальник буде очищено.')) return;
+  stock.forEach(function(i){ if((i.sup||'').trim()===name) i.sup='—'; });
+  localStorage.removeItem('suppData_'+name);
+  renderSuppList();
+  renderAll();
+  forceSyncToSheets();
+  toast('✓ Видалено: '+name);
+}
+
 function doAddSupp(){
   const name = (document.getElementById('suppNewName')||{}).value||'';
   if(!name.trim()){toast('⚠ Введіть назву');return;}
