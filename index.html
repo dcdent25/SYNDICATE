@@ -1610,6 +1610,7 @@ function nav2Render() {
           addBtn.addEventListener('mouseout',function(){this.style.background='';});
           addBtn.addEventListener('mousedown',function(e){
             e.preventDefault();
+            _skipBlur = true;
             /* Замінюємо кнопку на поле вводу прямо в дропдауні */
             addBtn.style.display = 'none';
             var addRow = document.createElement('div');
@@ -1667,6 +1668,7 @@ function nav2Render() {
           drop.style.width = rect.width+'px';
         }
 
+        var _skipBlur = false;
         txt.addEventListener('click', function(e) {
           e.stopPropagation();
           txt.style.display = 'none';
@@ -1677,6 +1679,7 @@ function nav2Render() {
           showDrop();
         });
         inp.addEventListener('blur', function() {
+          if(_skipBlur) { _skipBlur=false; return; }
           setTimeout(function(){
             var drop = document.getElementById('nav2drop_'+ft);
             if(drop) drop.remove();
