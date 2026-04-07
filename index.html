@@ -804,36 +804,11 @@ function saveLocalCache(){} function loadLocalCache(){return null;} function jso
 function postNoCors(payload){
   return new Promise(resolve=>{
     try{
-      // Send full data via no-cors POST
+      // Main POST — includes full locations WITH photos and navPhotos
       fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)}).catch(()=>{});
 
-      // Send locations WITHOUT photos via JSONP GET (guaranteed delivery, small payload)
-      if(payload.locations){
-        const locsClean = payload.locations.map(function(r){
-          const rc = Object.assign({},r);
-          delete rc.photo;
-          if(rc.cells) rc.cells = rc.cells.map(function(c){
-            const cc = Object.assign({},c);
-            delete cc.photo;
-            delete cc.containerPhotos;
-            return cc;
-          });
-          return rc;
-        });
-        const locData=encodeURIComponent(JSON.stringify({action:'saveLocations',locations:locsClean}));
-        if(locData.length < 7000){
-          const s=document.createElement('script');
-          const cb='_dsloc_'+Date.now();
-          const url=SCRIPT_URL+(SCRIPT_URL.includes('?')?'&':'?')+'action=saveLocations&data='+locData+'&callback='+cb+'&t='+Date.now();
-          window[cb]=function(){delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);};
-          s.onerror=function(){delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);};
-          s.src=url;
-          document.head.appendChild(s);
-        }
-      }
-
-      // Send nav photos separately via POST (they can be large)
-      if(payload.navPhotos){
+      // Also send navPhotos via dedicated POST for GAS handler
+      if(payload.navPhotos && Object.keys(payload.navPhotos).length > 0){
         fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},
           body:JSON.stringify({action:'saveNavPhotos',navPhotos:payload.navPhotos})}).catch(()=>{});
       }
@@ -843,7 +818,7 @@ function postNoCors(payload){
   });
 }
 function forceSyncToSheets(){if(!SCRIPT_URL)return;syncPending=false;syncToSheets();}
-async function loadFromSheets(){const cached=loadLocalCache();if(cached){stock=(cached.stock||[]).map(normalizeItem);history=cached.history||[];categories=cached.categories&&cached.categories.length?cached.categories:categories;if(cached.catGroups)Object.assign(catGroups,cached.catGroups);if(cached.locations&&cached.locations.length)locations=cached.locations;renderAll();renderHistory();}if(!SCRIPT_URL){hidePreloader();return;}showSyncStatus('loading');let data=null;try{data=await jsonp(SCRIPT_URL,15000);}catch(e){console.warn('[DS] JSONP failed:',e.message);try{const r=await fetch(SCRIPT_URL+'?t='+Date.now(),{mode:'cors',redirect:'follow'});const text=await r.text();if(!text||!text.trim())throw new Error('Empty response');data=JSON.parse(text);}catch(e2){console.warn('[DS] fetch also failed:',e2.message);if(!cached){showSyncStatus('error','Не вдалося завантажити');toast('⚠ Немає з\'єднання. Перевірте SCRIPT_URL або CSP сайту.');}else{showSyncStatus('ok');}renderAll();renderHistory();hidePreloader();return;}}if(data&&data.ok){if(Array.isArray(data.stock)&&data.stock.length>=0){stock=data.stock.map(normalizeItem);}if(Array.isArray(data.history))history=data.history;if(Array.isArray(data.categories)&&data.categories.length>0)categories=data.categories;if(data.catGroups)Object.assign(catGroups,data.catGroups);if(data.locations&&data.locations.length)locations=data.locations;_loadNavPhotosFromLocations();if(data.navPhotos)Object.assign(locationPhotos,data.navPhotos);else{try{var _lpc=localStorage.getItem('navPhotos_cache');if(_lpc)Object.assign(locationPhotos,JSON.parse(_lpc));}catch(e){}}try{localStorage.setItem('navPhotos_cache',JSON.stringify(locationPhotos));}catch(e){}showSyncStatus('ok');}else{showSyncStatus('error',data?data.error:'empty');}renderAll();renderHistory();hidePreloader();}
+async function loadFromSheets(){const cached=loadLocalCache();if(cached){stock=(cached.stock||[]).map(normalizeItem);history=cached.history||[];categories=cached.categories&&cached.categories.length?cached.categories:categories;if(cached.catGroups)Object.assign(catGroups,cached.catGroups);if(cached.locations&&cached.locations.length)locations=cached.locations;renderAll();renderHistory();}if(!SCRIPT_URL){try{var _c=localStorage.getItem('_navPhotosCache');if(_c)Object.assign(locationPhotos,JSON.parse(_c));}catch(e){}hidePreloader();return;}showSyncStatus('loading');let data=null;try{data=await jsonp(SCRIPT_URL,15000);}catch(e){console.warn('[DS] JSONP failed:',e.message);try{const r=await fetch(SCRIPT_URL+'?t='+Date.now(),{mode:'cors',redirect:'follow'});const text=await r.text();if(!text||!text.trim())throw new Error('Empty response');data=JSON.parse(text);}catch(e2){console.warn('[DS] fetch also failed:',e2.message);if(!cached){showSyncStatus('error','Не вдалося завантажити');toast('⚠ Немає з\'єднання. Перевірте SCRIPT_URL або CSP сайту.');}else{showSyncStatus('ok');}renderAll();renderHistory();hidePreloader();return;}}if(data&&data.ok){if(Array.isArray(data.stock)&&data.stock.length>=0){stock=data.stock.map(normalizeItem);}if(Array.isArray(data.history))history=data.history;if(Array.isArray(data.categories)&&data.categories.length>0)categories=data.categories;if(data.catGroups)Object.assign(catGroups,data.catGroups);if(data.locations&&data.locations.length)locations=data.locations;_loadNavPhotosFromLocations();if(data.navPhotos)Object.assign(locationPhotos,data.navPhotos);try{localStorage.setItem('_navPhotosCache',JSON.stringify(locationPhotos));}catch(e){}showSyncStatus('ok');}else{showSyncStatus('error',data?data.error:'empty');}renderAll();renderHistory();hidePreloader();}
 function normalizeItem(i){const n={...i,id:+i.id||0,qty:+i.qty||0,min:+i.min||1,price:+i.price||0};if(n.stockQty==null)n.stockQty=n.qty;else n.stockQty=+n.stockQty;if(!n.marketPrice)n.marketPrice=n.price;if(n.portions!=null&&n.portions>0)n._portionsManual=true;if(!n.mapPhotos&&n.mapPhoto)n.mapPhotos=[n.mapPhoto];
   /* Міграція: якщо i.con порожній а i.sup є контейнером — переносимо */
   if(!n.con && n.sup && n.sup!=='—') {
@@ -2577,7 +2552,7 @@ function nav2HandlePhoto(e) {
       locationPhotos[key] = canvas.toDataURL('image/jpeg', 0.7);
       // Save to locations data
       _saveNavPhotoToLocations(key, locationPhotos[key]);
-      try{localStorage.setItem('navPhotos_cache',JSON.stringify(locationPhotos));}catch(e){}
+      try{localStorage.setItem('_navPhotosCache',JSON.stringify(locationPhotos));}catch(e){}
       forceSyncToSheets();
       nav2Render();
       toast('✓ Фото додано');
