@@ -1245,8 +1245,89 @@ function renderSuppList(){
     return;
   }
   wrap.innerHTML = entries.map(([name, count]) =>
-    '<div style="display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px">\n      <span style="font-family:var(--font-d);font-size:13px;font-weight:500;flex:1;color:var(--text)">'+(name)+'</span>\n      <span style="font-family:var(--font-d);font-size:11px;color:var(--sub);background:var(--bg);padding:2px 8px;border-radius:100px;border:1px solid var(--border)">'+(count)+' поз.</span>\n      <button onclick="document.getElementById(\'suppRenameOld\').value=\''+(name.replace(/'/g,"\'"))+'\'" style="height:28px;padding:0 10px;border-radius:100px;border:1.5px solid var(--border);background:transparent;color:var(--sub);font-family:var(--font-d);font-size:11px;cursor:pointer" onmouseover="this.style.color=\'var(--blue)\';this.style.borderColor=\'var(--blue)\'" onmouseout="this.style.color=\'var(--sub)\';this.style.borderColor=\'var(--border)\'">Обрати</button>\n    </div>'
+    '<div style="display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px">'+
+    '<span style="font-family:var(--font-d);font-size:13px;font-weight:500;flex:1;color:var(--text)">'+(name)+'</span>'+
+    '<span style="font-family:var(--font-d);font-size:11px;color:var(--sub);background:var(--bg);padding:2px 8px;border-radius:100px;border:1px solid var(--border)">'+(count)+' поз.</span>'+
+    '<button onclick="openSuppDetails(\''+name.replace(/'/g,"\\'")+'\')" style="height:28px;width:28px;border-radius:50%;border:1.5px solid var(--border);background:transparent;color:var(--sub);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center" onmouseover="this.style.color=\'var(--blue)\';this.style.borderColor=\'var(--blue)\'" onmouseout="this.style.color=\'var(--sub)\';this.style.borderColor=\'var(--border)\'">⚙</button>'+
+    '</div>'
   ).join('');
+}
+
+function openSuppDetails(name) {
+  /* Завантажуємо збережені дані контрагента */
+  var suppData = JSON.parse(localStorage.getItem('suppData_'+name)||'{}');
+  var fields = [
+    {id:'suppName', label:'Назва Замовника', val: suppData.name||name},
+    {id:'suppShort', label:'Скорочена назва Замовника', val: suppData.short||''},
+    {id:'suppEdrpou', label:'ЄДРПОУ', val: suppData.edrpou||''},
+    {id:'suppAddr', label:'Юридична адреса', val: suppData.addr||''},
+    {id:'suppPost', label:'Поштова адреса', val: suppData.post||''},
+    {id:'suppIban', label:'IBAN', val: suppData.iban||''},
+    {id:'suppIpn', label:'ІПН', val: suppData.ipn||''},
+    {id:'suppPhone', label:'тел.', val: suppData.phone||''},
+  ];
+
+  var ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box';
+  ov.onclick = function(e){ if(e.target===ov) document.body.removeChild(ov); };
+
+  var box = document.createElement('div');
+  box.style.cssText = 'background:var(--surface);border-radius:20px;width:100%;max-width:460px;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.5);overflow:hidden';
+  box.onclick = function(e){ e.stopPropagation(); };
+
+  var head = document.createElement('div');
+  head.style.cssText = 'padding:20px 20px 12px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:space-between';
+  head.innerHTML = '<div style="font-family:var(--font-d);font-size:18px;font-weight:700;color:var(--text)">'+_esc(name)+'</div>'+
+    '<button onclick="this.closest(\'div\').parentElement.parentElement.remove()" style="background:var(--bg);border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;color:var(--sub);font-size:16px;display:flex;align-items:center;justify-content:center">✕</button>';
+  box.appendChild(head);
+
+  var body = document.createElement('div');
+  body.style.cssText = 'flex:1;overflow-y:auto;padding:16px 20px';
+  body.innerHTML = fields.map(function(f){
+    return '<div style="margin-bottom:14px">'+
+      '<div style="font-size:11px;color:var(--sub);font-family:var(--font-d);margin-bottom:5px">'+f.label+'</div>'+
+      '<input id="'+f.id+'" type="text" value="'+_esc(f.val)+'" style="width:100%;height:44px;padding:0 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--font-d);font-size:14px;outline:none;box-sizing:border-box" onfocus="this.style.borderColor=\'var(--blue)\'" onblur="this.style.borderColor=\'var(--border)\'">'+
+      '</div>';
+  }).join('');
+  box.appendChild(body);
+
+  var foot = document.createElement('div');
+  foot.style.cssText = 'padding:12px 20px 16px;border-top:1px solid var(--border);display:flex;gap:10px;flex-shrink:0';
+  var cancelBtn = document.createElement('button');
+  cancelBtn.textContent = 'Cancel';
+  cancelBtn.style.cssText = 'flex:1;height:46px;background:transparent;border:1.5px solid var(--border);border-radius:12px;font-family:var(--font-d);font-size:15px;color:var(--sub);cursor:pointer';
+  var saveBtn = document.createElement('button');
+  saveBtn.textContent = 'Save';
+  saveBtn.style.cssText = 'flex:1;height:46px;background:var(--blue);border:none;border-radius:12px;font-family:var(--font-d);font-size:15px;font-weight:700;color:#1c1f26;cursor:pointer';
+
+  cancelBtn.addEventListener('click', function(){ document.body.removeChild(ov); });
+  saveBtn.addEventListener('click', function(){
+    var data = {};
+    fields.forEach(function(f){
+      var el = box.querySelector('#'+f.id);
+      if(el) data[f.id.replace('supp',''). toLowerCase()] = el.value.trim();
+    });
+    /* Зберігаємо в localStorage */
+    localStorage.setItem('suppData_'+name, JSON.stringify(data));
+    /* Якщо змінилась назва — перейменовуємо */
+    var newName = (box.querySelector('#suppName')||{}).value||'';
+    newName = newName.trim();
+    if(newName && newName !== name) {
+      stock.forEach(function(i){ if((i.sup||'').trim()===name) i.sup=newName; });
+      localStorage.setItem('suppData_'+newName, JSON.stringify(data));
+      localStorage.removeItem('suppData_'+name);
+      renderAll(); forceSyncToSheets();
+    }
+    document.body.removeChild(ov);
+    renderSuppList();
+    toast('✓ Збережено');
+  });
+
+  foot.appendChild(cancelBtn);
+  foot.appendChild(saveBtn);
+  box.appendChild(foot);
+  ov.appendChild(box);
+  document.body.appendChild(ov);
 }
 function doRenameSupp(){
   const oldName = document.getElementById('suppRenameOld').value.trim();
