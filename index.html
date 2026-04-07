@@ -170,7 +170,14 @@ html,body{background:#1c1f26!important;overflow-x:hidden!important}.t-container,
   </div>
   <span id="dPortionCompUnit" style="display:none"></span>
   <input class="dval-edit" id="dPortionUnitEdit" type="text" style="display:none!important">
-</div><div class="dfield" id="dfield-qty">
+</div><!-- Вартість залишків -->
+
+<div class="dfield"><div class="dfield-label">Вартість залишків на складі</div>
+  <div class="dstock-qty" style="color:var(--blue);margin-top:4px"><span id="dStockCost">—</span><span style="font-size:14px;font-weight:400;color:var(--sub)">грн</span></div>
+  <span id="dPortionCost" style="display:none" class="dval-text-num"></span>
+</div>
+
+<div class="dfield" id="dfield-qty">
   <div class="dval-text dfield-label">Залишки матеріалу на складі</div>
   <div class="detail-edit-only" style="display:none;align-items:center;margin-bottom:6px">
     <span id="dQtyLabelDyn" style="font-size:11px;color:var(--sub);font-family:var(--font-d);letter-spacing:.2px">Кількість матеріалу</span>
@@ -204,13 +211,6 @@ html,body{background:#1c1f26!important;overflow-x:hidden!important}.t-container,
     <span id="dUnitLabelPreview" style="font-size:14px;color:var(--sub)">шт</span>
     <span id="dStatusBadgePreview" style="height:24px;padding:0 10px;border-radius:100px;font-family:var(--font-d);font-size:11px;font-weight:600;display:inline-flex;align-items:center;background:var(--amber-s);color:var(--amber)"></span>
   </div>
-</div>
-
-<!-- Вартість залишків -->
-
-<div class="dfield"><div class="dfield-label">Вартість залишків на складі</div>
-  <div class="dstock-qty" style="color:var(--blue);margin-top:4px"><span id="dStockCost">—</span><span style="font-size:14px;font-weight:400;color:var(--sub)">грн</span></div>
-  <span id="dPortionCost" style="display:none" class="dval-text-num"></span>
 </div>
 
 <!-- Таблиця об'єм складу -->
