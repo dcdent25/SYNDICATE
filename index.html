@@ -143,15 +143,7 @@ html,body{background:#1c1f26!important;overflow-x:hidden!important}.t-container,
 <div class="dfield" id="dfield-pp"><div class="dfield-label">Ціна за порцію (грн)</div><div class="dfield-val"><span class="dval-text dval-text-num" id="dPortionPrice">—</span><input class="dval-edit-num" id="dPortionPriceEdit" type="number" min="0" step="0.01" placeholder="0.00" style="flex:1"></div></div>
 <div class="dfield hide-view"><div class="dfield-label">Кількість порцій</div><div class="dfield-val"><span class="dval-text dval-text-num" id="dPortions">—</span><input class="dval-edit-num" id="dPortionsEdit" type="number" min="0" step="0.01" placeholder="0" style="flex:1" oninput="calcPortionsFromQty()"></div></div>
 
-<!-- Тип матеріалу -->
-<div class="dfield hide-view"><div class="dfield-label">Тип матеріалу</div>
-  <div class="dfield-val"><span class="dval-text" id="dMatType" style="flex:1">—</span></div>
-  <div class="dunit-chips detail-edit-only" id="dMatTypeChips" style="display:none;margin-top:6px">
-    <button class="dunit-chip sel" data-val="Загальний" onclick="selectMatType(this)">Загальний</button>
-    <button class="dunit-chip" data-val="Основний" onclick="selectMatType(this)">Основний</button>
-  </div>
-  <input class="dval-edit dinput" id="dMatTypeEdit" type="text" placeholder="Загальний" style="display:none!important">
-</div>
+
 
 <div class="dfield hide-view">
   <div class="dval-text dfield-label">Склад порції</div>
@@ -354,14 +346,7 @@ html,body{background:#1c1f26!important;overflow-x:hidden!important}.t-container,
   <div class="dfield-val"><input type="number" id="newPortions" min="0" step="0.01" placeholder="0" oninput="liveCalcNew()" style="flex:1;height:36px;padding:0 10px;background:var(--bg);border:1.5px solid var(--blue);border-radius:8px;color:var(--text);font-family:var(--font-d);font-size:15px;font-weight:500;outline:none;-webkit-appearance:none"></div>
 </div>
 
-<!-- Тип матеріалу -->
-<div class="dfield"><div class="dfield-label">Тип матеріалу</div>
-  <div class="dunit-chips" id="newMatTypeChips" style="margin-top:6px">
-    <button class="dunit-chip sel" data-val="Загальний" onclick="selectNewMatType(this)">Загальний</button>
-    <button class="dunit-chip" data-val="Основний" onclick="selectNewMatType(this)">Основний</button>
-  </div>
-  <input type="hidden" id="newMatType" value="Загальний">
-</div>
+
 
 <!-- Склад порції / Одиниця виміру -->
 <div class="dfield">
