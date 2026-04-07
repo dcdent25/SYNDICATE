@@ -1330,7 +1330,7 @@ function renderStorageCards(i) {
     return s;
   }
 
-  var conCardHtml = '<div id="dConCard" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color .15s'+(con?';cursor:pointer':'')+'">';
+  var conCardHtml = '<div id="dConCard" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color .15s'+(con?';cursor:pointer':'')+'"'+(con?' onclick="nav2OpenFromItem(currentDetailId)" onmouseover="this.style.borderColor=\'var(--blue)\'" onmouseout="this.style.borderColor=\'var(--border)\'"':'')+'>'; 
   conCardHtml += '<div style="width:100%;aspect-ratio:1;background:var(--bg);position:relative;overflow:hidden">';
   if(photoCon){
     conCardHtml += '<img src="'+photoCon+'" style="width:100%;height:100%;object-fit:cover;display:block">';
@@ -1343,17 +1343,6 @@ function renderStorageCards(i) {
   conCardHtml += '</div></div>';
 
   wrap.innerHTML = card('Приміщення', room, photoRoom, '') + card('Комірка', cell, photoCell, '') + conCardHtml;
-
-  if(con) {
-    var conCard = document.getElementById('dConCard');
-    if(conCard) {
-      conCard.addEventListener('mouseover', function(){ this.style.borderColor='var(--blue)'; });
-      conCard.addEventListener('mouseout',  function(){ this.style.borderColor='var(--border)'; });
-      conCard.addEventListener('click', function(){
-        nav2OpenFromItem(currentDetailId);
-      });
-    }
-  }
 }
 
 function dStoragePick(type) {
