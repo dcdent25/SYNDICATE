@@ -1556,28 +1556,92 @@ function nav2Render() {
         var txt = document.getElementById('nav2txt_'+ft);
         var inp = document.getElementById('nav2edit_'+ft);
         var card = document.getElementById('ncard_'+ft);
-        if(txt && inp) {
-          txt.addEventListener('click', function(e) {
-            e.stopPropagation();
-            txt.style.display = 'none';
-            inp.style.display = 'block';
-            if(card) card.style.borderColor = 'var(--blue)';
-            inp.focus();
-            inp.select();
+        if(!txt || !inp) return;
+
+        /* Збираємо варіанти для дропдауну */
+        function getOptions() {
+          var opts = [];
+          var seen = {};
+          if(ft==='room') {
+            locations.forEach(function(r){ if(!seen[r.name]){seen[r.name]=true;opts.push(r.name);} });
+          } else if(ft==='cell') {
+            locations.filter(function(r){return r.name===NAV2.room;}).forEach(function(r){
+              (r.cells||[]).forEach(function(c){ if(!seen[c.name]){seen[c.name]=true;opts.push(c.name);} });
+            });
+          } else {
+            var ri2 = NAV2.roomIdx>=0?NAV2.roomIdx:locations.findIndex(function(r){return r.name===NAV2.room;});
+            var ro = locations[ri2];
+            var co = ro&&ro.cells?ro.cells.find(function(c){return c.name===NAV2.cell;}):null;
+            (co&&co.containers||[]).forEach(function(cn){ if(!seen[cn]){seen[cn]=true;opts.push(cn);} });
+          }
+          return opts.sort();
+        }
+
+        function showDrop() {
+          var existing = document.getElementById('nav2drop_'+ft);
+          if(existing) existing.remove();
+          var opts = getOptions();
+          if(!opts.length) return;
+          var drop = document.createElement('div');
+          drop.id = 'nav2drop_'+ft;
+          drop.style.cssText = 'position:absolute;top:100%;left:-10px;right:-10px;background:var(--surface2);border:1.5px solid var(--blue);border-radius:10px;z-index:999;max-height:160px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.4);margin-top:2px';
+          opts.forEach(function(o){
+            var item = document.createElement('div');
+            item.textContent = o;
+            item.style.cssText = 'padding:10px 12px;font-family:var(--font-d);font-size:13px;font-weight:500;color:var(--text);cursor:pointer';
+            item.addEventListener('mouseover',function(){this.style.background='var(--blue-s)';});
+            item.addEventListener('mouseout',function(){this.style.background='';});
+            item.addEventListener('mousedown',function(e){
+              e.preventDefault();
+              inp.value = o;
+              drop.remove();
+              txt.style.display='none';
+              inp.style.display='block';
+              if(card) card.style.borderColor='var(--blue)';
+              inp.focus();
+            });
+            drop.appendChild(item);
           });
-          inp.addEventListener('blur', function() {
-            var newVal = inp.value;
+          /* Позиціонуємо відносно картки */
+          var cardEl = card || txt.closest('div');
+          cardEl.style.position = 'relative';
+          cardEl.appendChild(drop);
+        }
+
+        txt.addEventListener('click', function(e) {
+          e.stopPropagation();
+          txt.style.display = 'none';
+          inp.style.display = 'block';
+          if(card) card.style.borderColor = 'var(--blue)';
+          inp.focus();
+          inp.select();
+          showDrop();
+        });
+        inp.addEventListener('blur', function() {
+          setTimeout(function(){
+            var drop = document.getElementById('nav2drop_'+ft);
+            if(drop) drop.remove();
             inp.style.display = 'none';
             txt.style.display = '';
-            txt.textContent = newVal || '—';
+            txt.textContent = inp.value || '—';
             if(card) card.style.borderColor = 'var(--border)';
-            nav2SaveOneField(ft, newVal);
-          });
-          inp.addEventListener('keydown', function(e) {
-            if(e.key === 'Enter') inp.blur();
-          });
-          inp.addEventListener('click', function(e) { e.stopPropagation(); });
-        }
+            nav2SaveOneField(ft, inp.value);
+          }, 200);
+        });
+        inp.addEventListener('keydown', function(e) {
+          if(e.key === 'Enter') inp.blur();
+          if(e.key === 'Escape') { inp.value = txt.textContent==='—'?'':txt.textContent; inp.blur(); }
+        });
+        inp.addEventListener('input', function() {
+          var drop = document.getElementById('nav2drop_'+ft);
+          if(drop) {
+            var q = inp.value.toLowerCase();
+            Array.from(drop.children).forEach(function(item){
+              item.style.display = item.textContent.toLowerCase().indexOf(q)>=0 ? '' : 'none';
+            });
+          }
+        });
+        inp.addEventListener('click', function(e) { e.stopPropagation(); });
       });
     }
     return;
