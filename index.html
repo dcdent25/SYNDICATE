@@ -1791,7 +1791,7 @@ function nav2Render() {
     var isSelected = row.room===NAV2.room&&row.cell===NAV2.cell&&row.con===NAV2.con;
     var border = isSelected?'2px solid var(--blue)':'1.5px solid var(--border)';
 
-    html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 44px;gap:6px;padding:10px;border-radius:10px;background:var(--surface2);border:'+border+';cursor:pointer" onclick="(function(){var r=window[\''+rowId+'\'];nav2OpenDetail(r.room,r.cell,r.con,r.ri);})()">';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 44px 32px;gap:6px;padding:10px;border-radius:10px;background:var(--surface2);border:'+border+';cursor:pointer" onclick="(function(){var r=window[\''+rowId+'\'];nav2OpenDetail(r.room,r.cell,r.con,r.ri);})()">';
     ['Контейнер','Комірка','Приміщення'].forEach(function(label,li){
       var val=li===0?row.con:li===1?row.cell:row.room;
       html += '<div><div style="font-size:9px;color:var(--sub);font-family:var(--font-d);font-weight:500;margin-bottom:4px">'+label+'</div>';
@@ -1801,10 +1801,47 @@ function nav2Render() {
     html += '<div onclick="event.stopPropagation();nav2PhotoForKey(window[\''+pkId+'\'])" style="background:var(--blue-s);border:1.5px solid rgba(138,180,248,.3);border-radius:6px;width:44px;height:36px;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer">';
     html += photo?'<img src="'+photo+'" style="width:100%;height:100%;object-fit:cover">':'<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="color:var(--blue)"><path d="M12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7zM9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9z"/></svg>';
     html += '</div></div>';
+    /* Кнопка видалення */
+    var delId='nav2del_'+ri; window[delId]=row;
+    html += '<div style="display:flex;align-items:center;justify-content:center">';
+    html += '<button onclick="event.stopPropagation();nav2DeleteRow(window[\''+delId+'\'])" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;border-radius:6px;display:flex;align-items:center;justify-content:center" onmouseover="this.style.color=\'var(--red)\'" onmouseout="this.style.color=\'var(--muted)\'">';
+    html += '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>';
+    html += '</button></div>';
     html += '</div>';
   });
   html += '</div>';
   body.innerHTML = html;
+}
+
+function nav2DeleteRow(row) {
+  var msg = row.con ? 'Видалити контейнер "'+row.con+'"?' :
+            row.cell ? 'Видалити комірку "'+row.cell+'"?' :
+            'Видалити приміщення "'+row.room+'"?';
+  if(!confirm(msg)) return;
+
+  if(row.con) {
+    /* Видалити контейнер */
+    locations.filter(function(r){return r.name===row.room;}).forEach(function(r){
+      (r.cells||[]).filter(function(c){return c.name===row.cell;}).forEach(function(c){
+        var idx = (c.containers||[]).indexOf(row.con);
+        if(idx!==-1) c.containers.splice(idx,1);
+      });
+    });
+    stock.forEach(function(s){ if(s.room===row.room&&s.storage===row.cell&&s.sup===row.con) s.sup='—'; });
+  } else if(row.cell) {
+    /* Видалити комірку */
+    locations.filter(function(r){return r.name===row.room;}).forEach(function(r){
+      var idx = (r.cells||[]).findIndex(function(c){return c.name===row.cell;});
+      if(idx!==-1) r.cells.splice(idx,1);
+    });
+    stock.forEach(function(s){ if(s.room===row.room&&s.storage===row.cell){s.storage='';s.sup='—';} });
+  } else {
+    /* Видалити приміщення (конкретний екземпляр по ri) */
+    var ri = row.ri>=0 ? row.ri : locations.findIndex(function(r){return r.name===row.room;});
+    if(ri>=0) locations.splice(ri,1);
+    stock.forEach(function(s){ if(s.room===row.room) s.room=''; });
+  }
+  forceSyncToSheets(); renderAll(); nav2Render();
 }
 
 function nav2FabClick() {
