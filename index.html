@@ -1330,22 +1330,28 @@ function renderStorageCards(i) {
 
   wrap.innerHTML = card('Приміщення', room, photoRoom, 'room') + card('Комірка', cell, photoCell, 'cell') + conCardHtml;
 
-  if(isEditMode) {
-    ['room','cell'].forEach(function(type) {
-      var el = document.getElementById('dStorCard_'+type);
-      if(el) {
-        el.addEventListener('mouseover', function(){ this.style.borderColor='var(--blue)'; });
-        el.addEventListener('mouseout',  function(){ this.style.borderColor='var(--border)'; });
-        el.addEventListener('click', function(){ dStoragePick(type); });
-      }
-    });
-  }
+  ['room','cell'].forEach(function(type) {
+    var el = document.getElementById('dStorCard_'+type);
+    if(el) {
+      el.style.cursor = 'pointer';
+      el.addEventListener('mouseover', function(){ this.style.borderColor='var(--blue)'; });
+      el.addEventListener('mouseout',  function(){ this.style.borderColor='var(--border)'; });
+      el.addEventListener('click', function(){
+        var editing = document.querySelector('#ov-detail .modal') && document.querySelector('#ov-detail .modal').classList.contains('detail-edit-mode');
+        if(editing) dStoragePick(type);
+      });
+    }
+  });
 
   var conCard = document.getElementById('dConCard');
-  if(conCard && isEditMode) {
+  if(conCard) {
+    conCard.style.cursor = 'pointer';
     conCard.addEventListener('mouseover', function(){ this.style.borderColor='var(--blue)'; });
     conCard.addEventListener('mouseout',  function(){ this.style.borderColor='var(--border)'; });
-    conCard.addEventListener('click', function(){ dStoragePick('con'); });
+    conCard.addEventListener('click', function(){
+      var editing = document.querySelector('#ov-detail .modal') && document.querySelector('#ov-detail .modal').classList.contains('detail-edit-mode');
+      if(editing) dStoragePick('con');
+    });
   }
 }
 
