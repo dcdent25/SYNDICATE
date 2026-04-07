@@ -1304,13 +1304,17 @@ function renderStorageCards(i) {
   var cell = i ? (i.storage||'') : '';
   var con  = i ? (i.con||'') : '';
 
+  /* Перевіряємо чи активний режим редагування */
+  var isEditMode = document.querySelector('#ov-detail .modal')&&document.querySelector('#ov-detail .modal').classList.contains('detail-edit-mode');
+
   _loadNavPhotosFromLocations();
   var photoRoom = room ? (locationPhotos[room]||null) : null;
   var photoCell = (room&&cell) ? (locationPhotos[room+'::'+cell]||null) : null;
   var photoCon  = (room&&cell&&con) ? (locationPhotos[room+'::'+cell+'::'+con]||null) : null;
 
   function card(label, val, photo, clickFn) {
-    var s = '<div onclick="'+clickFn+'" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor=\'var(--blue)\'" onmouseout="this.style.borderColor=\'var(--border)\'">';
+    var clickable = isEditMode;
+    var s = '<div '+(clickable?'onclick="'+clickFn+'"':'')+' style="background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;overflow:hidden;'+(clickable?'cursor:pointer;':'')+'transition:border-color .15s"'+(clickable?' onmouseover="this.style.borderColor=\'var(--blue)\'" onmouseout="this.style.borderColor=\'var(--border)\'"':'')+'>'; 
     s += '<div style="width:100%;aspect-ratio:1;background:var(--bg);position:relative;overflow:hidden">';
     if(photo){
       s += '<img src="'+photo+'" style="width:100%;height:100%;object-fit:cover;display:block">';
