@@ -1332,27 +1332,30 @@ function dStoragePick(type) {
     locations.forEach(function(r){ if(!seen[r.name]){seen[r.name]=true;items.push(r.name);} });
   } else if(type==='cell') {
     if(!room){toast('⚠ Спочатку виберіть приміщення');return;}
+    var seen = {};
     locations.filter(function(r){return r.name===room;}).forEach(function(r){
-      (r.cells||[]).forEach(function(c){ items.push(c.name); });
+      (r.cells||[]).forEach(function(c){ if(!seen[c.name]){seen[c.name]=true;items.push(c.name);} });
     });
   } else {
     if(!room||!cell){toast('⚠ Спочатку виберіть приміщення і комірку');return;}
+    var seen = {};
     locations.filter(function(r){return r.name===room;}).forEach(function(r){
       (r.cells||[]).filter(function(c){return c.name===cell;}).forEach(function(c){
-        (c.containers||[]).forEach(function(cn){ items.push(cn); });
+        (c.containers||[]).forEach(function(cn){ if(!seen[cn]){seen[cn]=true;items.push(cn);} });
       });
     });
   }
 
   if(!items.length){toast('⚠ Немає варіантів для вибору');return;}
+  items.sort();
 
   var ov = document.createElement('div');
-  ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center;box-sizing:border-box';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box';
   ov.onclick = function(e){ if(e.target===ov) document.body.removeChild(ov); };
 
   var labels = {room:'Приміщення',cell:'Комірка',con:'Контейнер'};
   var box = document.createElement('div');
-  box.style.cssText = 'background:var(--surface);border-radius:24px 24px 0 0;padding:20px;width:100%;max-width:560px;max-height:60vh;overflow-y:auto;box-shadow:0 -4px 32px rgba(0,0,0,.3);animation:slideUp .22s cubic-bezier(.16,1,.3,1)';
+  box.style.cssText = 'background:var(--surface);border-radius:20px;padding:20px;width:100%;max-width:400px;max-height:70vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.5)';
   box.innerHTML = '<div style="font-family:var(--font-d);font-size:17px;font-weight:600;margin-bottom:14px">'+labels[type]+'</div>'+
     items.map(function(name){
       return '<div data-val="'+_esc(name)+'" style="padding:12px 14px;font-family:var(--font-d);font-size:14px;font-weight:500;color:var(--text);cursor:pointer;border-radius:10px;border:1.5px solid var(--border);margin-bottom:8px;background:var(--surface2)">'+_esc(name)+'</div>';
