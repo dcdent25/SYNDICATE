@@ -2243,8 +2243,8 @@ function nav2OpenFromItem(itemId) {
   NAV2.roomIdx = locations.findIndex(function(r){return r.name===NAV2.room;});
   NAV2._detail = true;
   NAV2._adding = false;
-  nav2SetFabIcon('edit');
   openModal('nav');
+  setTimeout(function(){ nav2Render(); }, 50);
 }
 
 function nav2BackToList() {
