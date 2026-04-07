@@ -231,25 +231,8 @@ html,body{background:#1c1f26!important;overflow-x:hidden!important}.t-container,
 
 <!-- Місце зберігання -->
 <div class="dfield"><div class="dfield-label">Місце зберігання</div>
-<div id="dStorageBlock" onclick="openStorageNavModal()" style="display:grid;grid-template-columns:1fr 1fr 1fr 44px;gap:6px;margin-top:8px;cursor:pointer">
-  <div>
-    <div style="font-size:10px;color:var(--muted);font-family:var(--font-d);margin-bottom:4px">Контейнер</div>
-    <div id="dSup2Display" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;height:44px;display:flex;align-items:center;padding:0 12px;font-family:var(--font-d);font-size:14px;font-weight:600;color:var(--text);box-sizing:border-box">—</div>
-  </div>
-  <div>
-    <div style="font-size:10px;color:var(--muted);font-family:var(--font-d);margin-bottom:4px">Комірка</div>
-    <div id="dStorageDisplay" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;height:44px;display:flex;align-items:center;padding:0 12px;font-family:var(--font-d);font-size:14px;font-weight:600;color:var(--text);box-sizing:border-box">—</div>
-  </div>
-  <div>
-    <div style="font-size:10px;color:var(--muted);font-family:var(--font-d);margin-bottom:4px">Приміщення</div>
-    <div id="dRoomDisplay" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;height:44px;display:flex;align-items:center;padding:0 12px;font-family:var(--font-d);font-size:14px;font-weight:600;color:var(--text);box-sizing:border-box">—</div>
-  </div>
-  <div>
-    <div style="font-size:10px;color:var(--muted);font-family:var(--font-d);margin-bottom:4px">Мапа</div>
-    <div id="dMapThumb" style="background:var(--blue-s);border:1.5px solid rgba(138,180,248,.3);border-radius:8px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;overflow:hidden;box-sizing:border-box;position:relative">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="color:var(--blue)"><path d="M12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7zM9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9z"/></svg>
-    </div>
-  </div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px" id="dStorageCards">
+  <!-- Картки рендеруються через renderStorageCards() -->
 </div>
 <!-- приховані поля для сумісності -->
 <div style="display:none">
@@ -1301,26 +1284,109 @@ function openStorageNavModal() {
   document.getElementById('ov-nav').classList.add('open');
 }
 
+function renderStorageCards(i) {
+  var wrap = document.getElementById('dStorageCards');
+  if(!wrap) return;
+  var room = i ? (i.room||'') : '';
+  var cell = i ? (i.storage||'') : '';
+  var con  = i ? (i.sup&&i.sup!=='—' ? i.sup : '') : '';
+
+  _loadNavPhotosFromLocations();
+  var photoRoom = room ? (locationPhotos[room]||null) : null;
+  var photoCell = (room&&cell) ? (locationPhotos[room+'::'+cell]||null) : null;
+  var photoCon  = (room&&cell&&con) ? (locationPhotos[room+'::'+cell+'::'+con]||null) : null;
+
+  function card(label, val, photo, clickFn) {
+    var s = '<div onclick="'+clickFn+'" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor=\'var(--blue)\'" onmouseout="this.style.borderColor=\'var(--border)\'">';
+    s += '<div style="width:100%;aspect-ratio:1;background:var(--bg);position:relative;overflow:hidden">';
+    if(photo){
+      s += '<img src="'+photo+'" style="width:100%;height:100%;object-fit:cover;display:block">';
+    } else {
+      s += '<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px">';
+      s += '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="color:var(--muted)"><path d="M12 15.2A3.2 3.2 0 1 1 12 8.8a3.2 3.2 0 0 1 0 6.4zM9 2L7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.17L15 2H9z"/></svg>';
+      s += '<div style="font-size:10px;color:var(--muted);font-family:var(--font-d)">Фото</div></div>';
+    }
+    s += '</div>';
+    s += '<div style="padding:8px 10px">';
+    s += '<div style="font-size:9px;color:var(--sub);font-family:var(--font-d);font-weight:500;margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px">'+label+'</div>';
+    s += '<div style="font-family:var(--font-d);font-size:13px;font-weight:600;color:'+(val?'var(--text)':'var(--muted)')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(val||'—')+'</div>';
+    s += '</div></div>';
+    return s;
+  }
+
+  wrap.innerHTML =
+    card('Приміщення', room, photoRoom, 'dStoragePick(\'room\')') +
+    card('Комірка', cell, photoCell, 'dStoragePick(\'cell\')') +
+    card('Контейнер', con, photoCon, 'dStoragePick(\'con\')');
+}
+
+function dStoragePick(type) {
+  var i = stock.find(function(x){return x.id===currentDetailId;});
+  var room = i ? (i.room||'') : '';
+  var cell = i ? (i.storage||'') : '';
+
+  var items = [];
+  if(type==='room') {
+    /* Унікальні приміщення */
+    var seen = {};
+    locations.forEach(function(r){ if(!seen[r.name]){seen[r.name]=true;items.push(r.name);} });
+  } else if(type==='cell') {
+    if(!room){toast('⚠ Спочатку виберіть приміщення');return;}
+    locations.filter(function(r){return r.name===room;}).forEach(function(r){
+      (r.cells||[]).forEach(function(c){ items.push(c.name); });
+    });
+  } else {
+    if(!room||!cell){toast('⚠ Спочатку виберіть приміщення і комірку');return;}
+    locations.filter(function(r){return r.name===room;}).forEach(function(r){
+      (r.cells||[]).filter(function(c){return c.name===cell;}).forEach(function(c){
+        (c.containers||[]).forEach(function(cn){ items.push(cn); });
+      });
+    });
+  }
+
+  if(!items.length){toast('⚠ Немає варіантів для вибору');return;}
+
+  var ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center;box-sizing:border-box';
+  ov.onclick = function(e){ if(e.target===ov) document.body.removeChild(ov); };
+
+  var labels = {room:'Приміщення',cell:'Комірка',con:'Контейнер'};
+  var box = document.createElement('div');
+  box.style.cssText = 'background:var(--surface);border-radius:24px 24px 0 0;padding:20px;width:100%;max-width:560px;max-height:60vh;overflow-y:auto;box-shadow:0 -4px 32px rgba(0,0,0,.3);animation:slideUp .22s cubic-bezier(.16,1,.3,1)';
+  box.innerHTML = '<div style="font-family:var(--font-d);font-size:17px;font-weight:600;margin-bottom:14px">'+labels[type]+'</div>'+
+    items.map(function(name){
+      return '<div data-val="'+_esc(name)+'" style="padding:12px 14px;font-family:var(--font-d);font-size:14px;font-weight:500;color:var(--text);cursor:pointer;border-radius:10px;border:1.5px solid var(--border);margin-bottom:8px;background:var(--surface2)">'+_esc(name)+'</div>';
+    }).join('');
+
+  box.querySelectorAll('[data-val]').forEach(function(el){
+    el.addEventListener('mouseover',function(){this.style.borderColor='var(--blue)';this.style.background='var(--blue-s)';});
+    el.addEventListener('mouseout',function(){this.style.borderColor='var(--border)';this.style.background='var(--surface2)';});
+    el.addEventListener('click',function(){
+      var val = this.getAttribute('data-val');
+      var it = stock.find(function(x){return x.id===currentDetailId;});
+      if(it){
+        if(type==='room'){ it.room=val; it.storage=''; it.sup='—'; }
+        else if(type==='cell'){ it.storage=val; it.sup='—'; }
+        else { it.sup=val; }
+        updateStorageDisplay(it);
+        forceSyncToSheets();
+      }
+      document.body.removeChild(ov);
+    });
+  });
+
+  box.onclick = function(e){e.stopPropagation();};
+  ov.appendChild(box);
+  document.body.appendChild(ov);
+}
+
 function updateStorageDisplay(i) {
   var room = i.room||'—', cell = i.storage||'—', con = (i.sup&&i.sup!=='—')?i.sup:'—';
   var el;
-  el = document.getElementById('dRoomDisplay'); if(el) el.textContent = room;
-  el = document.getElementById('dStorageDisplay'); if(el) el.textContent = cell;
-  el = document.getElementById('dSup2Display'); if(el) el.textContent = con;
   el = document.getElementById('dRoom'); if(el) el.textContent = room;
   el = document.getElementById('dStorage'); if(el) el.textContent = cell;
   el = document.getElementById('dSup2'); if(el) el.textContent = con;
-  // Map thumb
-  var photoKey = room!=='—' ? (cell!=='—' ? (con!=='—' ? room+'::'+cell+'::'+con : room+'::'+cell) : room) : '';
-  var photo = photoKey ? (locationPhotos[photoKey]||null) : null;
-  var thumb = document.getElementById('dMapThumb');
-  if(thumb){
-    if(photo){
-      thumb.innerHTML = '<img src="'+photo+'" style="width:100%;height:100%;object-fit:cover">';
-    } else {
-      thumb.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="color:var(--blue)"><path d="M12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7zM9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9z"/></svg>';
-    }
-  }
+  renderStorageCards(i);
 }
 
 function nav2Render() {
@@ -1360,12 +1426,9 @@ function nav2Render() {
       if(editMode) {
         var ftId = 'nav2ft_'+fieldType; window[ftId] = fieldType;
         var inpId = 'nav2edit_'+fieldType;
-        s += '<div id="nav2txt_'+fieldType+'" onclick="nav2ActivateField(\''+fieldType+'\')" style="font-family:var(--font-d);font-size:12px;font-weight:600;color:'+(val?'var(--text)':'var(--muted)')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:text;min-height:18px;border-bottom:1.5px solid var(--border);padding:2px 0">'+(val?_esc(val):'—')+'</div>';
+        s += '<div id="nav2txt_'+fieldType+'" style="font-family:var(--font-d);font-size:12px;font-weight:600;color:'+(val?'var(--text)':'var(--muted)')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:text;min-height:18px;border-bottom:1.5px solid var(--border);padding:2px 0">'+(val?_esc(val):'—')+'</div>';
         s += '<input id="'+inpId+'" type="text" value="'+_esc(val||'')+'"'
           +' onclick="event.stopPropagation()"'
-          +' onfocus="var c=document.getElementById(\'ncard_'+fieldType+'\');if(c)c.style.borderColor=\'var(--blue)\';this.style.borderBottomColor=\'var(--blue)\'"'
-          +' onblur="var c=document.getElementById(\'ncard_'+fieldType+'\');if(c)c.style.borderColor=\'var(--border)\';this.style.display=\'none\';var t=document.getElementById(\'nav2txt_'+fieldType+'\');if(t){t.style.display=\'\';t.textContent=this.value||\'—\';}nav2SaveOneField(window[\''+ftId+'\'],this.value)"'
-          +' onkeydown="if(event.key===\'Enter\'){this.blur();}"'
           +' style="display:none;width:100%;background:transparent;border:none;border-bottom:1.5px solid var(--blue);outline:none;font-family:var(--font-d);font-size:12px;font-weight:600;color:var(--text);padding:2px 0;box-sizing:border-box">';
       } else {
         s += '<div style="font-family:var(--font-d);font-size:12px;font-weight:600;color:'+(val?'var(--text)':'var(--muted)')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(val?_esc(val):'—')+'</div>';
@@ -1441,6 +1504,37 @@ function nav2Render() {
     html += '</div>';
 
     body.innerHTML = html;
+
+    /* Прив'язуємо кліки на текстові блоки в режимі редагування */
+    if(editMode) {
+      ['room','cell','con'].forEach(function(ft) {
+        var txt = document.getElementById('nav2txt_'+ft);
+        var inp = document.getElementById('nav2edit_'+ft);
+        var card = document.getElementById('ncard_'+ft);
+        if(txt && inp) {
+          txt.addEventListener('click', function(e) {
+            e.stopPropagation();
+            txt.style.display = 'none';
+            inp.style.display = 'block';
+            if(card) card.style.borderColor = 'var(--blue)';
+            inp.focus();
+            inp.select();
+          });
+          inp.addEventListener('blur', function() {
+            var newVal = inp.value;
+            inp.style.display = 'none';
+            txt.style.display = '';
+            txt.textContent = newVal || '—';
+            if(card) card.style.borderColor = 'var(--border)';
+            nav2SaveOneField(ft, newVal);
+          });
+          inp.addEventListener('keydown', function(e) {
+            if(e.key === 'Enter') inp.blur();
+          });
+          inp.addEventListener('click', function(e) { e.stopPropagation(); });
+        }
+      });
+    }
     return;
   }
 
