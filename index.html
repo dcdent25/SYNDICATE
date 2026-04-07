@@ -1409,7 +1409,7 @@ function nav2Render() {
     var photoCell = (NAV2.room&&NAV2.cell) ? (locationPhotos[NAV2.room+'::'+NAV2.cell]||null) : null;
     var photoCon  = (NAV2.room&&NAV2.cell&&NAV2.con) ? (locationPhotos[NAV2.room+'::'+NAV2.cell+'::'+NAV2.con]||null) : null;
 
-    var editMode = NAV2._editMode;
+    var editMode = true; // завжди дозволяємо клік на назву
 
     function _card(label, val, photo, photoKey, fieldType) {
       var pkId = 'npk_'+(Math.random()*1e9|0); window[pkId] = photoKey;
@@ -1770,15 +1770,7 @@ function nav2Render() {
 
 function nav2FabClick() {
   if (NAV2._detail) {
-    NAV2._editMode = !NAV2._editMode;
-    nav2SetFabIcon(NAV2._editMode ? 'edit' : 'plus');
-    nav2Render();
-    if (NAV2._editMode) {
-      setTimeout(function(){
-        var inp = document.getElementById('nav2edit_room');
-        if(inp) inp.focus();
-      }, 50);
-    }
+    nav2ShowEditForm();
   } else {
     nav2AddNew();
   }
@@ -1942,6 +1934,7 @@ function nav2OpenDetail(room, cell, con, ri) {
   NAV2.room = room; NAV2.cell = cell; NAV2.con = con;
   NAV2.roomIdx = (ri !== undefined) ? ri : locations.findIndex(function(r){return r.name===room;});
   NAV2._detail = true;
+  NAV2._editMode = false;
   nav2SetFabIcon('edit');
   nav2Render();
 }
