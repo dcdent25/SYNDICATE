@@ -1496,8 +1496,8 @@ function nav2Render() {
       s += '<div style="display:flex;align-items:center;gap:4px">';
       var ftId = 'nav2ft_'+fieldType; window[ftId] = fieldType;
       s += '<div id="nav2txt_'+fieldType+'" style="flex:1;font-family:var(--font-d);font-size:13px;font-weight:600;color:'+(val?'var(--text)':'var(--muted)')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;min-height:20px;padding:2px 0;border-bottom:1.5px solid '+(isActive?'var(--blue)':'var(--border)')+'">'+(val?_esc(val):'—')+'</div>';
-      /* Маленький олівець для редагування назви */
-      s += '<button onclick="event.stopPropagation();nav2EditCardPicker(\''+fieldType+'\')" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:2px;flex-shrink:0;display:flex;align-items:center">';
+      /* Маленький олівець для редагування назви та фото */
+      s += '<button onclick="event.stopPropagation();nav2EditCardSimple(\''+fieldType+'\')" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:2px;flex-shrink:0;display:flex;align-items:center">';
       s += '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>';
       s += '</div>';
       s += '<input id="nav2edit_'+fieldType+'" type="text" value="'+_esc(val||'')+'" onclick="event.stopPropagation()" style="display:none;width:100%;background:transparent;border:none;border-bottom:1.5px solid var(--blue);outline:none;font-family:var(--font-d);font-size:12px;font-weight:600;color:var(--text);padding:2px 0;box-sizing:border-box">';
@@ -1818,6 +1818,98 @@ function nav2FabClick() {
   } else {
     nav2AddNew();
   }
+}
+
+function nav2EditCardSimple(ft) {
+  var curVal = ft==='room'?NAV2.room:ft==='cell'?NAV2.cell:NAV2.con;
+  var photoKey = ft==='room'?NAV2.room:(ft==='cell'?(NAV2.room+'::'+NAV2.cell):(NAV2.room+'::'+NAV2.cell+'::'+NAV2.con));
+  var curPhoto = locationPhotos[photoKey]||null;
+  var labels = {room:'Приміщення',cell:'Комірка',con:'Контейнер'};
+
+  var ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box';
+  ov.onclick = function(e){ if(e.target===ov) document.body.removeChild(ov); };
+
+  var box = document.createElement('div');
+  box.style.cssText = 'background:var(--surface);border-radius:20px;padding:20px;width:100%;max-width:360px;box-shadow:0 8px 40px rgba(0,0,0,.5)';
+  box.onclick = function(e){ e.stopPropagation(); };
+
+  /* Фото */
+  var photoDiv = document.createElement('div');
+  photoDiv.style.cssText = 'width:100%;aspect-ratio:2;background:var(--bg);border-radius:12px;overflow:hidden;position:relative;margin-bottom:14px;cursor:pointer;display:flex;align-items:center;justify-content:center';
+  function renderPhoto() {
+    if(curPhoto) {
+      photoDiv.innerHTML = '<img src="'+curPhoto+'" style="width:100%;height:100%;object-fit:cover"><div style="position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,.55);border-radius:6px;width:28px;height:28px;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M12 15.2A3.2 3.2 0 1 1 12 8.8a3.2 3.2 0 0 1 0 6.4zM9 2L7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.17L15 2H9z"/></svg></div>';
+    } else {
+      photoDiv.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;gap:6px"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" style="color:var(--muted)"><path d="M12 15.2A3.2 3.2 0 1 1 12 8.8a3.2 3.2 0 0 1 0 6.4zM9 2L7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.17L15 2H9z"/></svg><span style="font-size:11px;color:var(--muted);font-family:var(--font-d)">Натисніть щоб додати фото</span></div>';
+    }
+  }
+  renderPhoto();
+
+  var fileInp = document.createElement('input');
+  fileInp.type='file'; fileInp.accept='image/*'; fileInp.style.display='none';
+  fileInp.addEventListener('change', function(e){
+    var file=e.target.files[0]; if(!file) return;
+    var reader=new FileReader();
+    reader.onload=function(ev){
+      var img=new Image();
+      img.onload=function(){
+        var canvas=document.createElement('canvas');
+        var max=800,w=img.width,h=img.height;
+        if(w>max||h>max){if(w>h){h=Math.round(h*max/w);w=max;}else{w=Math.round(w*max/h);h=max;}}
+        canvas.width=w;canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        curPhoto=canvas.toDataURL('image/jpeg',0.75);
+        renderPhoto();
+      };
+      img.src=ev.target.result;
+    };
+    reader.readAsDataURL(file);
+    e.target.value='';
+  });
+  photoDiv.appendChild(fileInp);
+  photoDiv.addEventListener('click', function(){ fileInp.click(); });
+
+  /* Назва */
+  var label = document.createElement('div');
+  label.textContent = labels[ft];
+  label.style.cssText = 'font-size:11px;color:var(--sub);font-family:var(--font-d);font-weight:500;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px';
+
+  var nameInp = document.createElement('input');
+  nameInp.type='text'; nameInp.value=curVal||'';
+  nameInp.style.cssText='width:100%;height:46px;padding:0 14px;background:var(--bg);border:1.5px solid var(--blue);border-radius:10px;color:var(--text);font-family:var(--font-d);font-size:15px;outline:none;box-sizing:border-box;margin-bottom:14px';
+
+  var saveBtn = document.createElement('button');
+  saveBtn.textContent='Зберегти';
+  saveBtn.style.cssText='width:100%;height:46px;background:var(--blue);color:#1c1f26;border:none;border-radius:12px;font-family:var(--font-d);font-size:15px;font-weight:700;cursor:pointer';
+
+  saveBtn.addEventListener('click', function(){
+    var newName = nameInp.value.trim();
+    /* Зберігаємо фото */
+    if(curPhoto !== (locationPhotos[photoKey]||null)) {
+      _saveNavPhotoToLocations(photoKey, curPhoto);
+      locationPhotos[photoKey] = curPhoto;
+    }
+    /* Зберігаємо назву */
+    if(newName && newName !== curVal) {
+      nav2SaveOneField(ft, newName);
+    } else {
+      document.body.removeChild(ov);
+      nav2Render();
+    }
+    document.body.removeChild(ov);
+    nav2Render();
+  });
+
+  nameInp.addEventListener('keydown', function(e){ if(e.key==='Enter') saveBtn.click(); });
+
+  box.appendChild(photoDiv);
+  box.appendChild(label);
+  box.appendChild(nameInp);
+  box.appendChild(saveBtn);
+  ov.appendChild(box);
+  document.body.appendChild(ov);
+  setTimeout(function(){ nameInp.focus(); nameInp.select(); }, 50);
 }
 
 function nav2EditCardPicker(ft) {
