@@ -123,7 +123,7 @@ html,body{background:#1c1f26!important;overflow-x:hidden!important}.t-container,
 
 <!-- Контрагент -->
 <div class="dfield"><div class="dfield-label">Контрагент</div>
-  <div class="dfield-val"><span class="dval-text" id="dSupplier" style="flex:1;cursor:pointer;color:var(--blue)" onclick="if(this.textContent&&this.textContent!=='—')openSuppDetails(this.textContent)">—</span></div>
+  <div class="dfield-val"><span class="dval-text" id="dSupplier" style="flex:1;cursor:pointer;color:var(--blue)" onclick="if(this.textContent&&this.textContent!=='—')openSuppView(this.textContent)">—</span></div>
   <div id="dSupplierWrap" style="margin-top:6px;display:none">
     <div id="dSupplierDisplay" onclick="openSuppPicker()" style="width:100%;height:36px;padding:0 10px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-d);font-size:15px;font-weight:500;display:flex;align-items:center;cursor:pointer;transition:border-color .15s;box-sizing:border-box" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--border)'">—</div>
     <input id="dSupplierEdit" type="hidden" value="">
@@ -1261,6 +1261,51 @@ function renderSuppList(){
   wrap.querySelectorAll('[data-supp-delete]').forEach(function(btn){
     btn.addEventListener('click', function(){ deleteSuppConfirm(this.getAttribute('data-supp-delete')); });
   });
+}
+
+function openSuppView(name) {
+  var suppData = JSON.parse(localStorage.getItem('suppData_'+name)||'{}');
+  var fields = [
+    {label:'Назва Замовника', val: suppData.name||name},
+    {label:'Скорочена назва', val: suppData.short||''},
+    {label:'ЄДРПОУ', val: suppData.edrpou||''},
+    {label:'Юридична адреса', val: suppData.addr||''},
+    {label:'Поштова адреса', val: suppData.post||''},
+    {label:'IBAN', val: suppData.iban||''},
+    {label:'ІПН', val: suppData.ipn||''},
+    {label:'тел.', val: suppData.phone||''},
+    {label:'e-mail', val: suppData.email||''},
+  ].filter(function(f){ return f.val; });
+
+  var ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box';
+  ov.onclick = function(e){ if(e.target===ov) document.body.removeChild(ov); };
+
+  var box = document.createElement('div');
+  box.style.cssText = 'background:var(--surface);border-radius:20px;width:100%;max-width:460px;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.5);overflow:hidden';
+  box.onclick = function(e){ e.stopPropagation(); };
+
+  var head = document.createElement('div');
+  head.style.cssText = 'padding:20px 20px 12px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:space-between';
+  head.innerHTML = '<div style="font-family:var(--font-d);font-size:18px;font-weight:700;color:var(--text)">'+_esc(name)+'</div>'+
+    '<button onclick="this.closest(\'div\').parentElement.parentElement.remove()" style="background:var(--bg);border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;color:var(--sub);font-size:16px;display:flex;align-items:center;justify-content:center">✕</button>';
+  box.appendChild(head);
+
+  var body = document.createElement('div');
+  body.style.cssText = 'flex:1;overflow-y:auto;padding:16px 20px';
+  if(!fields.length) {
+    body.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px 0">Дані не заповнені</div>';
+  } else {
+    body.innerHTML = fields.map(function(f){
+      return '<div style="margin-bottom:14px">'+
+        '<div style="font-size:11px;color:var(--sub);font-family:var(--font-d);margin-bottom:4px">'+f.label+'</div>'+
+        '<div style="font-family:var(--font-d);font-size:15px;font-weight:500;color:var(--text)">'+_esc(f.val)+'</div>'+
+        '</div>';
+    }).join('');
+  }
+  box.appendChild(body);
+  ov.appendChild(box);
+  document.body.appendChild(ov);
 }
 
 function openSuppDetails(name) {
