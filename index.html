@@ -1673,42 +1673,12 @@ function nav2Render() {
           box.addEventListener('click', function(e){ e.stopPropagation(); });
           ov.appendChild(box);
           document.body.appendChild(ov);
+          _skipBlur = true;
         }
 
-        var _skipBlur = false;
         txt.addEventListener('click', function(e) {
           e.stopPropagation();
-          txt.style.display = 'none';
-          inp.style.display = 'block';
-          if(card) card.style.borderColor = 'var(--blue)';
-          inp.focus();
-          inp.select();
           showDrop();
-        });
-        inp.addEventListener('blur', function() {
-          if(_skipBlur) { _skipBlur=false; return; }
-          setTimeout(function(){
-            var drop = document.getElementById('nav2drop_'+ft);
-            if(drop) drop.remove();
-            inp.style.display = 'none';
-            txt.style.display = '';
-            txt.textContent = inp.value || '—';
-            if(card) card.style.borderColor = 'var(--border)';
-            nav2SaveOneField(ft, inp.value);
-          }, 200);
-        });
-        inp.addEventListener('keydown', function(e) {
-          if(e.key === 'Enter') inp.blur();
-          if(e.key === 'Escape') { inp.value = txt.textContent==='—'?'':txt.textContent; inp.blur(); }
-        });
-        inp.addEventListener('input', function() {
-          var drop = document.getElementById('nav2drop_'+ft);
-          if(drop) {
-            var q = inp.value.toLowerCase();
-            Array.from(drop.children).forEach(function(item){
-              item.style.display = item.textContent.toLowerCase().indexOf(q)>=0 ? '' : 'none';
-            });
-          }
         });
         inp.addEventListener('click', function(e) { e.stopPropagation(); });
       });
