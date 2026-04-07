@@ -1580,92 +1580,96 @@ function nav2Render() {
         function showDrop() {
           document.querySelectorAll('.nav2-edit-drop').forEach(function(d){d.remove();});
           var opts = getOptions();
-          var drop = document.createElement('div');
-          drop.className = 'nav2-edit-drop';
-          drop.id = 'nav2drop_'+ft;
-          drop.style.cssText = 'position:fixed;background:var(--surface2);border:1.5px solid var(--blue);border-radius:10px;z-index:9999;max-height:240px;overflow-y:auto;box-shadow:0 4px 24px rgba(0,0,0,.5);min-width:120px';
+          var labels = {room:'Приміщення',cell:'Комірка',con:'Контейнер'};
+          var labelsAdd = {room:'приміщення',cell:'комірку',con:'контейнер'};
 
-          /* Існуючі варіанти */
+          /* Overlay */
+          var ov = document.createElement('div');
+          ov.className = 'nav2-edit-drop';
+          ov.id = 'nav2drop_'+ft;
+          ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center';
+
+          /* Box */
+          var box = document.createElement('div');
+          box.style.cssText = 'background:var(--surface);border-radius:20px 20px 0 0;padding:20px 16px 32px;width:100%;max-width:560px;max-height:70vh;overflow-y:auto;box-shadow:0 -4px 32px rgba(0,0,0,.4);animation:slideUp .2s cubic-bezier(.16,1,.3,1)';
+
+          /* Заголовок */
+          var title = document.createElement('div');
+          title.textContent = labels[ft];
+          title.style.cssText = 'font-family:var(--font-d);font-size:20px;font-weight:700;margin-bottom:16px;color:var(--text)';
+          box.appendChild(title);
+
+          /* Список варіантів */
+          var curVal = NAV2[ft==='room'?'room':ft==='cell'?'cell':'con']||'';
           opts.forEach(function(o){
             var item = document.createElement('div');
+            var isSel = o===curVal;
             item.textContent = o;
-            item.style.cssText = 'padding:10px 14px;font-family:var(--font-d);font-size:13px;font-weight:500;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border)';
-            item.addEventListener('mouseover',function(){this.style.background='var(--blue-s)';});
-            item.addEventListener('mouseout',function(){this.style.background='';});
-            item.addEventListener('mousedown',function(e){
-              e.preventDefault();
+            item.style.cssText = 'padding:14px 16px;font-family:var(--font-d);font-size:15px;font-weight:500;color:var(--text);cursor:pointer;border-radius:12px;border:1.5px solid '+(isSel?'var(--blue)':'var(--border)')+';background:'+(isSel?'var(--blue-s)':'var(--surface2)')+';margin-bottom:8px;transition:all .15s';
+            item.addEventListener('click',function(e){
+              e.stopPropagation();
               inp.value = o;
-              drop.remove();
-              inp.blur();
+              ov.remove();
+              _skipBlur = false;
+              nav2SaveOneField(ft, o);
             });
-            drop.appendChild(item);
+            box.appendChild(item);
           });
 
-          /* Кнопка "+ Додати нове" */
-          var labels = {room:'приміщення',cell:'комірку',con:'контейнер'};
-          var addBtn = document.createElement('div');
-          addBtn.style.cssText = 'padding:10px 14px;font-family:var(--font-d);font-size:13px;font-weight:600;color:var(--blue);cursor:pointer;display:flex;align-items:center;gap:6px';
-          addBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Додати '+labels[ft];
-          addBtn.addEventListener('mouseover',function(){this.style.background='var(--blue-s)';});
-          addBtn.addEventListener('mouseout',function(){this.style.background='';});
-          addBtn.addEventListener('mousedown',function(e){
-            e.preventDefault();
-            _skipBlur = true;
-            /* Замінюємо кнопку на поле вводу прямо в дропдауні */
-            addBtn.style.display = 'none';
-            var addRow = document.createElement('div');
-            addRow.style.cssText = 'padding:6px 8px;border-top:1px solid var(--border);display:flex;gap:6px;align-items:center';
-            var addInp = document.createElement('input');
-            addInp.type = 'text';
-            addInp.placeholder = 'Нова назва...';
-            addInp.style.cssText = 'flex:1;height:34px;padding:0 10px;background:var(--bg);border:1.5px solid var(--blue);border-radius:8px;color:var(--text);font-family:var(--font-d);font-size:13px;outline:none;min-width:0';
-            var addOk = document.createElement('button');
-            addOk.textContent = '✓';
-            addOk.style.cssText = 'height:34px;width:34px;background:var(--blue);color:#1c1f26;border:none;border-radius:8px;cursor:pointer;font-size:16px;font-weight:700;flex-shrink:0';
+          /* Поле додавання нового */
+          var addWrap = document.createElement('div');
+          addWrap.style.cssText = 'display:flex;gap:8px;margin-top:8px';
+          var addInp = document.createElement('input');
+          addInp.type = 'text';
+          addInp.placeholder = 'Нова назва '+labelsAdd[ft]+'...';
+          addInp.style.cssText = 'flex:1;height:46px;padding:0 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--font-d);font-size:14px;outline:none';
+          addInp.addEventListener('focus',function(){this.style.borderColor='var(--blue)';});
+          addInp.addEventListener('blur',function(){this.style.borderColor='var(--border)';});
+          var addBtn = document.createElement('button');
+          addBtn.textContent = '+ Додати';
+          addBtn.style.cssText = 'height:46px;padding:0 16px;background:var(--blue);color:#1c1f26;border:none;border-radius:10px;font-family:var(--font-d);font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0';
 
-            function doAdd() {
-              var name = addInp.value.trim();
-              if(!name) return;
-              drop.remove();
-
-              if(ft==='room') {
-                locations.push({name:name, cells:[]});
-                var newRi = locations.length-1;
-                NAV2.room=name; NAV2.cell=''; NAV2.con=''; NAV2.roomIdx=newRi;
-              } else if(ft==='cell') {
-                var ri2 = NAV2.roomIdx>=0?NAV2.roomIdx:locations.findIndex(function(r){return r.name===NAV2.room;});
-                var ro = locations[ri2];
-                if(!ro) return;
-                if(!ro.cells) ro.cells=[];
-                ro.cells.push({name:name, containers:[]});
-                NAV2.cell=name; NAV2.con='';
-              } else {
-                var ri2 = NAV2.roomIdx>=0?NAV2.roomIdx:locations.findIndex(function(r){return r.name===NAV2.room;});
-                var ro = locations[ri2];
-                var co = ro&&ro.cells?ro.cells.find(function(c){return c.name===NAV2.cell;}):null;
-                if(!co) return;
-                if(!co.containers) co.containers=[];
-                co.containers.push(name);
-                NAV2.con=name;
-              }
-              forceSyncToSheets(); toast('✓ '+name); nav2Render();
+          function doAdd() {
+            var name = addInp.value.trim();
+            if(!name) return;
+            ov.remove();
+            _skipBlur = false;
+            if(ft==='room') {
+              locations.push({name:name, cells:[]});
+              NAV2.room=name; NAV2.cell=''; NAV2.con=''; NAV2.roomIdx=locations.length-1;
+            } else if(ft==='cell') {
+              var ri2=NAV2.roomIdx>=0?NAV2.roomIdx:locations.findIndex(function(r){return r.name===NAV2.room;});
+              var ro=locations[ri2]; if(!ro) return;
+              if(!ro.cells) ro.cells=[];
+              ro.cells.push({name:name,containers:[]});
+              NAV2.cell=name; NAV2.con='';
+            } else {
+              var ri2=NAV2.roomIdx>=0?NAV2.roomIdx:locations.findIndex(function(r){return r.name===NAV2.room;});
+              var ro=locations[ri2];
+              var co=ro&&ro.cells?ro.cells.find(function(c){return c.name===NAV2.cell;}):null;
+              if(!co) return;
+              if(!co.containers) co.containers=[];
+              co.containers.push(name);
+              NAV2.con=name;
             }
+            forceSyncToSheets(); toast('✓ '+name); nav2Render();
+          }
 
-            addOk.addEventListener('mousedown', function(e){ e.preventDefault(); doAdd(); });
-            addInp.addEventListener('keydown', function(e){ if(e.key==='Enter') doAdd(); e.stopPropagation(); });
-            addInp.addEventListener('mousedown', function(e){ e.stopPropagation(); });
-            addRow.appendChild(addInp);
-            addRow.appendChild(addOk);
-            drop.appendChild(addRow);
-            setTimeout(function(){ addInp.focus(); }, 30);
+          addBtn.addEventListener('click', function(e){ e.stopPropagation(); doAdd(); });
+          addInp.addEventListener('keydown', function(e){ if(e.key==='Enter') doAdd(); e.stopPropagation(); });
+          addInp.addEventListener('click', function(e){ e.stopPropagation(); });
+          addWrap.appendChild(addInp);
+          addWrap.appendChild(addBtn);
+          box.appendChild(addWrap);
+
+          ov.addEventListener('click', function(e){
+            if(e.target===ov){ ov.remove(); _skipBlur=false; }
           });
-          drop.appendChild(addBtn);
-
-          document.body.appendChild(drop);
-          var rect = inp.getBoundingClientRect();
-          drop.style.left = rect.left+'px';
-          drop.style.top = (rect.bottom+4)+'px';
-          drop.style.width = rect.width+'px';
+          box.addEventListener('click', function(e){ e.stopPropagation(); });
+          ov.appendChild(box);
+          document.body.appendChild(ov);
+          _skipBlur = true;
+          setTimeout(function(){ addInp.focus(); }, 100);
         }
 
         var _skipBlur = false;
