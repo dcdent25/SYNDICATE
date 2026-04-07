@@ -396,18 +396,17 @@ html,body{background:#1c1f26!important;overflow-x:hidden!important}.t-container,
 
 <!-- Місце зберігання -->
 <div class="dfield"><div class="dfield-label">Місце зберігання</div>
-<div style="display:grid;grid-template-columns:1fr 1fr 1fr 44px;gap:8px;margin-top:8px">
-  <div><div style="font-size:10px;color:var(--muted);font-family:var(--font-d);margin-bottom:4px">Приміщення</div>
-    <input type="text" id="newRoom" style="height:44px;width:100%;box-sizing:border-box;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:0 12px;font-family:var(--font-d);font-size:15px;font-weight:600;color:var(--text);outline:none" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'"></div>
-  <div><div style="font-size:10px;color:var(--muted);font-family:var(--font-d);margin-bottom:4px">Комірка</div>
-    <input type="text" id="newStorage" style="height:44px;width:100%;box-sizing:border-box;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:0 12px;font-family:var(--font-d);font-size:15px;font-weight:600;color:var(--text);outline:none" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'"></div>
-  <div><div style="font-size:10px;color:var(--muted);font-family:var(--font-d);margin-bottom:4px">Контейнер</div>
-    <input type="text" id="newSup2" style="height:44px;width:100%;box-sizing:border-box;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:0 12px;font-family:var(--font-d);font-size:13px;color:var(--text);outline:none" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'"></div>
-  <div><div style="font-size:10px;color:var(--muted);font-family:var(--font-d);margin-bottom:4px">Мапа</div>
-    <button type="button" onclick="document.getElementById('newMapPhotoInput').click()" style="background:var(--blue-s);border:1.5px solid rgba(138,180,248,.3);border-radius:8px;cursor:pointer;color:var(--blue);padding:0;width:44px;height:44px;display:flex;align-items:center;justify-content:center;box-sizing:border-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7zM9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9z"/></svg></button>
-    <input type="file" id="newMapPhotoInput" accept="image/*" multiple style="display:none" onchange="handleNewMapPhoto(event)">
-  </div>
-</div></div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr 44px;gap:8px;margin-top:8px" id="newStorageCards">
+  <!-- рендерується через renderNewStorageCards() -->
+</div>
+<input type="hidden" id="newRoom" value="">
+<input type="hidden" id="newStorage" value="">
+<input type="hidden" id="newSup2" value="">
+<div><div style="font-size:10px;color:var(--muted);font-family:var(--font-d);margin-bottom:4px;margin-top:8px">Мапа</div>
+  <button type="button" onclick="document.getElementById('newMapPhotoInput').click()" style="background:var(--blue-s);border:1.5px solid rgba(138,180,248,.3);border-radius:8px;cursor:pointer;color:var(--blue);padding:0;width:44px;height:44px;display:flex;align-items:center;justify-content:center;box-sizing:border-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7zM9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9z"/></svg></button>
+  <input type="file" id="newMapPhotoInput" accept="image/*" multiple style="display:none" onchange="handleNewMapPhoto(event)">
+</div>
+</div>
 
 <!-- Коментар -->
 <div class="dfield"><div class="dfield-label">Коментар</div>
@@ -719,9 +718,121 @@ function doGive(){const id=+document.getElementById('giveItem').value;const qty=
 const givePortions = i.portionComp > 0 ? qty / i.portionComp : qty;
 const giveTotalCost = Math.round(givePortions * givePricePerPortion * 100) / 100;
 const givePhotoKey='op_give_'+now.replace(/[:.]/g,'_');history.unshift({type:'out',name:i.name,qty,note:'👨‍⚕️ Видано: '+doc+(note?' — '+note:''),time:now,cost:giveTotalCost,portions:givePortions,unit:i.unit||'шт',photoKey:_opPhotos['give']?givePhotoKey:null});_saveOpPhotoToSheets('give',givePhotoKey);closeModal('give');_resetOpPhoto('give');document.getElementById('givePreview').style.display='none';document.getElementById('giveDoc').value='';document.getElementById('giveNote').value='';renderAll();renderHistory();toast('Видано '+qty+' шт. — '+i.name+' → '+doc);forceSyncToSheets();}
-function openNewItemModal(){renderCategories();_updateNewCatSelect();document.getElementById('ov-new').classList.add('open');setTimeout(()=>document.getElementById('newName').focus(),50);}
+/* ── Місце зберігання у формі нової позиції ── */
+var _newStorageVals = {room:'', cell:'', con:''};
+
+function renderNewStorageCards() {
+  var wrap = document.getElementById('newStorageCards');
+  if(!wrap) return;
+  _loadNavPhotosFromLocations();
+  var r = _newStorageVals.room, c = _newStorageVals.cell, cn = _newStorageVals.con;
+  var photoRoom = r ? (locationPhotos[r]||null) : null;
+  var photoCell = (r&&c) ? (locationPhotos[r+'::'+c]||null) : null;
+  var photoCon  = (r&&c&&cn) ? (locationPhotos[r+'::'+c+'::'+cn]||null) : null;
+
+  function card(label, val, photo, type) {
+    var s = '<div id="nsc_'+type+'" style="background:var(--surface2);border:1.5px solid '+(val?'var(--blue)':'var(--border)')+';border-radius:12px;overflow:hidden;cursor:pointer;transition:border-color .15s">';
+    s += '<div style="width:100%;aspect-ratio:1;background:var(--bg);overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">';
+    if(photo) s += '<img src="'+photo+'" style="width:100%;height:100%;object-fit:cover;display:block">';
+    else s += '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="color:var(--muted)"><path d="M12 15.2A3.2 3.2 0 1 1 12 8.8a3.2 3.2 0 0 1 0 6.4zM9 2L7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.17L15 2H9z"/></svg><div style="font-size:9px;color:var(--muted);font-family:var(--font-d)">Фото</div>';
+    s += '</div><div style="padding:6px 8px"><div style="font-size:9px;color:var(--sub);font-family:var(--font-d);font-weight:500;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px">'+label+'</div>';
+    s += '<div style="font-family:var(--font-d);font-size:12px;font-weight:600;color:'+(val?'var(--text)':'var(--muted)')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(val||'—')+'</div></div></div>';
+    return s;
+  }
+  wrap.innerHTML = card('Приміщення', r, photoRoom, 'room') + card('Комірка', c, photoCell, 'cell') + card('Контейнер', cn, photoCon, 'con');
+
+  // Bind clicks
+  ['room','cell','con'].forEach(function(type) {
+    var el = document.getElementById('nsc_'+type);
+    if(!el) return;
+    el.addEventListener('mouseover', function(){ this.style.borderColor='var(--blue)'; });
+    el.addEventListener('mouseout',  function(){ this.style.borderColor=_newStorageVals[type==='cell'?'cell':type==='con'?'con':'room']?'var(--blue)':'var(--border)'; });
+    el.addEventListener('click', function(){ newStoragePick(type); });
+  });
+
+  // Sync hidden inputs
+  document.getElementById('newRoom').value = _newStorageVals.room;
+  document.getElementById('newStorage').value = _newStorageVals.cell;
+  document.getElementById('newSup2').value = _newStorageVals.con;
+}
+
+function newStoragePick(type) {
+  if(type==='cell' && !_newStorageVals.room){ toast('⚠ Спочатку оберіть приміщення'); return; }
+  if(type==='con' && (!_newStorageVals.room||!_newStorageVals.cell)){ toast('⚠ Спочатку оберіть приміщення і комірку'); return; }
+
+  var items = [], seen = {};
+  if(type==='room') {
+    locations.forEach(function(r){ if(!seen[r.name]){seen[r.name]=true;items.push(r.name);} });
+  } else if(type==='cell') {
+    locations.filter(function(r){return r.name===_newStorageVals.room;}).forEach(function(r){
+      (r.cells||[]).forEach(function(c){ if(!seen[c.name]){seen[c.name]=true;items.push(c.name);} });
+    });
+  } else {
+    locations.filter(function(r){return r.name===_newStorageVals.room;}).forEach(function(r){
+      (r.cells||[]).filter(function(c){return c.name===_newStorageVals.cell;}).forEach(function(c){
+        (c.containers||[]).forEach(function(cn){ if(!seen[cn]){seen[cn]=true;items.push(cn);} });
+      });
+    });
+  }
+  items.sort();
+  var labels = {room:'Приміщення', cell:'Комірка', con:'Контейнер'};
+
+  var ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box';
+  ov.onclick = function(e){ if(e.target===ov) document.body.removeChild(ov); };
+  var box = document.createElement('div');
+  box.style.cssText = 'background:var(--surface);border-radius:20px;width:100%;max-width:400px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.5);overflow:hidden';
+  box.onclick = function(e){ e.stopPropagation(); };
+  var title = document.createElement('div');
+  title.textContent = labels[type];
+  title.style.cssText = 'font-family:var(--font-d);font-size:20px;font-weight:700;color:var(--text);padding:20px 16px 12px;flex-shrink:0';
+  box.appendChild(title);
+  var list = document.createElement('div');
+  list.style.cssText = 'flex:1;overflow-y:auto;padding:0 16px';
+  items.forEach(function(name){
+    var item = document.createElement('div');
+    item.textContent = name;
+    item.style.cssText = 'padding:14px 16px;font-family:var(--font-d);font-size:15px;font-weight:500;color:var(--text);cursor:pointer;border-radius:12px;border:1.5px solid var(--border);background:var(--surface2);margin-bottom:8px';
+    item.addEventListener('mouseover',function(){this.style.borderColor='var(--blue)';this.style.background='var(--blue-s)';});
+    item.addEventListener('mouseout',function(){this.style.borderColor='var(--border)';this.style.background='var(--surface2)';});
+    item.addEventListener('click',function(){
+      if(type==='room'){ _newStorageVals.room=name; _newStorageVals.cell=''; _newStorageVals.con=''; }
+      else if(type==='cell'){ _newStorageVals.cell=name; _newStorageVals.con=''; }
+      else { _newStorageVals.con=name; }
+      document.body.removeChild(ov);
+      renderNewStorageCards();
+    });
+    list.appendChild(item);
+  });
+  box.appendChild(list);
+  var addWrap = document.createElement('div');
+  addWrap.style.cssText = 'display:flex;gap:8px;padding:12px 16px 16px;border-top:1px solid var(--border);flex-shrink:0';
+  var addInp = document.createElement('input');
+  addInp.type='text'; addInp.placeholder='Нова назва...';
+  addInp.style.cssText='flex:1;height:46px;padding:0 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--font-d);font-size:14px;outline:none';
+  addInp.addEventListener('focus',function(){this.style.borderColor='var(--blue)';});
+  addInp.addEventListener('blur',function(){this.style.borderColor='var(--border)';});
+  var addBtn = document.createElement('button');
+  addBtn.textContent='+ Додати';
+  addBtn.style.cssText='height:46px;padding:0 16px;background:var(--blue);color:#1c1f26;border:none;border-radius:10px;font-family:var(--font-d);font-size:14px;font-weight:600;cursor:pointer;flex-shrink:0';
+  addBtn.addEventListener('click',function(){
+    var n=addInp.value.trim(); if(!n) return;
+    if(type==='room'){ _newStorageVals.room=n; _newStorageVals.cell=''; _newStorageVals.con=''; }
+    else if(type==='cell'){ _newStorageVals.cell=n; _newStorageVals.con=''; }
+    else { _newStorageVals.con=n; }
+    document.body.removeChild(ov);
+    renderNewStorageCards();
+  });
+  addInp.addEventListener('keydown',function(e){ if(e.key==='Enter') addBtn.click(); });
+  addWrap.appendChild(addInp); addWrap.appendChild(addBtn);
+  box.appendChild(addWrap);
+  ov.appendChild(box);
+  document.body.appendChild(ov);
+}
+
+function openNewItemModal(){renderCategories();_updateNewCatSelect();_newStorageVals={room:'',cell:'',con:''};document.getElementById('ov-new').classList.add('open');setTimeout(function(){renderNewStorageCards();document.getElementById('newName').focus();},50);}
 function closeNewModal(){document.getElementById('ov-new').classList.remove('open');}
-function doNewItem(){const name=document.getElementById('newName').value.trim();const cat=document.getElementById('newCat').value;const qty=parseInt(document.getElementById('newQty').value)||0;const min=parseInt(document.getElementById('newMin').value)||5;const price=parseFloat(document.getElementById('newPrice').value)||0;const marketPrice=price;const sup=document.getElementById('newSup').value.trim()||'—';const storage=document.getElementById('newStorage').value.trim()||'—';const room=document.getElementById('newRoom')?.value.trim()||'';const link=document.getElementById('newLink').value.trim();const comment=document.getElementById('newComment').value.trim();const unit=document.querySelector('#newUnitChips .dunit-chip.sel')?.dataset.unit||'шт';const portions=parseFloat(document.getElementById('newPortions').value)||0;const matType=(document.getElementById('newMatType')?.value||document.querySelector('#newMatTypeChips .dunit-chip.sel')?.dataset.val||'Загальний').trim();const portionUnit=document.querySelector('#newPortionUnitChips .dunit-chip.sel')?.dataset.unit||(document.getElementById('newPortionUnit')?.value.trim())||unit;const portionComp=parseFloat(document.getElementById('newPortionComp').value)||1;const portionPrice=parseFloat(document.getElementById('newPortionPrice').value)||0;if(!name){toast('⚠ Введіть назву');return;}const maxId=stock.length?Math.max(...stock.map(x=>x.id)):0;const newId=maxId+1;const _nThreshOk=parseInt(document.getElementById('newDv1a')?.value);const _nThreshMid=parseInt(document.getElementById('newDv3b')?.value);const threshOk=!isNaN(_nThreshOk)?_nThreshOk:min;const threshMid=!isNaN(_nThreshMid)?_nThreshMid:Math.ceil(min*0.3);const newItm={id:newId,name,cat,qty,stockQty:qty,min,price,marketPrice,sup,storage,room,link,comment,unit,photo:newItemPhoto,mapPhoto:window._newMapPhoto||null,mapPhotos:window._newMapPhotos&&window._newMapPhotos.length?window._newMapPhotos:(window._newMapPhoto?[window._newMapPhoto]:[]),portions,matType,portionUnit,portionComp,portionPrice,threshOk,threshMid};calcItem(newItm);stock.push(newItm);const now=new Date().toISOString();history.unshift({type:'in',name,qty,note:'Нова позиція — '+sup,time:now});closeNewModal();renderAll();renderHistory();toast('Додано — '+name);forceSyncToSheets();['newName','newQty','newMin','newPrice','newSup','newStorage','newRoom','newLink','newComment','newPortions','newPortionComp','newPortionPrice','newSup2'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=id==='newQty'?'0':id==='newMin'?'5':'';});document.querySelectorAll('#newPortionUnitChips .dunit-chip').forEach((c,i)=>c.classList.toggle('sel',i===0));newItemPhoto=null;window._newMapPhoto=null;window._newMapPhotos=[];var _nmw=document.getElementById('newMapPhotoPreviewWrap');if(_nmw)_nmw.innerHTML='';const box=document.getElementById('newImgBox');box.innerHTML='<svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" style="color:var(--sub)"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span style="font-family:var(--font-d);font-size:13px;color:var(--sub)">Додати фото</span>';box.style.border='1.5px dashed var(--border)';selectChip(document.querySelector('#newUnitChips .dunit-chip'),'newUnitChips');}
+function doNewItem(){const name=document.getElementById('newName').value.trim();const cat=document.getElementById('newCat').value;const qty=parseInt(document.getElementById('newQty').value)||0;const min=parseInt(document.getElementById('newMin').value)||5;const price=parseFloat(document.getElementById('newPrice').value)||0;const marketPrice=price;const sup=document.getElementById('newSup').value.trim()||'—';const storage=_newStorageVals.cell||'—';const room=_newStorageVals.room||'';const newCon=_newStorageVals.con||'';const link=document.getElementById('newLink').value.trim();const comment=document.getElementById('newComment').value.trim();const unit=document.querySelector('#newUnitChips .dunit-chip.sel')?.dataset.unit||'шт';const portions=parseFloat(document.getElementById('newPortions').value)||0;const matType=(document.getElementById('newMatType')?.value||document.querySelector('#newMatTypeChips .dunit-chip.sel')?.dataset.val||'Загальний').trim();const portionUnit=document.querySelector('#newPortionUnitChips .dunit-chip.sel')?.dataset.unit||(document.getElementById('newPortionUnit')?.value.trim())||unit;const portionComp=parseFloat(document.getElementById('newPortionComp').value)||1;const portionPrice=parseFloat(document.getElementById('newPortionPrice').value)||0;if(!name){toast('⚠ Введіть назву');return;}const maxId=stock.length?Math.max(...stock.map(x=>x.id)):0;const newId=maxId+1;const _nThreshOk=parseInt(document.getElementById('newDv1a')?.value);const _nThreshMid=parseInt(document.getElementById('newDv3b')?.value);const threshOk=!isNaN(_nThreshOk)?_nThreshOk:min;const threshMid=!isNaN(_nThreshMid)?_nThreshMid:Math.ceil(min*0.3);const newItm={id:newId,name,cat,qty,stockQty:qty,min,price,marketPrice,sup,storage,room,con:newCon,link,comment,unit,photo:newItemPhoto,mapPhoto:window._newMapPhoto||null,mapPhotos:window._newMapPhotos&&window._newMapPhotos.length?window._newMapPhotos:(window._newMapPhoto?[window._newMapPhoto]:[]),portions,matType,portionUnit,portionComp,portionPrice,threshOk,threshMid};calcItem(newItm);stock.push(newItm);const now=new Date().toISOString();history.unshift({type:'in',name,qty,note:'Нова позиція — '+sup,time:now});closeNewModal();renderAll();renderHistory();toast('Додано — '+name);forceSyncToSheets();['newName','newQty','newMin','newPrice','newSup','newStorage','newRoom','newLink','newComment','newPortions','newPortionComp','newPortionPrice','newSup2'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=id==='newQty'?'0':id==='newMin'?'5':'';});document.querySelectorAll('#newPortionUnitChips .dunit-chip').forEach((c,i)=>c.classList.toggle('sel',i===0));newItemPhoto=null;window._newMapPhoto=null;window._newMapPhotos=[];var _nmw=document.getElementById('newMapPhotoPreviewWrap');if(_nmw)_nmw.innerHTML='';const box=document.getElementById('newImgBox');box.innerHTML='<svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" style="color:var(--sub)"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span style="font-family:var(--font-d);font-size:13px;color:var(--sub)">Додати фото</span>';box.style.border='1.5px dashed var(--border)';selectChip(document.querySelector('#newUnitChips .dunit-chip'),'newUnitChips');_newStorageVals={room:'',cell:'',con:''};}
 function selectChip(el,groupId){document.getElementById(groupId).querySelectorAll('.dunit-chip').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');
   if(groupId==='dUnitChips'){var s=document.getElementById('dUnitSuffix');if(s)s.textContent=el.dataset.unit;var pu=document.getElementById('dPortionsUnit');if(pu)pu.textContent=el.dataset.unit;var pue=document.getElementById('dPortionsUnitEdit');if(pue)pue.textContent=el.dataset.unit;}
   if(groupId==='dPortionUnitChips'){var pc=document.getElementById('dPortionCompUnit');if(pc)pc.textContent=el.dataset.unit;}
