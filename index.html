@@ -1537,19 +1537,6 @@ function nav2Render() {
       html += '<button onclick="nav2ConfirmStorage()" style="width:100%;height:44px;background:var(--blue);color:#1c1f26;border:none;border-radius:10px;font-family:var(--font-d);font-size:14px;font-weight:600;cursor:pointer;margin-top:8px">✓ Вибрати це місце</button>';
     }
 
-    /* Додати комірку або контейнер */
-    html += '<div style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px;display:flex;flex-direction:column;gap:8px">';
-    if(!NAV2.cell){
-      html += '<div style="font-size:11px;font-weight:600;color:var(--sub);font-family:var(--font-d);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">Додати комірку</div>';
-      html += '<div style="display:flex;gap:8px"><input id="nav2-inp-cell" type="text" placeholder="Нова комірка..." style="flex:1;height:38px;padding:0 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-d);font-size:13px;outline:none" onkeydown="if(event.key===\'Enter\')nav2AddCell()">';
-      html += '<button onclick="nav2AddCell()" style="height:38px;padding:0 16px;background:var(--blue);color:#1c1f26;border:none;border-radius:8px;font-family:var(--font-d);font-size:13px;font-weight:600;cursor:pointer">+ Додати</button></div>';
-    } else {
-      html += '<div style="font-size:11px;font-weight:600;color:var(--sub);font-family:var(--font-d);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">Додати контейнер</div>';
-      html += '<div style="display:flex;gap:8px"><input id="nav2-inp-con" type="text" placeholder="Новий контейнер..." style="flex:1;height:38px;padding:0 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-d);font-size:13px;outline:none" onkeydown="if(event.key===\'Enter\')nav2AddCon()">';
-      html += '<button onclick="nav2AddCon()" style="height:38px;padding:0 16px;background:var(--blue);color:#1c1f26;border:none;border-radius:8px;font-family:var(--font-d);font-size:13px;font-weight:600;cursor:pointer">+ Додати</button></div>';
-    }
-    html += '</div>';
-
     body.innerHTML = html;
 
     /* Прив'язуємо кліки на текстові блоки в режимі редагування */
