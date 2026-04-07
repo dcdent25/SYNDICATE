@@ -1411,33 +1411,36 @@ function nav2Render() {
     var photoCell = (NAV2.room&&NAV2.cell) ? (locationPhotos[NAV2.room+'::'+NAV2.cell]||null) : null;
     var photoCon  = (NAV2.room&&NAV2.cell&&NAV2.con) ? (locationPhotos[NAV2.room+'::'+NAV2.cell+'::'+NAV2.con]||null) : null;
 
-    var editMode = true; // завжди дозволяємо клік на назву
+    var editMode = true;
+
+    /* Визначаємо активний рівень для підсвічування */
+    var activeLevel = NAV2.con ? 'con' : (NAV2.cell ? 'cell' : 'room');
 
     function _card(label, val, photo, photoKey, fieldType) {
       var pkId = 'npk_'+(Math.random()*1e9|0); window[pkId] = photoKey;
       var zkId = 'nzk_'+(Math.random()*1e9|0); window[zkId] = photoKey;
       var cardId = 'ncard_'+fieldType;
-      var s = '<div id="'+cardId+'" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color .15s">';
-      s += '<div style="width:100%;aspect-ratio:1;background:var(--bg);position:relative;overflow:hidden">';
+      var isActive = fieldType === activeLevel;
+      var border = isActive ? 'var(--blue)' : 'var(--border)';
+      var s = '<div id="'+cardId+'" style="background:var(--surface2);border:1.5px solid '+border+';border-radius:12px;overflow:hidden;transition:border-color .15s">';
+      /* Фото — клік активує цей рівень */
+      var navFn = fieldType==='room' ? 'nav2SetActiveLevel(\'room\')' : fieldType==='cell' ? 'nav2SetActiveLevel(\'cell\')' : 'nav2SetActiveLevel(\'con\')';
+      s += '<div onclick="'+navFn+'" style="width:100%;aspect-ratio:1;background:var(--bg);position:relative;overflow:hidden;cursor:pointer">';
       if(photo){
-        s += '<img src="'+photo+'" onclick="nav2PhotoZoom(window[\''+zkId+'\'])" style="width:100%;height:100%;object-fit:cover;cursor:zoom-in;display:block">';
-        s += '<button onclick="nav2PhotoForKey(window[\''+pkId+'\'])" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);border:none;border-radius:6px;width:26px;height:26px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0"><svg width="13" height="13" viewBox="0 0 24 24" fill="white"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>';
+        s += '<img src="'+photo+'" style="width:100%;height:100%;object-fit:cover;display:block">';
+        s += '<button onclick="event.stopPropagation();nav2PhotoForKey(window[\''+pkId+'\'])" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);border:none;border-radius:6px;width:26px;height:26px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0"><svg width="13" height="13" viewBox="0 0 24 24" fill="white"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>';
       } else {
-        s += '<div onclick="nav2PhotoForKey(window[\''+pkId+'\'])" style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="color:var(--muted)"><path d="M12 15.2A3.2 3.2 0 1 1 12 8.8a3.2 3.2 0 0 1 0 6.4zM9 2L7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.17L15 2H9z"/></svg><div style="font-size:10px;color:var(--muted);font-family:var(--font-d)">Фото</div></div>';
+        s += '<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px">';
+        s += '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="color:var(--muted)"><path d="M12 15.2A3.2 3.2 0 1 1 12 8.8a3.2 3.2 0 0 1 0 6.4zM9 2L7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.17L15 2H9z"/></svg>';
+        s += '<div style="font-size:10px;color:var(--muted);font-family:var(--font-d)">Фото</div></div>';
+        s += '<button onclick="event.stopPropagation();nav2PhotoForKey(window[\''+pkId+'\'])" style="position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,.35);border:none;border-radius:6px;width:26px;height:26px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0"><svg width="13" height="13" viewBox="0 0 24 24" fill="white" style="opacity:.6"><path d="M12 15.2A3.2 3.2 0 1 1 12 8.8a3.2 3.2 0 0 1 0 6.4zM9 2L7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.17L15 2H9z"/></svg></button>';
       }
       s += '</div>';
       s += '<div style="padding:8px 10px">';
       s += '<div style="font-size:9px;color:var(--sub);font-family:var(--font-d);font-weight:500;margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px">'+label+'</div>';
-      if(editMode) {
-        var ftId = 'nav2ft_'+fieldType; window[ftId] = fieldType;
-        var inpId = 'nav2edit_'+fieldType;
-        s += '<div id="nav2txt_'+fieldType+'" style="font-family:var(--font-d);font-size:13px;font-weight:600;color:'+(val?'var(--text)':'var(--muted)')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;min-height:20px;padding:2px 0;border-bottom:1.5px solid var(--border)">'+(val?_esc(val):'—')+'</div>';
-        s += '<input id="'+inpId+'" type="text" value="'+_esc(val||'')+'"'
-          +' onclick="event.stopPropagation()"'
-          +' style="display:none;width:100%;background:transparent;border:none;border-bottom:1.5px solid var(--blue);outline:none;font-family:var(--font-d);font-size:12px;font-weight:600;color:var(--text);padding:2px 0;box-sizing:border-box">';
-      } else {
-        s += '<div style="font-family:var(--font-d);font-size:12px;font-weight:600;color:'+(val?'var(--text)':'var(--muted)')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(val?_esc(val):'—')+'</div>';
-      }
+      var ftId = 'nav2ft_'+fieldType; window[ftId] = fieldType;
+      s += '<div id="nav2txt_'+fieldType+'" style="font-family:var(--font-d);font-size:13px;font-weight:600;color:'+(val?'var(--text)':'var(--muted)')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;min-height:20px;padding:2px 0;border-bottom:1.5px solid '+(isActive?'var(--blue)':'var(--border)')+'">'+(val?_esc(val):'—')+'</div>';
+      s += '<input id="nav2edit_'+fieldType+'" type="text" value="'+_esc(val||'')+'" onclick="event.stopPropagation()" style="display:none;width:100%;background:transparent;border:none;border-bottom:1.5px solid var(--blue);outline:none;font-family:var(--font-d);font-size:12px;font-weight:600;color:var(--text);padding:2px 0;box-sizing:border-box">';
       s += '</div></div>';
       return s;
     }
@@ -1751,6 +1754,13 @@ function nav2FabClick() {
   } else {
     nav2AddNew();
   }
+}
+
+function nav2SetActiveLevel(level) {
+  /* Клік на картку — скидаємо нижчі рівні і рендеримо */
+  if(level==='room') { NAV2.cell=''; NAV2.con=''; }
+  else if(level==='cell') { NAV2.con=''; }
+  nav2Render();
 }
 
 function nav2ActivateField(fieldType) {
