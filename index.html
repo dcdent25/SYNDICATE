@@ -1313,8 +1313,7 @@ function renderStorageCards(i) {
   var photoCon  = (room&&cell&&con) ? (locationPhotos[room+'::'+cell+'::'+con]||null) : null;
 
   function card(label, val, photo, clickFn) {
-    var clickable = isEditMode;
-    var s = '<div '+(clickable?'onclick="'+clickFn+'"':'')+' style="background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;overflow:hidden;'+(clickable?'cursor:pointer;':'')+'transition:border-color .15s"'+(clickable?' onmouseover="this.style.borderColor=\'var(--blue)\'" onmouseout="this.style.borderColor=\'var(--border)\'"':'')+'>'; 
+    var s = '<div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;overflow:hidden">';
     s += '<div style="width:100%;aspect-ratio:1;background:var(--bg);position:relative;overflow:hidden">';
     if(photo){
       s += '<img src="'+photo+'" style="width:100%;height:100%;object-fit:cover;display:block">';
