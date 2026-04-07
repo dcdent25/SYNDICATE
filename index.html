@@ -1616,13 +1616,11 @@ function nav2Render() {
             name = name.trim();
 
             if(ft==='room') {
-              /* Створити нове приміщення і перейти в нього */
+              /* Завжди створити нове приміщення */
               locations.push({name:name, cells:[]});
               var newRi = locations.length-1;
-              NAV2.room = name; NAV2.cell = ''; NAV2.con = '';
-              NAV2.roomIdx = newRi;
-              forceSyncToSheets(); toast('✓ Приміщення: '+name);
-              nav2Render();
+              NAV2.room=name; NAV2.cell=''; NAV2.con=''; NAV2.roomIdx=newRi;
+              forceSyncToSheets(); toast('✓ Приміщення: '+name); nav2Render();
             } else if(ft==='cell') {
               /* Створити нову комірку в поточному приміщенні */
               var ri2 = NAV2.roomIdx>=0?NAV2.roomIdx:locations.findIndex(function(r){return r.name===NAV2.room;});
@@ -1777,18 +1775,29 @@ function nav2SaveOneField(fieldType, newVal) {
   var roomObj = locations[NAV2.roomIdx] || locations.find(function(r){return r.name===NAV2.room;});
   var cellObj = roomObj&&roomObj.cells?roomObj.cells.find(function(c){return c.name===NAV2.cell;}):null;
 
-  if (fieldType==='room' && roomObj) {
-    if(newVal===NAV2.room) return;
-    stock.forEach(function(s){ if(s.room===NAV2.room) s.room=newVal; });
-    roomObj.name=newVal; NAV2.room=newVal;
+  if (fieldType==='room') {
+    /* Знайти існуюче приміщення і перейти в нього */
+    var existingIdx = locations.findIndex(function(r){return r.name===newVal;});
+    if(existingIdx>=0 && existingIdx!==NAV2.roomIdx) {
+      /* Перейти в інше існуюче приміщення */
+      NAV2.room=newVal; NAV2.cell=''; NAV2.con=''; NAV2.roomIdx=existingIdx;
+    } else if(existingIdx<0) {
+      /* Перейменувати поточне */
+      if(roomObj){
+        stock.forEach(function(s){ if(s.room===NAV2.room) s.room=newVal; });
+        roomObj.name=newVal; NAV2.room=newVal;
+      }
+    }
     forceSyncToSheets(); renderAll(); toast('✓ '+newVal); nav2Render();
 
   } else if (fieldType==='cell') {
     if(!roomObj) return;
     if(!roomObj.cells) roomObj.cells=[];
-    if(!NAV2.cell) {
-      /* Створюємо нову комірку */
-      if(roomObj.cells.find(function(c){return c.name===newVal;})){toast('⚠ Вже існує');return;}
+    var existingCell = roomObj.cells.find(function(c){return c.name===newVal;});
+    if(existingCell) {
+      /* Перейти в існуючу комірку */
+      NAV2.cell=newVal; NAV2.con='';
+    } else if(!NAV2.cell) {
       roomObj.cells.push({name:newVal,containers:[]});
       NAV2.cell=newVal;
     } else {
@@ -1802,9 +1811,10 @@ function nav2SaveOneField(fieldType, newVal) {
   } else if (fieldType==='con') {
     if(!cellObj) return;
     if(!cellObj.containers) cellObj.containers=[];
-    if(!NAV2.con) {
-      /* Додаємо новий контейнер */
-      if(cellObj.containers.indexOf(newVal)!==-1){toast('⚠ Вже існує');return;}
+    var existingCon = cellObj.containers.indexOf(newVal)!==-1;
+    if(existingCon) {
+      NAV2.con=newVal;
+    } else if(!NAV2.con) {
       cellObj.containers.push(newVal);
       NAV2.con=newVal;
     } else {
