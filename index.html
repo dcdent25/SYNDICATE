@@ -1578,34 +1578,33 @@ function nav2Render() {
         }
 
         function showDrop() {
-          var existing = document.getElementById('nav2drop_'+ft);
-          if(existing) existing.remove();
+          document.querySelectorAll('.nav2-edit-drop').forEach(function(d){d.remove();});
           var opts = getOptions();
           if(!opts.length) return;
           var drop = document.createElement('div');
+          drop.className = 'nav2-edit-drop';
           drop.id = 'nav2drop_'+ft;
-          drop.style.cssText = 'position:absolute;top:100%;left:-10px;right:-10px;background:var(--surface2);border:1.5px solid var(--blue);border-radius:10px;z-index:999;max-height:160px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.4);margin-top:2px';
+          drop.style.cssText = 'position:fixed;background:var(--surface2);border:1.5px solid var(--blue);border-radius:10px;z-index:9999;max-height:200px;overflow-y:auto;box-shadow:0 4px 24px rgba(0,0,0,.5);min-width:120px';
           opts.forEach(function(o){
             var item = document.createElement('div');
             item.textContent = o;
-            item.style.cssText = 'padding:10px 12px;font-family:var(--font-d);font-size:13px;font-weight:500;color:var(--text);cursor:pointer';
+            item.style.cssText = 'padding:10px 14px;font-family:var(--font-d);font-size:13px;font-weight:500;color:var(--text);cursor:pointer';
             item.addEventListener('mouseover',function(){this.style.background='var(--blue-s)';});
             item.addEventListener('mouseout',function(){this.style.background='';});
             item.addEventListener('mousedown',function(e){
               e.preventDefault();
               inp.value = o;
               drop.remove();
-              txt.style.display='none';
-              inp.style.display='block';
-              if(card) card.style.borderColor='var(--blue)';
-              inp.focus();
+              inp.blur();
             });
             drop.appendChild(item);
           });
-          /* Позиціонуємо відносно картки */
-          var cardEl = card || txt.closest('div');
-          cardEl.style.position = 'relative';
-          cardEl.appendChild(drop);
+          document.body.appendChild(drop);
+          /* Позиціонуємо під інпутом */
+          var rect = inp.getBoundingClientRect();
+          drop.style.left = rect.left+'px';
+          drop.style.top = (rect.bottom+4)+'px';
+          drop.style.width = rect.width+'px';
         }
 
         txt.addEventListener('click', function(e) {
