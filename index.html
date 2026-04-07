@@ -1429,7 +1429,7 @@ function nav2Render() {
       if(editMode) {
         var ftId = 'nav2ft_'+fieldType; window[ftId] = fieldType;
         var inpId = 'nav2edit_'+fieldType;
-        s += '<div id="nav2txt_'+fieldType+'" style="font-family:var(--font-d);font-size:12px;font-weight:600;color:'+(val?'var(--text)':'var(--muted)')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:text;min-height:18px;border-bottom:1.5px solid var(--border);padding:2px 0">'+(val?_esc(val):'—')+'</div>';
+        s += '<div id="nav2txt_'+fieldType+'" style="font-family:var(--font-d);font-size:12px;font-weight:600;color:'+(val?'var(--text)':'var(--muted)')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;min-height:18px;padding:2px 0">'+(val?_esc(val):'—')+'</div>';
         s += '<input id="'+inpId+'" type="text" value="'+_esc(val||'')+'"'
           +' onclick="event.stopPropagation()"'
           +' style="display:none;width:100%;background:transparent;border:none;border-bottom:1.5px solid var(--blue);outline:none;font-family:var(--font-d);font-size:12px;font-weight:600;color:var(--text);padding:2px 0;box-sizing:border-box">';
