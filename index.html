@@ -1246,14 +1246,22 @@ function renderSuppList(){
     return;
   }
   wrap.innerHTML = entries.map(([name, count]) => {
-    var esc = name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    var esc = _esc(name);
     return '<div style="display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px">'+
-    '<span style="font-family:var(--font-d);font-size:13px;font-weight:500;flex:1;color:var(--text)">'+_esc(name)+'</span>'+
+    '<span style="font-family:var(--font-d);font-size:13px;font-weight:500;flex:1;color:var(--text)">'+esc+'</span>'+
     '<span style="font-family:var(--font-d);font-size:11px;color:var(--sub);background:var(--bg);padding:2px 8px;border-radius:100px;border:1px solid var(--border)">'+(count)+' поз.</span>'+
-    '<button onclick="openSuppDetails(\''+esc+'\')" title="Налаштування" style="height:28px;width:28px;border-radius:50%;border:1.5px solid var(--border);background:transparent;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0" onmouseover="this.style.color=\'var(--blue)\';this.style.borderColor=\'var(--blue)\'" onmouseout="this.style.color=\'var(--sub)\';this.style.borderColor=\'var(--border)\'"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96a7.01 7.01 0 0 0-1.62-.94l-.36-2.54A.48.48 0 0 0 14 2h-4a.48.48 0 0 0-.48.41l-.36 2.54a7.38 7.38 0 0 0-1.62.94l-2.39-.96a.48.48 0 0 0-.59.22L2.64 8.47a.47.47 0 0 0 .12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.47.47 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.36 1.04.67 1.62.94l.36 2.54c.06.27.29.47.57.47h4c.28 0 .5-.2.56-.47l.36-2.54a7.38 7.38 0 0 0 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.47.47 0 0 0-.12-.61l-2.03-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"/></svg></button>'+
-    '<button onclick="deleteSuppConfirm(\''+esc+'\')" title="Видалити" style="height:28px;width:28px;border-radius:50%;border:1.5px solid var(--border);background:transparent;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0" onmouseover="this.style.color=\'var(--red)\';this.style.borderColor=\'var(--red)\'" onmouseout="this.style.color=\'var(--sub)\';this.style.borderColor=\'var(--border)\'"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>'+
+    '<button data-supp-settings="'+esc+'" title="Налаштування" style="height:28px;width:28px;border-radius:50%;border:1.5px solid var(--border);background:transparent;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0" onmouseover="this.style.color=\'var(--blue)\';this.style.borderColor=\'var(--blue)\'" onmouseout="this.style.color=\'var(--sub)\';this.style.borderColor=\'var(--border)\'"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96a7.01 7.01 0 0 0-1.62-.94l-.36-2.54A.48.48 0 0 0 14 2h-4a.48.48 0 0 0-.48.41l-.36 2.54a7.38 7.38 0 0 0-1.62.94l-2.39-.96a.48.48 0 0 0-.59.22L2.64 8.47a.47.47 0 0 0 .12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.47.47 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.36 1.04.67 1.62.94l.36 2.54c.06.27.29.47.57.47h4c.28 0 .5-.2.56-.47l.36-2.54a7.38 7.38 0 0 0 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.47.47 0 0 0-.12-.61l-2.03-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"/></svg></button>'+
+    '<button data-supp-delete="'+esc+'" title="Видалити" style="height:28px;width:28px;border-radius:50%;border:1.5px solid var(--border);background:transparent;color:var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0" onmouseover="this.style.color=\'var(--red)\';this.style.borderColor=\'var(--red)\'" onmouseout="this.style.color=\'var(--sub)\';this.style.borderColor=\'var(--border)\'"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>'+
     '</div>';
   }).join('');
+
+  /* Bind buttons via event delegation */
+  wrap.querySelectorAll('[data-supp-settings]').forEach(function(btn){
+    btn.addEventListener('click', function(){ openSuppDetails(this.getAttribute('data-supp-settings')); });
+  });
+  wrap.querySelectorAll('[data-supp-delete]').forEach(function(btn){
+    btn.addEventListener('click', function(){ deleteSuppConfirm(this.getAttribute('data-supp-delete')); });
+  });
 }
 
 function openSuppDetails(name) {
@@ -1387,13 +1395,26 @@ function openSuppPicker() {
 }
 
 function deleteSuppConfirm(name) {
-  if(!confirm('Видалити контрагента "'+name+'"?\nУ всіх товарів цей постачальник буде очищено.')) return;
-  stock.forEach(function(i){ if((i.sup||'').trim()===name) i.sup='—'; });
-  localStorage.removeItem('suppData_'+name);
-  renderSuppList();
-  renderAll();
-  forceSyncToSheets();
-  toast('✓ Видалено: '+name);
+  var ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box';
+  ov.innerHTML = '<div style="background:var(--surface);border-radius:16px;padding:24px;max-width:340px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.5)" onclick="event.stopPropagation()">'+
+    '<div style="font-family:var(--font-d);font-size:17px;font-weight:700;color:var(--text);margin-bottom:8px">Видалити контрагента?</div>'+
+    '<div style="font-size:13px;color:var(--sub);margin-bottom:20px">«'+_esc(name)+'» буде видалено. У всіх товарів постачальник буде очищено.</div>'+
+    '<div style="display:flex;gap:10px">'+
+    '<button id="_suppDelCancel" style="flex:1;height:42px;background:transparent;border:1.5px solid var(--border);border-radius:10px;font-family:var(--font-d);font-size:14px;color:var(--sub);cursor:pointer">Скасувати</button>'+
+    '<button id="_suppDelOk" style="flex:1;height:42px;background:var(--red);border:none;border-radius:10px;font-family:var(--font-d);font-size:14px;font-weight:700;color:#1c1f26;cursor:pointer">Видалити</button>'+
+    '</div></div>';
+  document.body.appendChild(ov);
+  ov.querySelector('#_suppDelCancel').addEventListener('click', function(){ document.body.removeChild(ov); });
+  ov.querySelector('#_suppDelOk').addEventListener('click', function(){
+    document.body.removeChild(ov);
+    stock.forEach(function(i){ if((i.sup||'').trim()===name) i.sup='—'; });
+    localStorage.removeItem('suppData_'+name);
+    renderSuppList();
+    renderAll();
+    forceSyncToSheets();
+    toast('✓ Видалено: '+name);
+  });
 }
 
 function doAddSupp(){
