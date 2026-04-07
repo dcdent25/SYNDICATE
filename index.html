@@ -1482,18 +1482,24 @@ function nav2Render() {
       s += '<div onclick="'+navFn+'" style="width:100%;aspect-ratio:1;background:var(--bg);position:relative;overflow:hidden;cursor:pointer">';
       if(photo){
         s += '<img src="'+photo+'" style="width:100%;height:100%;object-fit:cover;display:block">';
-        s += '<button onclick="event.stopPropagation();nav2PhotoForKey(window[\''+pkId+'\'])" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);border:none;border-radius:6px;width:26px;height:26px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0"><svg width="13" height="13" viewBox="0 0 24 24" fill="white"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>';
       } else {
         s += '<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px">';
         s += '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="color:var(--muted)"><path d="M12 15.2A3.2 3.2 0 1 1 12 8.8a3.2 3.2 0 0 1 0 6.4zM9 2L7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.17L15 2H9z"/></svg>';
         s += '<div style="font-size:10px;color:var(--muted);font-family:var(--font-d)">Фото</div></div>';
-        s += '<button onclick="event.stopPropagation();nav2PhotoForKey(window[\''+pkId+'\'])" style="position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,.35);border:none;border-radius:6px;width:26px;height:26px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0"><svg width="13" height="13" viewBox="0 0 24 24" fill="white" style="opacity:.6"><path d="M12 15.2A3.2 3.2 0 1 1 12 8.8a3.2 3.2 0 0 1 0 6.4zM9 2L7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.17L15 2H9z"/></svg></button>';
       }
+      /* Кнопка камери */
+      s += '<button onclick="event.stopPropagation();nav2PhotoForKey(window[\''+pkId+'\'])" style="position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,.5);border:none;border-radius:6px;width:26px;height:26px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">';
+      s += '<svg width="13" height="13" viewBox="0 0 24 24" fill="white"><path d="M12 15.2A3.2 3.2 0 1 1 12 8.8a3.2 3.2 0 0 1 0 6.4zM9 2L7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.17L15 2H9z"/></svg></button>';
       s += '</div>';
       s += '<div style="padding:8px 10px">';
       s += '<div style="font-size:9px;color:var(--sub);font-family:var(--font-d);font-weight:500;margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px">'+label+'</div>';
+      s += '<div style="display:flex;align-items:center;gap:4px">';
       var ftId = 'nav2ft_'+fieldType; window[ftId] = fieldType;
-      s += '<div id="nav2txt_'+fieldType+'" style="font-family:var(--font-d);font-size:13px;font-weight:600;color:'+(val?'var(--text)':'var(--muted)')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;min-height:20px;padding:2px 0;border-bottom:1.5px solid '+(isActive?'var(--blue)':'var(--border)')+'">'+(val?_esc(val):'—')+'</div>';
+      s += '<div id="nav2txt_'+fieldType+'" style="flex:1;font-family:var(--font-d);font-size:13px;font-weight:600;color:'+(val?'var(--text)':'var(--muted)')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;min-height:20px;padding:2px 0;border-bottom:1.5px solid '+(isActive?'var(--blue)':'var(--border)')+'">'+(val?_esc(val):'—')+'</div>';
+      /* Маленький олівець для редагування назви */
+      s += '<button onclick="event.stopPropagation();nav2EditCardPicker(\''+fieldType+'\')" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:2px;flex-shrink:0;display:flex;align-items:center">';
+      s += '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>';
+      s += '</div>';
       s += '<input id="nav2edit_'+fieldType+'" type="text" value="'+_esc(val||'')+'" onclick="event.stopPropagation()" style="display:none;width:100%;background:transparent;border:none;border-bottom:1.5px solid var(--blue);outline:none;font-family:var(--font-d);font-size:12px;font-weight:600;color:var(--text);padding:2px 0;box-sizing:border-box">';
       s += '</div></div>';
       return s;
@@ -1806,10 +1812,105 @@ function nav2Render() {
 
 function nav2FabClick() {
   if (NAV2._detail) {
-    nav2ShowEditForm();
+    /* Відкриваємо модалку вибору для активного рівня */
+    var activeLevel = NAV2.con ? 'con' : (NAV2.cell ? 'cell' : 'room');
+    nav2EditCardPicker(activeLevel);
   } else {
     nav2AddNew();
   }
+}
+
+function nav2EditCardPicker(ft) {
+  /* Та сама модалка що showDrop але для навігації */
+  var opts = [];
+  var seen = {};
+  if(ft==='room') {
+    locations.forEach(function(r){ if(!seen[r.name]){seen[r.name]=true;opts.push(r.name);} });
+  } else if(ft==='cell') {
+    locations.filter(function(r){return r.name===NAV2.room;}).forEach(function(r){
+      (r.cells||[]).forEach(function(c){ if(!seen[c.name]){seen[c.name]=true;opts.push(c.name);} });
+    });
+  } else {
+    var ri2=NAV2.roomIdx>=0?NAV2.roomIdx:locations.findIndex(function(r){return r.name===NAV2.room;});
+    var ro=locations[ri2]; var co=ro&&ro.cells?ro.cells.find(function(c){return c.name===NAV2.cell;}):null;
+    (co&&co.containers||[]).forEach(function(cn){ opts.push(cn); });
+  }
+  opts.sort();
+
+  var labels={room:'Приміщення',cell:'Комірка',con:'Контейнер'};
+  var labelsAdd={room:'приміщення',cell:'комірку',con:'контейнер'};
+  var curVal = ft==='room'?NAV2.room:ft==='cell'?NAV2.cell:NAV2.con;
+
+  var ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box';
+  ov.onclick = function(e){ if(e.target===ov) document.body.removeChild(ov); };
+
+  var box = document.createElement('div');
+  box.style.cssText = 'background:var(--surface);border-radius:20px;width:100%;max-width:400px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.5);overflow:hidden';
+  box.onclick = function(e){ e.stopPropagation(); };
+
+  var title = document.createElement('div');
+  title.textContent = labels[ft];
+  title.style.cssText = 'font-family:var(--font-d);font-size:20px;font-weight:700;color:var(--text);padding:20px 16px 12px;flex-shrink:0';
+  box.appendChild(title);
+
+  var listWrap = document.createElement('div');
+  listWrap.style.cssText = 'flex:1;overflow-y:auto;padding:0 16px';
+  opts.forEach(function(o){
+    var item = document.createElement('div');
+    var isSel = o===curVal;
+    item.textContent = o;
+    item.style.cssText = 'padding:14px 16px;font-family:var(--font-d);font-size:15px;font-weight:500;color:var(--text);cursor:pointer;border-radius:12px;border:1.5px solid '+(isSel?'var(--blue)':'var(--border)')+';background:'+(isSel?'var(--blue-s)':'var(--surface2)')+';margin-bottom:8px';
+    item.addEventListener('click',function(){
+      document.body.removeChild(ov);
+      nav2SaveOneField(ft, o);
+    });
+    listWrap.appendChild(item);
+  });
+  box.appendChild(listWrap);
+
+  var addWrap = document.createElement('div');
+  addWrap.style.cssText = 'display:flex;gap:8px;padding:12px 16px 16px;border-top:1px solid var(--border);flex-shrink:0';
+  var addInp = document.createElement('input');
+  addInp.type='text'; addInp.placeholder='Нова назва '+labelsAdd[ft]+'...';
+  addInp.style.cssText='flex:1;height:46px;padding:0 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--font-d);font-size:14px;outline:none';
+  addInp.addEventListener('focus',function(){this.style.borderColor='var(--blue)';});
+  addInp.addEventListener('blur',function(){this.style.borderColor='var(--border)';});
+  var addBtn = document.createElement('button');
+  addBtn.textContent='+ Додати';
+  addBtn.style.cssText='height:46px;padding:0 16px;background:var(--blue);color:#1c1f26;border:none;border-radius:10px;font-family:var(--font-d);font-size:14px;font-weight:600;cursor:pointer;flex-shrink:0';
+
+  function doAdd(){
+    var name=addInp.value.trim(); if(!name) return;
+    document.body.removeChild(ov);
+    /* Створюємо і зберігаємо */
+    if(ft==='room'){
+      locations.push({name:name,cells:[]});
+      NAV2.room=name; NAV2.cell=''; NAV2.con=''; NAV2.roomIdx=locations.length-1;
+    } else if(ft==='cell'){
+      var ri2=NAV2.roomIdx>=0?NAV2.roomIdx:locations.findIndex(function(r){return r.name===NAV2.room;});
+      var ro=locations[ri2]; if(!ro)return;
+      if(!ro.cells)ro.cells=[];
+      ro.cells.push({name:name,containers:[]});
+      NAV2.cell=name; NAV2.con='';
+    } else {
+      var ri2=NAV2.roomIdx>=0?NAV2.roomIdx:locations.findIndex(function(r){return r.name===NAV2.room;});
+      var ro=locations[ri2];
+      var co=ro&&ro.cells?ro.cells.find(function(c){return c.name===NAV2.cell;}):null;
+      if(!co)return;
+      if(!co.containers)co.containers=[];
+      co.containers.push(name);
+      NAV2.con=name;
+    }
+    forceSyncToSheets(); toast('✓ '+name); nav2Render();
+  }
+
+  addBtn.addEventListener('click',doAdd);
+  addInp.addEventListener('keydown',function(e){ if(e.key==='Enter')doAdd(); e.stopPropagation(); });
+  addWrap.appendChild(addInp); addWrap.appendChild(addBtn);
+  box.appendChild(addWrap);
+  ov.appendChild(box);
+  document.body.appendChild(ov);
 }
 
 function nav2SetActiveLevel(level) {
