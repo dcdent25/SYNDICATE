@@ -231,20 +231,36 @@ html,body{background:#1c1f26!important;overflow-x:hidden!important}.t-container,
 
 <!-- Місце зберігання -->
 <div class="dfield"><div class="dfield-label">Місце зберігання</div>
-<div style="display:grid;grid-template-columns:1fr 1fr 1fr 44px;gap:8px;margin-top:8px">
-  <div><div style="font-size:10px;color:var(--muted);font-family:var(--font-d);margin-bottom:4px">Приміщення</div>
-    <div class="dval-text" id="dRoom" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;height:44px;display:flex;align-items:center;padding:0 12px;font-family:var(--font-d);font-size:15px;font-weight:600;color:var(--text);box-sizing:border-box">—</div>
-    <select class="dval-edit" id="dRoomSel" style="height:44px;width:100%;box-sizing:border-box;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:0 12px;font-family:var(--font-d);font-size:14px;color:var(--text);outline:none;-webkit-appearance:none;display:none"></select></div>
-  <div><div style="font-size:10px;color:var(--muted);font-family:var(--font-d);margin-bottom:4px">Комірка</div>
-    <div class="dval-text" id="dStorage" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;height:44px;display:flex;align-items:center;padding:0 12px;font-family:var(--font-d);font-size:15px;font-weight:600;color:var(--text);box-sizing:border-box">—</div>
-    <select class="dval-edit" id="dCellSel" style="height:44px;width:100%;box-sizing:border-box;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:0 12px;font-family:var(--font-d);font-size:14px;color:var(--text);outline:none;-webkit-appearance:none;display:none"></select></div>
-  <div><div style="font-size:10px;color:var(--muted);font-family:var(--font-d);margin-bottom:4px">Контейнер</div>
-    <div class="dval-text" id="dSup2" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;height:44px;display:flex;align-items:center;padding:0 12px;font-family:var(--font-d);font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;box-sizing:border-box">—</div>
-    <select class="dval-edit" id="dConSel" style="height:44px;width:100%;box-sizing:border-box;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:0 12px;font-family:var(--font-d);font-size:13px;color:var(--text);outline:none;-webkit-appearance:none;display:none"></select></div>
-  <div><div style="font-size:10px;color:var(--muted);font-family:var(--font-d);margin-bottom:4px">Мапа</div>
-    <button onclick="openMapPhoto()" style="background:var(--blue-s);border:1.5px solid rgba(138,180,248,.3);border-radius:8px;cursor:pointer;color:var(--blue);padding:0;width:44px;height:44px;display:flex;align-items:center;justify-content:center;box-sizing:border-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7zM9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9z"/></svg></button>
-    <input type="file" id="dMapPhotoInput" accept="image/*" multiple style="display:none" onchange="handleMapPhoto(event)"></div>
-</div></div>
+<div id="dStorageBlock" onclick="openStorageNavModal()" style="display:grid;grid-template-columns:1fr 1fr 1fr 44px;gap:6px;margin-top:8px;cursor:pointer">
+  <div>
+    <div style="font-size:10px;color:var(--muted);font-family:var(--font-d);margin-bottom:4px">Контейнер</div>
+    <div id="dSup2Display" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;height:44px;display:flex;align-items:center;padding:0 12px;font-family:var(--font-d);font-size:14px;font-weight:600;color:var(--text);box-sizing:border-box">—</div>
+  </div>
+  <div>
+    <div style="font-size:10px;color:var(--muted);font-family:var(--font-d);margin-bottom:4px">Комірка</div>
+    <div id="dStorageDisplay" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;height:44px;display:flex;align-items:center;padding:0 12px;font-family:var(--font-d);font-size:14px;font-weight:600;color:var(--text);box-sizing:border-box">—</div>
+  </div>
+  <div>
+    <div style="font-size:10px;color:var(--muted);font-family:var(--font-d);margin-bottom:4px">Приміщення</div>
+    <div id="dRoomDisplay" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;height:44px;display:flex;align-items:center;padding:0 12px;font-family:var(--font-d);font-size:14px;font-weight:600;color:var(--text);box-sizing:border-box">—</div>
+  </div>
+  <div>
+    <div style="font-size:10px;color:var(--muted);font-family:var(--font-d);margin-bottom:4px">Мапа</div>
+    <div id="dMapThumb" style="background:var(--blue-s);border:1.5px solid rgba(138,180,248,.3);border-radius:8px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;overflow:hidden;box-sizing:border-box;position:relative">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="color:var(--blue)"><path d="M12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7zM9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9z"/></svg>
+    </div>
+  </div>
+</div>
+<!-- приховані поля для сумісності -->
+<div style="display:none">
+  <div id="dRoom">—</div>
+  <div id="dStorage">—</div>
+  <div id="dSup2">—</div>
+  <select id="dRoomSel"></select>
+  <select id="dCellSel"></select>
+  <select id="dConSel"></select>
+</div>
+</div>
 
 <!-- Коментар -->
 <div class="dfield"><div class="dfield-label">Коментар</div>
@@ -482,13 +498,15 @@ html,body{background:#1c1f26!important;overflow-x:hidden!important}.t-container,
     <div class="modal-title">Навігація</div>
     <div id="nav2-breadcrumb" style="font-size:12px;color:var(--sub);margin-top:2px;font-family:var(--font-d)"></div>
   </div>
-  <button class="modal-close" onclick="closeModal('nav')"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
+  <button class="modal-close" onclick="if(NAV2._storageMode||NAV2._storageCallback){NAV2._storageMode=false;NAV2._storageCallback=false;var ar=document.getElementById('nav2-add');if(ar)ar.style.display='flex';var sb=document.getElementById('nav2-select-btn');if(sb)sb.remove();}closeModal('nav')"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
 </div>
 <div id="nav2-body"></div>
 <input type="file" id="nav2PhotoInput" accept="image/*" style="display:none" onchange="nav2HandlePhoto(event)">
-<div id="nav2-add" style="display:flex;gap:8px;margin-top:14px;align-items:center">
-  <input id="nav2-inp" type="text" placeholder="" style="flex:1;height:42px;padding:0 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--font-d);font-size:14px;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'" onkeydown="if(event.key==='Enter')nav2Add()">
-  <button onclick="nav2Add()" style="height:42px;padding:0 20px;background:var(--blue);color:#1c1f26;border:none;border-radius:10px;font-family:var(--font-d);font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap">+ Додати</button>
+<div id="nav2-add" style="display:flex;justify-content:flex-end;margin-top:14px">
+  <button id="nav2-fab" onclick="nav2FabClick()" style="width:52px;height:52px;border-radius:50%;background:var(--blue);color:#1c1f26;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(138,180,248,.4);flex-shrink:0;transition:all .2s">
+    <svg id="nav2-fab-icon-plus" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+    <svg id="nav2-fab-icon-edit" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+  </button>
 </div>
 </div></div>
 
@@ -680,7 +698,7 @@ var _lbl=document.getElementById('dQtyLabelDyn');if(_lbl)_lbl.textContent='Кі�
 var _lbl2=document.getElementById('dPortionLabelDyn');if(_lbl2)_lbl2.textContent='Склад порції, '+(i.portionUnit||i.unit||'шт');
 var _dQtyMatEl=document.getElementById('dQtyMat');if(_dQtyMatEl){var _stc=getStatus(i);var _c=_stc.cls==='sbadge-ok'?'var(--green)':_stc.cls==='sbadge-low'?'var(--amber)':'var(--red)';_dQtyMatEl.style.color=_c;var _sb=document.getElementById('dStatusBadge');if(_sb){_sb.textContent=_stc.label;_sb.style.background=_stc.cls==='sbadge-ok'?'var(--green-s)':_stc.cls==='sbadge-low'?'var(--amber-s)':'var(--red-s)';_sb.style.color=_c;}}
 var _qmeNew=document.getElementById('dQtyMatEdit');if(_qmeNew)_qmeNew.value=i.qty;
-document.querySelectorAll('#dUnitChips .dunit-chip').forEach(function(c){c.classList.toggle('sel',c.dataset.unit===(i.unit||'шт'));});var _pu=document.getElementById('dPortionsUnit');if(_pu)_pu.textContent=i.unit||'шт';var _pue=document.getElementById('dPortionsUnitEdit');if(_pue)_pue.textContent=i.unit||'шт';var _dus=document.getElementById('dUnitSuffix');if(_dus)_dus.textContent=i.unit||'шт';var _dQtyMatEl=document.getElementById('dQtyMat');if(_dQtyMatEl){const _sq2=i.stockQty!=null?i.stockQty:i.qty;_dQtyMatEl.textContent=String(_sq2);var _c=st.cls==='sbadge-ok'?'var(--green)':st.cls==='sbadge-low'?'var(--amber)':'var(--red)';_dQtyMatEl.style.color=_c;var _sb=document.getElementById('dStatusBadge');if(_sb){_sb.textContent=st.label;_sb.style.background=st.cls==='sbadge-ok'?'var(--green-s)':st.cls==='sbadge-low'?'var(--amber-s)':'var(--red-s)';_sb.style.color=_c;}}if(document.getElementById('dStorage'))document.getElementById('dStorage').textContent=i.storage||'—';if(document.getElementById('dRoom'))document.getElementById('dRoom').textContent=i.room||'—';if(document.getElementById('dSup2'))document.getElementById('dSup2').textContent=i.sup||'—';_fillLocationSelects(i);document.getElementById('dStockCost').textContent=(((i.stockQty!=null?i.stockQty:i.qty)||0)*(i.price||0)).toLocaleString('uk',{minimumFractionDigits:2});const _min=i.min||1;document.getElementById('dv1a').textContent=_min;document.getElementById('dv1b').textContent='∞';document.getElementById('dv2a').textContent=Math.ceil(_min*0.3);document.getElementById('dv2b').textContent=_min;document.getElementById('dv3a').textContent=0;document.getElementById('dv3b').textContent=Math.ceil(_min*0.3);const min=i.min||1;
+document.querySelectorAll('#dUnitChips .dunit-chip').forEach(function(c){c.classList.toggle('sel',c.dataset.unit===(i.unit||'шт'));});var _pu=document.getElementById('dPortionsUnit');if(_pu)_pu.textContent=i.unit||'шт';var _pue=document.getElementById('dPortionsUnitEdit');if(_pue)_pue.textContent=i.unit||'шт';var _dus=document.getElementById('dUnitSuffix');if(_dus)_dus.textContent=i.unit||'шт';var _dQtyMatEl=document.getElementById('dQtyMat');if(_dQtyMatEl){const _sq2=i.stockQty!=null?i.stockQty:i.qty;_dQtyMatEl.textContent=String(_sq2);var _c=st.cls==='sbadge-ok'?'var(--green)':st.cls==='sbadge-low'?'var(--amber)':'var(--red)';_dQtyMatEl.style.color=_c;var _sb=document.getElementById('dStatusBadge');if(_sb){_sb.textContent=st.label;_sb.style.background=st.cls==='sbadge-ok'?'var(--green-s)':st.cls==='sbadge-low'?'var(--amber-s)':'var(--red-s)';_sb.style.color=_c;}}if(document.getElementById('dStorage'))document.getElementById('dStorage').textContent=i.storage||'—';if(document.getElementById('dRoom'))document.getElementById('dRoom').textContent=i.room||'—';if(document.getElementById('dSup2'))document.getElementById('dSup2').textContent=i.sup||'—';updateStorageDisplay(i);_fillLocationSelects(i);document.getElementById('dStockCost').textContent=(((i.stockQty!=null?i.stockQty:i.qty)||0)*(i.price||0)).toLocaleString('uk',{minimumFractionDigits:2});const _min=i.min||1;document.getElementById('dv1a').textContent=_min;document.getElementById('dv1b').textContent='∞';document.getElementById('dv2a').textContent=Math.ceil(_min*0.3);document.getElementById('dv2b').textContent=_min;document.getElementById('dv3a').textContent=0;document.getElementById('dv3b').textContent=Math.ceil(_min*0.3);const min=i.min||1;
 const _t1=i.threshOk!=null?i.threshOk:min;
 const _t2=i.threshMid!=null?i.threshMid:Math.ceil(min*0.3);
 document.getElementById('dv1a').textContent=_t1;document.getElementById('dv1b').textContent='∞';
@@ -712,7 +730,7 @@ if(_fqty&&_fpp){
 }
 }}
 function saveDetail(){const i=stock.find(x=>x.id===currentDetailId);if(!i)return;const newQty=parseFloat(document.getElementById('dQtyMatDisplay')?.value);if(!isNaN(newQty))i.qty=newQty;const newCat=document.getElementById('dCatEdit')?.value;if(newCat)i.cat=newCat;const newName=document.getElementById('dNameEdit').value.trim();const newSup=document.getElementById('dSupplierEdit').value.trim();const newLink=document.getElementById('dLinkEdit').value.trim();const newPrice=parseFloat(document.getElementById('dPriceEdit').value);const newMin=parseInt(document.getElementById('dMinEdit').value);if(newName)i.name=newName;if(newSup)i.sup=newSup;i.link=newLink;if(!isNaN(newPrice))i.price=newPrice;if(!isNaN(newMin)&&newMin>0)i.min=newMin;i.comment=document.getElementById('dComment').value;i.unit=document.querySelector('#dUnitChips .dunit-chip.sel')?.dataset.unit||i.unit||'шт';const newMP=parseFloat(document.getElementById('dMarketPriceEdit')?.value);if(!isNaN(newMP))i.marketPrice=newMP;const newPortions=parseFloat(document.getElementById('dPortionsEdit').value);if(!isNaN(newPortions))i.portions=newPortions;const newMatType=document.getElementById('dMatTypeEdit').value.trim();if(newMatType)i.matType=newMatType;const _puChipSel=document.querySelector('#dPortionUnitChips .dunit-chip.sel');const newPortionUnit=_puChipSel?_puChipSel.dataset.unit:(document.getElementById('dPortionUnitEdit').value.trim());if(newPortionUnit)i.portionUnit=newPortionUnit;const newPortionComp=parseFloat(document.getElementById('dPortionCompEdit').value);if(!isNaN(newPortionComp))i.portionComp=newPortionComp;const newPortionPrice=parseFloat(document.getElementById('dPortionPriceEdit').value);if(!isNaN(newPortionPrice))i.portionPrice=newPortionPrice;document.getElementById('dTitle').textContent=i.name;document.getElementById('dCatLabel').textContent='Категорія: '+i.cat;document.getElementById('dName').textContent=i.name;document.getElementById('dSupplier').textContent=i.sup||'—';document.getElementById('dPrice').textContent='грн '+(i.price||0).toLocaleString('uk',{minimumFractionDigits:2});document.getElementById('dMinVal').textContent=String(i.min);document.getElementById('dUnitText').textContent=i.unit;const mpD=document.getElementById('dMarketPrice');if(mpD)mpD.textContent=i.marketPrice?'грн '+(i.marketPrice||0).toLocaleString('uk',{minimumFractionDigits:2}):'—';calcItem(i);
-var _dp=document.getElementById('dPortions');if(_dp)_dp.textContent=i.portions!=null?i.portions.toLocaleString('uk'):'—';document.getElementById('dMatType').textContent=i.matType||'—';document.getElementById('dPortionUnit').textContent=i.portionUnit||'—';var _puu=document.getElementById('dPortionCompUnit');if(_puu)_puu.textContent=i.portionUnit||'гр';var _puchips=document.getElementById('dPortionUnitChips');if(_puchips)_puchips.querySelectorAll('.dunit-chip').forEach(function(c){c.classList.toggle('sel',c.dataset.unit===(i.portionUnit||'гр'));});document.getElementById('dPortionComp').textContent=i.portionComp!=null?String(i.portionComp):'—';document.getElementById('dPortionPrice').textContent=i.portionPrice?'грн '+(i.portionPrice||0).toLocaleString('uk',{minimumFractionDigits:2}):'—';const portionCost2=(i.portions||0)*(i.portionPrice||0);document.getElementById('dPortionCost').textContent=portionCost2?'грн '+portionCost2.toLocaleString('uk',{minimumFractionDigits:2}):'—';document.getElementById('dLink').textContent=i.link||'—';document.getElementById('dLink').href=i.link||'#';if(document.getElementById('dStorage'))document.getElementById('dStorage').textContent=i.storage||'—';if(document.getElementById('dRoom'))document.getElementById('dRoom').textContent=i.room||'—';if(document.getElementById('dSup2'))document.getElementById('dSup2').textContent=i.sup||'—';_fillLocationSelects(i);document.getElementById('dStockCost').textContent=(((i.stockQty!=null?i.stockQty:i.qty)||0)*(i.price||0)).toLocaleString('uk',{minimumFractionDigits:2});const _min=i.min||1;document.getElementById('dv1a').textContent=_min;document.getElementById('dv1b').textContent='∞';document.getElementById('dv2a').textContent=Math.ceil(_min*0.3);document.getElementById('dv2b').textContent=_min;document.getElementById('dv3a').textContent=0;document.getElementById('dv3b').textContent=Math.ceil(_min*0.3);var _rSel=document.getElementById('dRoomSel');var _cSel=document.getElementById('dCellSel');var _conSel=document.getElementById('dConSel');if(_rSel&&_rSel.value)i.room=_rSel.value;if(_cSel&&_cSel.value)i.storage=_cSel.value;if(_conSel&&_conSel.value)i.sup=_conSel.value;const _newT1=parseInt(document.getElementById('dv1a_edit')?.value);const _newT2=parseInt(document.getElementById('dv3b_edit')?.value);if(!isNaN(_newT1))i.threshOk=_newT1;if(!isNaN(_newT2))i.threshMid=_newT2;renderAll();renderHistory();toast('Збережено — '+i.name);forceSyncToSheets();}
+var _dp=document.getElementById('dPortions');if(_dp)_dp.textContent=i.portions!=null?i.portions.toLocaleString('uk'):'—';document.getElementById('dMatType').textContent=i.matType||'—';document.getElementById('dPortionUnit').textContent=i.portionUnit||'—';var _puu=document.getElementById('dPortionCompUnit');if(_puu)_puu.textContent=i.portionUnit||'гр';var _puchips=document.getElementById('dPortionUnitChips');if(_puchips)_puchips.querySelectorAll('.dunit-chip').forEach(function(c){c.classList.toggle('sel',c.dataset.unit===(i.portionUnit||'гр'));});document.getElementById('dPortionComp').textContent=i.portionComp!=null?String(i.portionComp):'—';document.getElementById('dPortionPrice').textContent=i.portionPrice?'грн '+(i.portionPrice||0).toLocaleString('uk',{minimumFractionDigits:2}):'—';const portionCost2=(i.portions||0)*(i.portionPrice||0);document.getElementById('dPortionCost').textContent=portionCost2?'грн '+portionCost2.toLocaleString('uk',{minimumFractionDigits:2}):'—';document.getElementById('dLink').textContent=i.link||'—';document.getElementById('dLink').href=i.link||'#';if(document.getElementById('dStorage'))document.getElementById('dStorage').textContent=i.storage||'—';if(document.getElementById('dRoom'))document.getElementById('dRoom').textContent=i.room||'—';if(document.getElementById('dSup2'))document.getElementById('dSup2').textContent=i.sup||'—';updateStorageDisplay(i);_fillLocationSelects(i);document.getElementById('dStockCost').textContent=(((i.stockQty!=null?i.stockQty:i.qty)||0)*(i.price||0)).toLocaleString('uk',{minimumFractionDigits:2});const _min=i.min||1;document.getElementById('dv1a').textContent=_min;document.getElementById('dv1b').textContent='∞';document.getElementById('dv2a').textContent=Math.ceil(_min*0.3);document.getElementById('dv2b').textContent=_min;document.getElementById('dv3a').textContent=0;document.getElementById('dv3b').textContent=Math.ceil(_min*0.3);var _rSel=document.getElementById('dRoomSel');var _cSel=document.getElementById('dCellSel');var _conSel=document.getElementById('dConSel');if(_rSel&&_rSel.value)i.room=_rSel.value;if(_cSel&&_cSel.value)i.storage=_cSel.value;if(_conSel&&_conSel.value)i.sup=_conSel.value;const _newT1=parseInt(document.getElementById('dv1a_edit')?.value);const _newT2=parseInt(document.getElementById('dv3b_edit')?.value);if(!isNaN(_newT1))i.threshOk=_newT1;if(!isNaN(_newT2))i.threshMid=_newT2;renderAll();renderHistory();toast('Збережено — '+i.name);forceSyncToSheets();}
 function deleteCurrentItem(){const i=stock.find(x=>x.id===currentDetailId);if(!i)return;if(!confirm('Видалити "'+(i.name)+'"? Цю дію не можна скасувати.'))return;stock=stock.filter(x=>x.id!==currentDetailId);closeModal('detail');renderAll();renderHistory();toast('Видалено — '+i.name);if(SCRIPT_URL){postNoCors({action:'deleteItem',id:String(currentDetailId)}).then(()=>forceSyncToSheets());}else{forceSyncToSheets();}}
 function triggerImgUpload(){if(!document.querySelector('#ov-detail .modal').classList.contains('detail-edit-mode'))return;document.getElementById('dImgInput').click();}
 function handleImgUpload(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=async ev=>{const compressed=await compressImage(ev.target.result,800,800,0.75);const i=stock.find(x=>x.id===currentDetailId);if(i){i.photo=compressed;const imgEl=document.getElementById('dImg');imgEl.innerHTML='<img src="'+(compressed)+'" alt="фото"><div class="detail-img-overlay"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Змінити фото</span></div>';imgEl.style.fontSize='';}renderAll();forceSyncToSheets();toast('Фото оновлено');};reader.readAsDataURL(file);e.target.value='';}
@@ -1259,15 +1277,50 @@ function _esc(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
-var NAV2 = { level: 0, room: '', cell: '' };
+var NAV2 = { level: 0, room: '', cell: '', roomIdx: -1 };
 var locationPhotos = {}; // key: 'room::cell::con' or 'room' or 'room::cell'
 // level: 0=приміщення, 1=комірки, 2=контейнери
 
 function openNavModal() {
   NAV2.level = 0; NAV2.room = ''; NAV2.cell = ''; NAV2.con = '';
+  NAV2._storageMode = false; NAV2._detail = false; NAV2._storageCallback = false;
   _loadNavPhotosFromLocations();
   nav2Render();
+  document.getElementById('nav2-add').style.display = 'flex';
+  setTimeout(function(){ nav2SetFabIcon('plus'); }, 0);
   document.getElementById('ov-nav').classList.add('open');
+}
+
+function openStorageNavModal() {
+  var i = stock.find(function(x){return x.id===currentDetailId;});
+  NAV2.room = (i&&i.room)||''; NAV2.cell = (i&&i.storage)||''; NAV2.con = (i&&i.sup&&i.sup!=='—'?i.sup:'');
+  NAV2._storageMode = true; NAV2._detail = false;
+  _loadNavPhotosFromLocations();
+  nav2Render();
+  document.getElementById('nav2-add').style.display = 'none';
+  document.getElementById('ov-nav').classList.add('open');
+}
+
+function updateStorageDisplay(i) {
+  var room = i.room||'—', cell = i.storage||'—', con = (i.sup&&i.sup!=='—')?i.sup:'—';
+  var el;
+  el = document.getElementById('dRoomDisplay'); if(el) el.textContent = room;
+  el = document.getElementById('dStorageDisplay'); if(el) el.textContent = cell;
+  el = document.getElementById('dSup2Display'); if(el) el.textContent = con;
+  el = document.getElementById('dRoom'); if(el) el.textContent = room;
+  el = document.getElementById('dStorage'); if(el) el.textContent = cell;
+  el = document.getElementById('dSup2'); if(el) el.textContent = con;
+  // Map thumb
+  var photoKey = room!=='—' ? (cell!=='—' ? (con!=='—' ? room+'::'+cell+'::'+con : room+'::'+cell) : room) : '';
+  var photo = photoKey ? (locationPhotos[photoKey]||null) : null;
+  var thumb = document.getElementById('dMapThumb');
+  if(thumb){
+    if(photo){
+      thumb.innerHTML = '<img src="'+photo+'" style="width:100%;height:100%;object-fit:cover">';
+    } else {
+      thumb.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="color:var(--blue)"><path d="M12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7zM9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9z"/></svg>';
+    }
+  }
 }
 
 function nav2Render() {
@@ -1276,134 +1329,440 @@ function nav2Render() {
   var inp  = document.getElementById('nav2-inp');
   if (!body) return;
 
-  /* breadcrumb */
-  var bcParts = [];
-  if (NAV2.level >= 1) bcParts.push('<span onclick="nav2GoLevel(0)" style="cursor:pointer;color:var(--blue)">Приміщення</span>');
-  if (NAV2.level >= 2) bcParts.push('<span style="color:var(--muted)"> › </span><span onclick="nav2GoLevel(1)" style="cursor:pointer;color:var(--blue)">' + _esc(NAV2.room) + '</span>');
-  if (NAV2.level === 2) bcParts.push('<span style="color:var(--muted)"> › </span><span style="color:var(--text);font-weight:600">' + _esc(NAV2.cell) + '</span>');
-  bc.innerHTML = bcParts.join('');
+  _loadNavPhotosFromLocations();
 
-  /* placeholder для інпуту */
-  var placeholders = ['Нове приміщення…', 'Нова комірка…', 'Новий контейнер…'];
-  if (inp) inp.placeholder = placeholders[NAV2.level] || '';
+  /* ── РЕЖИМ ДЕТАЛІ: показуємо картки + список + позиції ── */
+  if (NAV2._detail) {
+    if(bc) bc.innerHTML = '<span onclick="nav2BackToList()" style="cursor:pointer;color:var(--blue);display:flex;align-items:center;gap:4px"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg> Назад</span>';
+    if(inp) document.getElementById('nav2-add').style.display = 'none';
 
-  /* ── Картки вибору зверху ── */
-  /* фото для кожного рівня */
-  var photoRoom = NAV2.room ? (locationPhotos[NAV2.room]||null) : null;
-  var photoCell = (NAV2.room&&NAV2.cell) ? (locationPhotos[NAV2.room+'::'+NAV2.cell]||null) : null;
-  var photoCon  = (NAV2.room&&NAV2.cell&&NAV2.con) ? (locationPhotos[NAV2.room+'::'+NAV2.cell+'::'+NAV2.con]||null) : null;
+    var photoRoom = NAV2.room ? (locationPhotos[NAV2.room]||null) : null;
+    var photoCell = (NAV2.room&&NAV2.cell) ? (locationPhotos[NAV2.room+'::'+NAV2.cell]||null) : null;
+    var photoCon  = (NAV2.room&&NAV2.cell&&NAV2.con) ? (locationPhotos[NAV2.room+'::'+NAV2.cell+'::'+NAV2.con]||null) : null;
 
-  function _nc(label, val, active, selected, navFn, photo, photoKey) {
-    var b = selected ? 'var(--blue)' : 'var(--border)';
-    var op = active ? '1' : '.4';
-    var s = '<div style="background:var(--surface2);border:1.5px solid '+b+';border-radius:12px;overflow:hidden;opacity:'+op+';position:relative">';
-    /* верхня частина — квадратна рамка для фото */
-    s += '<div style="width:100%;aspect-ratio:1;background:var(--bg);position:relative;overflow:hidden">';
-    if(photo){
-      /* фото — натискання збільшує */
-      s += '<img src="'+photo+'" onclick="nav2PhotoZoom(\''+photoKey+'\')" style="width:100%;height:100%;object-fit:cover;cursor:zoom-in;display:block">';
-      /* кнопка редагування поверх */
-      if(active && val){
-        s += '<button onclick="nav2PhotoForKey(\''+photoKey+'\')" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);border:none;border-radius:6px;width:26px;height:26px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">';
-        s += '<svg width="13" height="13" viewBox="0 0 24 24" fill="white"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>';
-        s += '</button>';
-      }
-    } else {
-      /* порожня рамка — натискання завантажує фото */
-      if(active && val){
-        s += '<div onclick="nav2PhotoForKey(\''+photoKey+'\')" style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer">';
-        s += '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="color:var(--muted)"><path d="M12 15.2A3.2 3.2 0 1 1 12 8.8a3.2 3.2 0 0 1 0 6.4zM9 2L7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.17L15 2H9z"/></svg>';
-        s += '<div style="font-size:10px;color:var(--muted);font-family:var(--font-d)">Додати фото</div>';
-        s += '</div>';
+    var editMode = NAV2._editMode;
+
+    function _card(label, val, photo, photoKey, fieldType) {
+      var pkId = 'npk_'+(Math.random()*1e9|0); window[pkId] = photoKey;
+      var zkId = 'nzk_'+(Math.random()*1e9|0); window[zkId] = photoKey;
+      var cardId = 'ncard_'+fieldType;
+      var s = '<div id="'+cardId+'" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color .15s">';
+      s += '<div style="width:100%;aspect-ratio:1;background:var(--bg);position:relative;overflow:hidden">';
+      if(photo){
+        s += '<img src="'+photo+'" onclick="nav2PhotoZoom(window[\''+zkId+'\'])" style="width:100%;height:100%;object-fit:cover;cursor:zoom-in;display:block">';
+        s += '<button onclick="nav2PhotoForKey(window[\''+pkId+'\'])" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);border:none;border-radius:6px;width:26px;height:26px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0"><svg width="13" height="13" viewBox="0 0 24 24" fill="white"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>';
       } else {
-        s += '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="color:var(--border2)"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg></div>';
+        s += '<div onclick="nav2PhotoForKey(window[\''+pkId+'\'])" style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="color:var(--muted)"><path d="M12 15.2A3.2 3.2 0 1 1 12 8.8a3.2 3.2 0 0 1 0 6.4zM9 2L7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.17L15 2H9z"/></svg><div style="font-size:10px;color:var(--muted);font-family:var(--font-d)">Фото</div></div>';
       }
+      s += '</div>';
+      s += '<div style="padding:8px 10px">';
+      s += '<div style="font-size:9px;color:var(--sub);font-family:var(--font-d);font-weight:500;margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px">'+label+'</div>';
+      if(editMode) {
+        var ftId = 'nav2ft_'+fieldType; window[ftId] = fieldType;
+        var inpId = 'nav2edit_'+fieldType;
+        s += '<div id="nav2txt_'+fieldType+'" onclick="nav2ActivateField(\''+fieldType+'\')" style="font-family:var(--font-d);font-size:12px;font-weight:600;color:'+(val?'var(--text)':'var(--muted)')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:text;min-height:18px;border-bottom:1.5px solid var(--border);padding:2px 0">'+(val?_esc(val):'—')+'</div>';
+        s += '<input id="'+inpId+'" type="text" value="'+_esc(val||'')+'"'
+          +' onclick="event.stopPropagation()"'
+          +' onfocus="var c=document.getElementById(\'ncard_'+fieldType+'\');if(c)c.style.borderColor=\'var(--blue)\';this.style.borderBottomColor=\'var(--blue)\'"'
+          +' onblur="var c=document.getElementById(\'ncard_'+fieldType+'\');if(c)c.style.borderColor=\'var(--border)\';this.style.display=\'none\';var t=document.getElementById(\'nav2txt_'+fieldType+'\');if(t){t.style.display=\'\';t.textContent=this.value||\'—\';}nav2SaveOneField(window[\''+ftId+'\'],this.value)"'
+          +' onkeydown="if(event.key===\'Enter\'){this.blur();}"'
+          +' style="display:none;width:100%;background:transparent;border:none;border-bottom:1.5px solid var(--blue);outline:none;font-family:var(--font-d);font-size:12px;font-weight:600;color:var(--text);padding:2px 0;box-sizing:border-box">';
+      } else {
+        s += '<div style="font-family:var(--font-d);font-size:12px;font-weight:600;color:'+(val?'var(--text)':'var(--muted)')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(val?_esc(val):'—')+'</div>';
+      }
+      s += '</div></div>';
+      return s;
     }
-    s += '</div>';
-    /* нижня частина — назва */
-    s += '<div style="padding:8px 10px;cursor:'+(navFn?'pointer':'default')+'"'+(navFn?' onclick="'+navFn+'"':'')+' >';
-    s += '<div style="font-size:9px;color:var(--sub);font-family:var(--font-d);font-weight:500;margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px">'+label+'</div>';
-    s += '<div style="font-family:var(--font-d);font-size:12px;font-weight:600;color:'+(val?'var(--text)':'var(--muted)')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(val?_esc(val):'—')+'</div>';
-    s += '</div></div>';
-    return s;
-  }
 
-  var levelCards = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px">';
-  levelCards += _nc('Приміщення', NAV2.room, true, NAV2.level===0, NAV2.room?'nav2GoLevel(0)':'', photoRoom, NAV2.room||'');
-  levelCards += _nc('Комірка', NAV2.cell, !!NAV2.room, NAV2.level===1, NAV2.cell?'nav2GoLevel(1)':'', photoCell, NAV2.room&&NAV2.cell?NAV2.room+'::'+NAV2.cell:'');
-  levelCards += _nc('Контейнер', NAV2.con||'', !!NAV2.cell, NAV2.level===2, '', photoCon, NAV2.room&&NAV2.cell&&NAV2.con?NAV2.room+'::'+NAV2.cell+'::'+NAV2.con:'');
-  levelCards += '</div>';
+    var html = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px">';
+    html += _card('Приміщення', NAV2.room, photoRoom, NAV2.room||'', 'room');
+    html += _card('Комірка', NAV2.cell, photoCell, NAV2.room&&NAV2.cell?NAV2.room+'::'+NAV2.cell:'', 'cell');
+    html += _card('Контейнер', NAV2.con||'', photoCon, NAV2.room&&NAV2.cell&&NAV2.con?NAV2.room+'::'+NAV2.cell+'::'+NAV2.con:'', 'con');
+    html += '</div>';
 
-  var html = levelCards;
+    /* Список контейнерів */
+    var ri = NAV2.roomIdx >= 0 ? NAV2.roomIdx : locations.findIndex(function(r){return r.name===NAV2.room;});
+    var roomObj = locations[ri] || null;
+    var cellObj = roomObj&&roomObj.cells?roomObj.cells.find(function(c){return c.name===NAV2.cell;}):null;
+    var ci = cellObj&&roomObj?roomObj.cells.indexOf(cellObj):-1;
 
-  /* ── РІВЕНЬ 0: Приміщення ── */
-  if (NAV2.level === 0) {
-    if (!locations.length) {
-      html += '<div style="font-size:13px;color:var(--muted);padding:16px 0;text-align:center">Ще немає приміщень. Додайте перше.</div>';
-    }
-    locations.forEach(function(r, ri) {
-      var cellCount = r.cells ? r.cells.length : 0;
-      var conCount  = r.cells ? r.cells.reduce(function(a,c){return a+(c.containers?c.containers.length:0);},0) : 0;
-      var itemCount = stock.filter(function(s){return s.room===r.name;}).length;
-      html += '<div style="display:flex;align-items:center;gap:6px;padding:10px 12px;border-radius:10px;background:var(--surface2);border:1.5px solid var(--border);margin-bottom:6px">';
-      html += '<div onclick="nav2Enter(0,' + ri + ')" style="flex:1;cursor:pointer;min-width:0">';
-      html += '<div style="font-family:var(--font-d);font-size:14px;font-weight:600;color:var(--text)">' + _esc(r.name) + '</div>';
-      html += '<div style="font-size:11px;color:var(--sub);margin-top:2px">' + cellCount + ' комірок · ' + conCount + ' контейнерів' + (itemCount ? ' · <span style="color:var(--blue)">' + itemCount + ' позицій</span>' : '') + '</div>';
-      html += '</div>';
-      html += nav2BtnRename('room', ri, -1, -1, r.name);
-      html += nav2BtnDelete('room', ri, -1, -1, r.name);
-      html += '<span onclick="nav2Enter(0,' + ri + ')" style="cursor:pointer;color:var(--muted);display:flex;align-items:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></span>';
-      html += '</div>';
-    });
-
-  /* ── РІВЕНЬ 1: Комірки ── */
-  } else if (NAV2.level === 1) {
-    var roomObj = locations.find(function(r){return r.name===NAV2.room;});
-    var ri = roomObj ? locations.indexOf(roomObj) : -1;
-    if (!roomObj || !roomObj.cells || !roomObj.cells.length) {
-      html += '<div style="font-size:13px;color:var(--muted);padding:16px 0;text-align:center">Ще немає комірок. Додайте першу.</div>';
-    } else {
-      roomObj.cells.forEach(function(cel, ci) {
-        var conCount  = cel.containers ? cel.containers.length : 0;
-        var itemCount = stock.filter(function(s){return s.room===NAV2.room&&s.storage===cel.name;}).length;
-        html += '<div style="display:flex;align-items:center;gap:6px;padding:10px 12px;border-radius:10px;background:var(--surface2);border:1.5px solid var(--border);margin-bottom:6px">';
-        html += '<div onclick="nav2Enter(1,' + ci + ')" style="flex:1;cursor:pointer;min-width:0">';
-        html += '<div style="font-family:var(--font-d);font-size:13.5px;font-weight:600;color:var(--text)">' + _esc(cel.name) + '</div>';
-        html += '<div style="font-size:11px;color:var(--sub);margin-top:2px">' + conCount + ' контейнерів' + (itemCount ? ' · <span style="color:var(--blue)">' + itemCount + ' позицій</span>' : '') + '</div>';
+    if(cellObj&&cellObj.containers&&cellObj.containers.length){
+      cellObj.containers.forEach(function(cn,coni) {
+        var ic = stock.filter(function(s){return s.room===NAV2.room&&s.storage===NAV2.cell&&s.sup===cn;}).length;
+        var isSel = NAV2.con===cn;
+        var cnId = 'ncn_'+coni; window[cnId]=cn;
+        var total = cellObj.containers.length;
+        html += '<div style="display:flex;align-items:center;gap:6px;padding:10px 12px;border-radius:10px;background:'+(isSel?'var(--blue-s)':'var(--surface2)')+';border:1.5px solid '+(isSel?'var(--blue)':'var(--border)')+';margin-bottom:6px">';
+        html += '<div onclick="nav2Enter(2,window[\''+cnId+'\'])" style="flex:1;min-width:0;cursor:pointer"><div style="font-family:var(--font-d);font-size:13.5px;font-weight:600;color:'+(isSel?'var(--blue)':'var(--text)')+'">'+_esc(cn)+'</div>';
+        html += '<div style="font-size:11px;color:'+(ic?'var(--blue)':'var(--muted)')+';margin-top:2px">'+(ic?ic+' позицій':'порожньо')+'</div></div>';
+        /* сортування */
+        html += '<div style="display:flex;flex-direction:column;gap:1px">';
+        html += '<button onclick="event.stopPropagation();nav2MoveCon('+ri+','+ci+','+coni+',-1)" style="background:none;border:none;cursor:'+(coni>0?'pointer':'default')+';color:'+(coni>0?'var(--sub)':'var(--border)')+';padding:2px;line-height:1;font-size:14px" '+(coni===0?'disabled':'')+'>↑</button>';
+        html += '<button onclick="event.stopPropagation();nav2MoveCon('+ri+','+ci+','+coni+',1)" style="background:none;border:none;cursor:'+(coni<total-1?'pointer':'default')+';color:'+(coni<total-1?'var(--sub)':'var(--border)')+';padding:2px;line-height:1;font-size:14px" '+(coni===total-1?'disabled':'')+'>↓</button>';
         html += '</div>';
-        html += nav2BtnRename('cell', ri, ci, -1, cel.name);
-        html += nav2BtnDelete('cell', ri, ci, -1, cel.name);
-        html += '<span onclick="nav2Enter(1,' + ci + ')" style="cursor:pointer;color:var(--muted);display:flex;align-items:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></span>';
+        html += nav2BtnRename('con',ri,ci,coni,cn)+nav2BtnDelete('con',ri,ci,coni,cn);
+        html += '</div>';
+      });
+    } else {
+      html += '<div style="font-size:13px;color:var(--muted);padding:12px 0;text-align:center">Ще немає контейнерів</div>';
+    }
+
+    /* Позиції */
+    var items = stock.filter(function(s){return s.room===NAV2.room&&s.storage===NAV2.cell&&(NAV2.con?s.sup===NAV2.con:true);});
+    if(items.length){
+      html += '<div style="margin-top:12px;font-size:11px;font-weight:600;color:var(--sub);font-family:var(--font-d);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">'+items.length+' позицій</div>';
+      items.forEach(function(it){
+        var st=getStatus(it);
+        var itId='nit_'+it.id;window[itId]=it.id;
+        html += '<div onclick="(function(){closeModal(\'nav\');setTimeout(function(){openDetail(window[\''+itId+'\']);},200);})()" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);margin-bottom:6px;cursor:pointer">';
+        html += '<div style="flex:1;min-width:0"><div style="font-family:var(--font-d);font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+_esc(it.name)+'</div>';
+        html += '<div style="font-size:11px;color:var(--sub);margin-top:2px">'+_esc(it.cat)+'</div></div>';
+        html += '<span class="sbadge '+st.cls+'">'+st.label+'</span>';
         html += '</div>';
       });
     }
 
-  /* ── РІВЕНЬ 2: Контейнери ── */
-  } else {
-    var roomObj = locations.find(function(r){return r.name===NAV2.room;});
-    var ri = roomObj ? locations.indexOf(roomObj) : -1;
-    var cellObj = roomObj && roomObj.cells ? roomObj.cells.find(function(c){return c.name===NAV2.cell;}) : null;
-    var ci = cellObj && roomObj ? roomObj.cells.indexOf(cellObj) : -1;
-    if (!cellObj || !cellObj.containers || !cellObj.containers.length) {
-      html += '<div style="font-size:13px;color:var(--muted);padding:16px 0;text-align:center">Ще немає контейнерів. Додайте перший.</div>';
+    /* Кнопка вибору (тільки в режимі вибору місця) */
+    if(NAV2._storageMode){
+      html += '<button onclick="nav2ConfirmStorage()" style="width:100%;height:44px;background:var(--blue);color:#1c1f26;border:none;border-radius:10px;font-family:var(--font-d);font-size:14px;font-weight:600;cursor:pointer;margin-top:8px">✓ Вибрати це місце</button>';
+    }
+
+    /* Додати комірку або контейнер */
+    html += '<div style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px;display:flex;flex-direction:column;gap:8px">';
+    if(!NAV2.cell){
+      html += '<div style="font-size:11px;font-weight:600;color:var(--sub);font-family:var(--font-d);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">Додати комірку</div>';
+      html += '<div style="display:flex;gap:8px"><input id="nav2-inp-cell" type="text" placeholder="Нова комірка..." style="flex:1;height:38px;padding:0 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-d);font-size:13px;outline:none" onkeydown="if(event.key===\'Enter\')nav2AddCell()">';
+      html += '<button onclick="nav2AddCell()" style="height:38px;padding:0 16px;background:var(--blue);color:#1c1f26;border:none;border-radius:8px;font-family:var(--font-d);font-size:13px;font-weight:600;cursor:pointer">+ Додати</button></div>';
     } else {
-      cellObj.containers.forEach(function(cn, coni) {
-        var itemCount = stock.filter(function(s){return s.room===NAV2.room&&s.storage===NAV2.cell&&s.sup===cn;}).length;
-        var isSelected = NAV2.con === cn;
-        html += '<div style="display:flex;align-items:center;gap:6px;padding:10px 12px;border-radius:10px;background:'+(isSelected?'var(--blue-s)':'var(--surface2)')+';border:1.5px solid '+(isSelected?'var(--blue)':'var(--border)')+';margin-bottom:6px;cursor:pointer" onclick="nav2Enter(2,window[\'_nav2cn_'+coni+'\'])">';
-        window['_nav2cn_'+coni] = cn;
-        html += '<div style="flex:1;min-width:0">';
-        html += '<div style="font-family:var(--font-d);font-size:13.5px;font-weight:600;color:'+(isSelected?'var(--blue)':'var(--text)')+';">' + _esc(cn) + '</div>';
-        html += '<div style="font-size:11px;color:' + (itemCount?'var(--blue)':'var(--muted)') + ';margin-top:2px">' + (itemCount ? itemCount+' позицій' : 'порожньо') + '</div>';
-        html += '</div>';
+      html += '<div style="font-size:11px;font-weight:600;color:var(--sub);font-family:var(--font-d);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">Додати контейнер</div>';
+      html += '<div style="display:flex;gap:8px"><input id="nav2-inp-con" type="text" placeholder="Новий контейнер..." style="flex:1;height:38px;padding:0 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-d);font-size:13px;outline:none" onkeydown="if(event.key===\'Enter\')nav2AddCon()">';
+      html += '<button onclick="nav2AddCon()" style="height:38px;padding:0 16px;background:var(--blue);color:#1c1f26;border:none;border-radius:8px;font-family:var(--font-d);font-size:13px;font-weight:600;cursor:pointer">+ Додати</button></div>';
+    }
+    html += '</div>';
+
+    body.innerHTML = html;
+    return;
+  }
+
+  /* ── ПЛОСКИЙ СПИСОК ── */
+  if(bc) bc.innerHTML = '';
+  if(inp) document.getElementById('nav2-add').style.display = 'flex';
+
+  var rows = [];
+  locations.forEach(function(r, ri) {
+    if (!r.cells||!r.cells.length) {
+      rows.push({room:r.name,cell:'',con:'',ri:ri});
+    } else {
+      r.cells.forEach(function(c) {
+        if(!c.containers||!c.containers.length) {
+          rows.push({room:r.name,cell:c.name,con:'',ri:ri});
+        } else {
+          c.containers.forEach(function(cn){rows.push({room:r.name,cell:c.name,con:cn,ri:ri});});
+        }
+      });
+    }
+  });
+
+  if(!rows.length){
+    body.innerHTML = '<div style="font-size:13px;color:var(--muted);padding:16px 0;text-align:center">Ще немає локацій. Додайте приміщення.</div>';
+    return;
+  }
+
+  var html = '<div style="display:flex;flex-direction:column;gap:6px">';
+
+  rows.forEach(function(row,ri) {
+    var rowId='nav2r_'+ri; window[rowId]=row;
+    var photoKey = row.room?(row.cell?(row.con?row.room+'::'+row.cell+'::'+row.con:row.room+'::'+row.cell):row.room):'';
+    var photo = photoKey?(locationPhotos[photoKey]||null):null;
+    var pkId='nav2pk_'+ri; window[pkId]=photoKey;
+    var isSelected = row.room===NAV2.room&&row.cell===NAV2.cell&&row.con===NAV2.con;
+    var border = isSelected?'2px solid var(--blue)':'1.5px solid var(--border)';
+
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 44px;gap:6px;padding:10px;border-radius:10px;background:var(--surface2);border:'+border+';cursor:pointer" onclick="(function(){var r=window[\''+rowId+'\'];nav2OpenDetail(r.room,r.cell,r.con,r.ri);})()">';
+    ['Контейнер','Комірка','Приміщення'].forEach(function(label,li){
+      var val=li===0?row.con:li===1?row.cell:row.room;
+      html += '<div><div style="font-size:9px;color:var(--sub);font-family:var(--font-d);font-weight:500;margin-bottom:4px">'+label+'</div>';
+      html += '<div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;height:36px;display:flex;align-items:center;padding:0 8px;font-family:var(--font-d);font-size:13px;font-weight:600;color:'+(val?'var(--text)':'var(--muted)')+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span style="color:var(--muted);margin-right:4px">–</span>'+(val||'')+'</div></div>';
+    });
+    html += '<div><div style="font-size:9px;color:var(--sub);font-family:var(--font-d);font-weight:500;margin-bottom:4px">Мапа</div>';
+    html += '<div onclick="event.stopPropagation();nav2PhotoForKey(window[\''+pkId+'\'])" style="background:var(--blue-s);border:1.5px solid rgba(138,180,248,.3);border-radius:6px;width:44px;height:36px;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer">';
+    html += photo?'<img src="'+photo+'" style="width:100%;height:100%;object-fit:cover">':'<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="color:var(--blue)"><path d="M12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7zM9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9z"/></svg>';
+    html += '</div></div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  body.innerHTML = html;
+}
+
+function nav2FabClick() {
+  if (NAV2._detail) {
+    NAV2._editMode = !NAV2._editMode;
+    nav2SetFabIcon(NAV2._editMode ? 'edit' : 'plus');
+    nav2Render();
+    if (NAV2._editMode) {
+      setTimeout(function(){
+        var inp = document.getElementById('nav2edit_room');
+        if(inp) inp.focus();
+      }, 50);
+    }
+  } else {
+    nav2AddNew();
+  }
+}
+
+function nav2ActivateField(fieldType) {
+  var txt = document.getElementById('nav2txt_'+fieldType);
+  var inp = document.getElementById('nav2edit_'+fieldType);
+  if(!inp) return;
+  if(txt) txt.style.display = 'none';
+  inp.style.display = 'block';
+  inp.focus();
+  inp.select();
+}
+
+function nav2SaveOneField(fieldType, newVal) {
+  newVal = (newVal||'').trim();
+  if (!newVal) return;
+
+  var roomObj = locations[NAV2.roomIdx] || locations.find(function(r){return r.name===NAV2.room;});
+  var cellObj = roomObj&&roomObj.cells?roomObj.cells.find(function(c){return c.name===NAV2.cell;}):null;
+
+  if (fieldType==='room' && roomObj) {
+    if(newVal===NAV2.room) return;
+    stock.forEach(function(s){ if(s.room===NAV2.room) s.room=newVal; });
+    roomObj.name=newVal; NAV2.room=newVal;
+    forceSyncToSheets(); renderAll(); toast('✓ '+newVal); nav2Render();
+
+  } else if (fieldType==='cell') {
+    if(!roomObj) return;
+    if(!roomObj.cells) roomObj.cells=[];
+    if(!NAV2.cell) {
+      /* Створюємо нову комірку */
+      if(roomObj.cells.find(function(c){return c.name===newVal;})){toast('⚠ Вже існує');return;}
+      roomObj.cells.push({name:newVal,containers:[]});
+      NAV2.cell=newVal;
+    } else {
+      if(newVal===NAV2.cell) return;
+      if(!cellObj) return;
+      stock.forEach(function(s){ if(s.room===NAV2.room&&s.storage===NAV2.cell) s.storage=newVal; });
+      cellObj.name=newVal; NAV2.cell=newVal;
+    }
+    forceSyncToSheets(); renderAll(); toast('✓ '+newVal); nav2Render();
+
+  } else if (fieldType==='con') {
+    if(!cellObj) return;
+    if(!cellObj.containers) cellObj.containers=[];
+    if(!NAV2.con) {
+      /* Додаємо новий контейнер */
+      if(cellObj.containers.indexOf(newVal)!==-1){toast('⚠ Вже існує');return;}
+      cellObj.containers.push(newVal);
+      NAV2.con=newVal;
+    } else {
+      if(newVal===NAV2.con) return;
+      var idx=cellObj.containers.indexOf(NAV2.con);
+      if(idx===-1) return;
+      stock.forEach(function(s){ if(s.room===NAV2.room&&s.storage===NAV2.cell&&s.sup===NAV2.con) s.sup=newVal; });
+      cellObj.containers[idx]=newVal; NAV2.con=newVal;
+    }
+    forceSyncToSheets(); renderAll(); toast('✓ '+newVal); nav2Render();
+  }
+}
+
+function nav2SaveInlineEdit() { /* legacy — не використовується */ }
+
+function nav2ShowEditForm() {
+  var roomObj = locations.find(function(r){return r.name===NAV2.room;});
+  var ri = roomObj ? locations.indexOf(roomObj) : -1;
+  var cellObj = roomObj&&roomObj.cells ? roomObj.cells.find(function(c){return c.name===NAV2.cell;}) : null;
+  var ci = cellObj&&roomObj ? roomObj.cells.indexOf(cellObj) : -1;
+
+  var ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center;box-sizing:border-box';
+  ov.onclick = function(e){ if(e.target===ov) document.body.removeChild(ov); };
+
+  var box = document.createElement('div');
+  box.style.cssText = 'background:var(--surface);border-radius:24px 24px 0 0;padding:20px 20px 32px;width:100%;max-width:560px;box-shadow:0 -4px 32px rgba(0,0,0,.3);animation:slideUp .22s cubic-bezier(.16,1,.3,1)';
+
+  function field(label, value, id) {
+    return '<div style="margin-bottom:14px">'+
+      '<div style="font-size:11px;color:var(--sub);font-family:var(--font-d);font-weight:500;margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px">'+label+'</div>'+
+      '<input id="'+id+'" type="text" value="'+_esc(value||'')+'" style="width:100%;height:46px;padding:0 14px;background:var(--bg);border:1.5px solid var(--blue);border-radius:10px;color:var(--text);font-family:var(--font-d);font-size:15px;outline:none;box-sizing:border-box">'+
+      '</div>';
+  }
+
+  box.innerHTML =
+    '<div style="width:32px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 16px"></div>'+
+    '<div style="font-family:var(--font-d);font-size:17px;font-weight:600;margin-bottom:16px">Редагувати</div>'+
+    field('Приміщення', NAV2.room, 'edit-room')+
+    (NAV2.cell ? field('Комірка', NAV2.cell, 'edit-cell') : '')+
+    (NAV2.con ? field('Контейнер', NAV2.con, 'edit-con') : '')+
+    '<button id="edit-save-btn" style="width:100%;height:46px;background:var(--blue);color:#1c1f26;border:none;border-radius:12px;font-family:var(--font-d);font-size:15px;font-weight:600;cursor:pointer;margin-top:4px">Зберегти</button>';
+
+  box.querySelector('#edit-save-btn').onclick = function() {
+    var newRoom = (box.querySelector('#edit-room')||{}).value||'';
+    var newCell = (box.querySelector('#edit-cell')||{}).value||'';
+    var newCon  = (box.querySelector('#edit-con')||{}).value||'';
+    newRoom = newRoom.trim(); newCell = newCell.trim(); newCon = newCon.trim();
+    if (!newRoom) { toast('⚠ Назва не може бути порожньою'); return; }
+
+    // Оновлюємо приміщення
+    if (newRoom !== NAV2.room && roomObj) {
+      stock.forEach(function(s){ if(s.room===NAV2.room) s.room=newRoom; });
+      roomObj.name = newRoom;
+      NAV2.room = newRoom;
+    }
+    // Оновлюємо комірку
+    if (newCell && newCell !== NAV2.cell && cellObj) {
+      stock.forEach(function(s){ if(s.room===NAV2.room&&s.storage===NAV2.cell) s.storage=newCell; });
+      cellObj.name = newCell;
+      NAV2.cell = newCell;
+    }
+    // Оновлюємо контейнер
+    if (newCon && newCon !== NAV2.con && cellObj && cellObj.containers) {
+      var idx = cellObj.containers.indexOf(NAV2.con);
+      if (idx !== -1) {
+        stock.forEach(function(s){ if(s.room===NAV2.room&&s.storage===NAV2.cell&&s.sup===NAV2.con) s.sup=newCon; });
+        cellObj.containers[idx] = newCon;
+        NAV2.con = newCon;
+      }
+    }
+
+    document.body.removeChild(ov);
+    forceSyncToSheets();
+    renderAll();
+    toast('✓ Збережено');
+    nav2Render();
+  };
+
+  ov.appendChild(box);
+  document.body.appendChild(ov);
+  setTimeout(function(){ var inp = box.querySelector('input'); if(inp) inp.focus(); }, 50);
+}
+
+function nav2SetFabIcon(mode) {
+  var plus = document.getElementById('nav2-fab-icon-plus');
+  var edit = document.getElementById('nav2-fab-icon-edit');
+  if (!plus || !edit) return;
+  if (mode === 'edit') {
+    plus.style.display = 'none';
+    edit.style.display = 'block';
+  } else {
+    plus.style.display = 'block';
+    edit.style.display = 'none';
+  }
+}
+
+function nav2OpenDetail(room, cell, con, ri) {
+  NAV2.room = room; NAV2.cell = cell; NAV2.con = con;
+  NAV2.roomIdx = (ri !== undefined) ? ri : locations.findIndex(function(r){return r.name===room;});
+  NAV2._detail = true;
+  nav2SetFabIcon('edit');
+  nav2Render();
+}
+
+function nav2BackToList() {
+  NAV2._detail = false; NAV2._editMode = false;
+  NAV2.room = ''; NAV2.cell = ''; NAV2.con = '';
+  nav2SetFabIcon('plus');
+  nav2Render();
+}
+
+function nav2ConfirmStorage() {
+  var i = stock.find(function(x){return x.id===currentDetailId;});
+  if(i){
+    i.room = NAV2.room; i.storage = NAV2.cell; i.sup = NAV2.con||'—';
+    updateStorageDisplay(i);
+    forceSyncToSheets();
+  }
+  NAV2._storageMode = false;
+  NAV2._detail = false;
+  closeModal('nav');
+  document.getElementById('nav2-add').style.display = 'flex';
+}
+
+function nav2AddCell() {
+  var inp = document.getElementById('nav2-inp-cell');
+  if(!inp) return;
+  var val = inp.value.trim();
+  if(!val) return;
+  var roomObj = locations[NAV2.roomIdx] || locations.find(function(r){return r.name===NAV2.room;});
+  if(!roomObj) return;
+  if(!roomObj.cells) roomObj.cells=[];
+  if(roomObj.cells.find(function(c){return c.name===val;})){toast('⚠ Вже існує');return;}
+  roomObj.cells.push({name:val, containers:[]});
+  NAV2.cell = val;
+  forceSyncToSheets(); toast('✓ Комірку додано'); nav2Render();
+}
+
+function nav2MoveCell(ri, ci, dir) {
+  var r = locations[ri]; if(!r||!r.cells) return;
+  var ni = ci+dir;
+  if(ni<0||ni>=r.cells.length) return;
+  var tmp=r.cells[ci]; r.cells[ci]=r.cells[ni]; r.cells[ni]=tmp;
+  forceSyncToSheets(); nav2Render();
+}
+
+function nav2MoveCon(ri, ci, coni, dir) {
+  var r=locations[ri]; if(!r) return;
+  var c=r.cells&&r.cells[ci]; if(!c||!c.containers) return;
+  var ni=coni+dir;
+  if(ni<0||ni>=c.containers.length) return;
+  var tmp=c.containers[coni]; c.containers[coni]=c.containers[ni]; c.containers[ni]=tmp;
+  forceSyncToSheets(); nav2Render();
+}
+
+function nav2AddCon() {
+  var inp = document.getElementById('nav2-inp-con');
+  if(!inp) return;
+  var val = inp.value.trim();
+  if(!val) return;
+  var roomObj = locations[NAV2.roomIdx] || locations.find(function(r){return r.name===NAV2.room;});
+  var cellObj = roomObj&&roomObj.cells?roomObj.cells.find(function(c){return c.name===NAV2.cell;}):null;
+  if(!cellObj) return;
+  if(!cellObj.containers) cellObj.containers=[];
+  if(cellObj.containers.indexOf(val)!==-1){toast('⚠ Вже існує');return;}
+  cellObj.containers.push(val);
+  inp.value='';
+  forceSyncToSheets(); toast('✓ Контейнер додано'); nav2Render();
+}
+
+
+function nav2SelectRow(room, cell, con) {
+  nav2OpenDetail(room, cell, con);
+}
+
+function nav2ManageButtons() {
+  var html = '';
+  locations.forEach(function(r, ri) {
+    html += '<div style="margin-bottom:8px">';
+    html += '<div style="display:flex;align-items:center;gap:6px;padding:8px 10px;background:var(--bg);border-radius:8px;border:1px solid var(--border)">';
+    html += '<div style="flex:1;font-family:var(--font-d);font-size:13px;font-weight:600">'+_esc(r.name)+'</div>';
+    html += nav2BtnRename('room', ri, -1, -1, r.name);
+    html += nav2BtnDelete('room', ri, -1, -1, r.name);
+    html += '</div>';
+    if (r.cells) r.cells.forEach(function(c, ci) {
+      var totalCells = r.cells.length;
+      html += '<div style="margin-left:16px;margin-top:4px;display:flex;align-items:center;gap:4px;padding:6px 10px;background:var(--bg);border-radius:8px;border:1px solid var(--border)">';
+      html += '<div style="flex:1;font-family:var(--font-d);font-size:12px;font-weight:500;color:var(--sub)">📁 '+_esc(c.name)+'</div>';
+      html += '<button onclick="nav2MoveCell('+ri+','+ci+',-1)" style="background:none;border:none;cursor:'+(ci>0?'pointer':'default')+';color:'+(ci>0?'var(--sub)':'var(--border)')+';font-size:13px;padding:2px" '+(ci===0?'disabled':'')+'>↑</button>';
+      html += '<button onclick="nav2MoveCell('+ri+','+ci+',1)" style="background:none;border:none;cursor:'+(ci<totalCells-1?'pointer':'default')+';color:'+(ci<totalCells-1?'var(--sub)':'var(--border)')+';font-size:13px;padding:2px" '+(ci===totalCells-1?'disabled':'')+'>↓</button>';
+      html += nav2BtnRename('cell', ri, ci, -1, c.name);
+      html += nav2BtnDelete('cell', ri, ci, -1, c.name);
+      html += '</div>';
+      if (c.containers) c.containers.forEach(function(cn, coni) {
+        var totalCons = c.containers.length;
+        html += '<div style="margin-left:32px;margin-top:4px;display:flex;align-items:center;gap:4px;padding:5px 10px;background:var(--bg);border-radius:8px;border:1px solid var(--border)">';
+        html += '<div style="flex:1;font-family:var(--font-d);font-size:11px;color:var(--sub)">📦 '+_esc(cn)+'</div>';
+        html += '<button onclick="nav2MoveCon('+ri+','+ci+','+coni+',-1)" style="background:none;border:none;cursor:'+(coni>0?'pointer':'default')+';color:'+(coni>0?'var(--sub)':'var(--border)')+';font-size:13px;padding:2px" '+(coni===0?'disabled':'')+'>↑</button>';
+        html += '<button onclick="nav2MoveCon('+ri+','+ci+','+coni+',1)" style="background:none;border:none;cursor:'+(coni<totalCons-1?'pointer':'default')+';color:'+(coni<totalCons-1?'var(--sub)':'var(--border)')+';font-size:13px;padding:2px" '+(coni===totalCons-1?'disabled':'')+'>↓</button>';
         html += nav2BtnRename('con', ri, ci, coni, cn);
         html += nav2BtnDelete('con', ri, ci, coni, cn);
         html += '</div>';
       });
-    }
-  }
-
-  body.innerHTML = html;
+    });
+    html += '</div>';
+  });
+  return html;
 }
 
 /* Фото навігації */
@@ -1541,52 +1900,83 @@ function nav2Enter(fromLevel, idx) {
 }
 
 /* Додати елемент */
-function nav2Add() {
-  var inp = document.getElementById('nav2-inp');
-  if (!inp) return;
-  var val = inp.value.trim();
-  if (!val) { inp.focus(); return; }
+function nav2AddNew() {
+  var ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center;box-sizing:border-box';
 
-  if (NAV2.level === 0) {
-    if (locations.find(function(r){return r.name===val;})) { toast('⚠ Вже існує'); return; }
-    locations.push({ name: val, cells: [] });
-    inp.value = '';
-    forceSyncToSheets();
-    toast('✓ Приміщення додано. Тепер додайте комірку.');
-    NAV2.room = val;
-    NAV2.level = 1;
-    nav2Render();
-    return;
-  } else if (NAV2.level === 1) {
-    var roomObj = locations.find(function(r){return r.name===NAV2.room;});
-    if (!roomObj) return;
-    if (!roomObj.cells) roomObj.cells = [];
-    if (roomObj.cells.find(function(c){return c.name===val;})) { toast('⚠ Вже існує'); return; }
-    roomObj.cells.push({ name: val, containers: [] });
-    inp.value = '';
-    forceSyncToSheets();
-    toast('✓ Комірку додано. Тепер додайте контейнер.');
-    NAV2.cell = val;
-    NAV2.level = 2;
-    nav2Render();
-    return;
-  } else if (NAV2.level === 2) {
-    var roomObj = locations.find(function(r){return r.name===NAV2.room;});
-    var cellObj = roomObj && roomObj.cells ? roomObj.cells.find(function(c){return c.name===NAV2.cell;}) : null;
-    if (!cellObj) return;
-    if (!cellObj.containers) cellObj.containers = [];
-    if (cellObj.containers.indexOf(val) !== -1) { toast('⚠ Вже існує'); return; }
-    cellObj.containers.push(val);
+  var box = document.createElement('div');
+  box.style.cssText = 'background:var(--surface);border-radius:24px 24px 0 0;padding:20px 20px 32px;width:100%;max-width:560px;box-shadow:0 -4px 32px rgba(0,0,0,.3);animation:slideUp .22s cubic-bezier(.16,1,.3,1)';
+
+  var existingRooms = locations.map(function(r){ return r.name; });
+
+  box.innerHTML =
+    '<div style="width:32px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 16px"></div>'+
+    '<div style="font-family:var(--font-d);font-size:20px;font-weight:700;margin-bottom:16px">Нове приміщення</div>'+
+    '<div style="font-size:11px;color:var(--sub);font-family:var(--font-d);margin-bottom:6px">Назва</div>'+
+    '<div style="position:relative">'+
+      '<input id="n2name" type="text" placeholder="Введіть назву..." autocomplete="off"'+
+      ' style="width:100%;height:46px;padding:0 '+(existingRooms.length?'48px':'14px')+' 0 14px;background:var(--bg);border:1.5px solid var(--blue);border-radius:10px;color:var(--text);font-family:var(--font-d);font-size:15px;outline:none;box-sizing:border-box">'+
+      (existingRooms.length ?
+        '<button id="n2arrow" type="button" style="position:absolute;right:0;top:0;height:46px;width:44px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--sub)">'+
+        '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg></button>' : '')+
+      '<div id="n2drop" style="display:none;position:absolute;top:46px;left:0;right:0;background:var(--surface2);border:1.5px solid var(--blue);border-top:none;border-radius:0 0 10px 10px;z-index:10;max-height:180px;overflow-y:auto">'+
+      existingRooms.map(function(name){
+        return '<div data-name="'+_esc(name)+'" style="padding:10px 14px;font-family:var(--font-d);font-size:14px;font-weight:500;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border)">'+_esc(name)+'</div>';
+      }).join('')+
+      '</div>'+
+    '</div>'+
+    '<div style="height:16px"></div>'+
+    '<button id="n2btn" style="width:100%;height:46px;background:var(--blue);color:#1c1f26;border:none;border-radius:12px;font-family:var(--font-d);font-size:15px;font-weight:700;cursor:pointer">+ Додати</button>';
+
+  var inp = box.querySelector('#n2name');
+  var drop = box.querySelector('#n2drop');
+  var arrow = box.querySelector('#n2arrow');
+  var btn = box.querySelector('#n2btn');
+
+  if(arrow && drop) {
+    arrow.addEventListener('mousedown', function(e){
+      e.preventDefault();
+      drop.style.display = drop.style.display==='block' ? 'none' : 'block';
+    });
   }
 
-  inp.value = '';
-  inp.focus();
-  forceSyncToSheets();
-  toast('✓ Додано: ' + val);
-  nav2Render();
+  if(drop) {
+    drop.querySelectorAll('div[data-name]').forEach(function(item){
+      item.addEventListener('mouseover', function(){ this.style.background='var(--blue-s)'; });
+      item.addEventListener('mouseout',  function(){ this.style.background=''; });
+      item.addEventListener('mousedown', function(e){
+        e.preventDefault();
+        inp.value = this.getAttribute('data-name');
+        drop.style.display = 'none';
+        inp.focus();
+      });
+    });
+  }
+
+  if(inp) {
+    inp.addEventListener('keydown', function(e){ if(e.key==='Enter') doSave(); });
+    inp.addEventListener('blur', function(){ setTimeout(function(){ if(drop) drop.style.display='none'; }, 150); });
+  }
+
+  function doSave() {
+    var val = inp ? inp.value.trim() : '';
+    if(!val){toast('\u26a0 \u0412\u0432\u0435\u0434\u0456\u0442\u044c \u043d\u0430\u0437\u0432\u0443');return;}
+    locations.push({name:val, cells:[]});
+    document.body.removeChild(ov);
+    forceSyncToSheets(); toast('\u2713 ' + val); nav2Render();
+  }
+
+  if(btn) btn.addEventListener('click', doSave);
+
+  ov.addEventListener('click', function(e){ if(e.target===ov) document.body.removeChild(ov); });
+  box.addEventListener('click', function(e){ e.stopPropagation(); });
+
+  ov.appendChild(box);
+  document.body.appendChild(ov);
+  setTimeout(function(){ if(inp) inp.focus(); }, 50);
 }
 
-/* Видалити елемент */
+function nav2Add() { nav2AddNew(); }
 function nav2Delete(type, ri, ci, coni, name) {
   var labels = { room: 'приміщення', cell: 'комірку', con: 'контейнер' };
   if (!confirm('Видалити ' + (labels[type]||'') + ' "' + name + '"?')) return;
