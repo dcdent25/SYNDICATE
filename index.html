@@ -859,19 +859,19 @@ function _nextInvoiceNum(type){
   if(type==='in'){
     history.forEach(function(h){
       if(h.type==='in'&&h.invoice){
-        var m=h.invoice.match(/НН-(\d+)/);
-        if(m) max=Math.max(max,parseInt(m[1]));
-      }
-    });
-    return 'НН-'+String(max+1).padStart(4,'0');
-  } else {
-    history.forEach(function(h){
-      if((h.type==='give'||h.type==='out')&&h.invoice){
         var m=h.invoice.match(/^N(\d+)$/);
         if(m) max=Math.max(max,parseInt(m[1]));
       }
     });
     return 'N'+(max+1);
+  } else {
+    history.forEach(function(h){
+      if((h.type==='give'||h.type==='out')&&h.invoice){
+        var m=h.invoice.match(/НН-(\d+)/);
+        if(m) max=Math.max(max,parseInt(m[1]));
+      }
+    });
+    return 'НН-'+String(max+1).padStart(4,'0');
   }
 }
 function openModal(type){
