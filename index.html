@@ -483,10 +483,10 @@ html,body{background:#1c1f26!important;overflow-x:hidden!important}.t-container,
 <div class="overlay" id="ov-supp"><div class="modal" style="padding-bottom:32px;max-height:88vh;overflow-y:auto"><div class="modal-handle"></div><div class="modal-head"><div class="modal-title">Контрагенти</div><button class="modal-close" onclick="closeModal('supp')"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button></div>
 <div style="font-size:11px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;font-family:var(--font-d)">Контрагенти у складі</div>
 <div id="suppListWrap" style="display:flex;flex-direction:column;gap:6px;margin-bottom:20px"></div>
-<div style="font-size:11px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;font-family:var(--font-d)">Додати контрагента</div>
-<div style="display:flex;gap:8px;margin-bottom:4px">
-  <div class="field" style="margin:0;flex:1"><div class="field-wrap ai-glow" style="--bg-fill:var(--bg)"><input type="text" id="suppNewName" placeholder="Назва контрагента" onkeydown="if(event.key==='Enter')doAddSupp()"></div></div>
-  <button class="btn btn-filled" style="height:46px" onclick="doAddSupp()">+ Додати</button>
+<div style="display:flex;justify-content:center;padding-bottom:8px">
+  <button onclick="doAddSupp()" style="width:48px;height:48px;border-radius:50%;background:var(--blue);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(138,180,248,.4);color:#1c1f26">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+  </button>
 </div>
 </div></div>
 <div class="toast" id="toast"></div>
@@ -1570,7 +1570,7 @@ function openSuppView(name) {
 
   var head = document.createElement('div');
   head.style.cssText = 'padding:20px 20px 12px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:space-between';
-  head.innerHTML = '<div style="font-family:var(--font-d);font-size:18px;font-weight:700;color:var(--text)">'+_esc(name)+'</div>'+
+  head.innerHTML = '<div style="font-family:var(--font-d);font-size:18px;font-weight:700;color:var(--text)">'+(isNew?'Новий контрагент':_esc(name))+'</div>'+
     '<button onclick="this.closest(\'div\').parentElement.parentElement.remove()" style="background:var(--bg);border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;color:var(--sub);font-size:16px;display:flex;align-items:center;justify-content:center">✕</button>';
   box.appendChild(head);
 
@@ -1592,10 +1592,10 @@ function openSuppView(name) {
 }
 
 function openSuppDetails(name) {
-  /* Завантажуємо збережені дані контрагента */
-  var suppData = JSON.parse(localStorage.getItem('suppData_'+name)||'{}');
+  var isNew = !name;
+  var suppData = name ? JSON.parse(localStorage.getItem('suppData_'+name)||'{}') : {};
   var fields = [
-    {id:'suppName', label:'Назва Замовника', val: suppData.name||name},
+    {id:'suppName', label:'Назва Замовника', val: suppData.name||name||''},
     {id:'suppShort', label:'Скорочена назва Замовника', val: suppData.short||''},
     {id:'suppEdrpou', label:'ЄДРПОУ', val: suppData.edrpou||''},
     {id:'suppAddr', label:'Юридична адреса', val: suppData.addr||''},
@@ -1647,13 +1647,12 @@ function openSuppDetails(name) {
       if(el) data[f.id.replace('supp',''). toLowerCase()] = el.value.trim();
     });
     /* Зберігаємо в localStorage */
-    localStorage.setItem('suppData_'+name, JSON.stringify(data));
-    /* Якщо змінилась назва — перейменовуємо */
     var newName = (box.querySelector('#suppName')||{}).value||'';
     newName = newName.trim();
-    if(newName && newName !== name) {
+    if(!newName){ toast('⚠ Введіть назву'); return; }
+    localStorage.setItem('suppData_'+newName, JSON.stringify(data));
+    if(!isNew && newName !== name) {
       stock.forEach(function(i){ if((i.sup||'').trim()===name) i.sup=newName; });
-      localStorage.setItem('suppData_'+newName, JSON.stringify(data));
       localStorage.removeItem('suppData_'+name);
       renderAll(); forceSyncToSheets();
     }
@@ -1746,10 +1745,7 @@ function deleteSuppConfirm(name) {
 }
 
 function doAddSupp(){
-  const name = (document.getElementById('suppNewName')||{}).value||'';
-  if(!name.trim()){toast('⚠ Введіть назву');return;}
-  document.getElementById('suppNewName').value='';
-  openSuppDetails(name.trim());
+  openSuppDetails('');
 }
 
 function doRenameSupp(){
