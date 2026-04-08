@@ -167,23 +167,12 @@ html,body{background:#1c1f26!important;overflow-x:hidden!important}.t-container,
   <div class="dfield-val"><span class="dval-text dval-text-num" id="dPrice">—</span></div>
   <input class="dval-edit dinput" id="dPriceEdit" type="number" min="0" step="0.01" placeholder="0.00" style="margin-top:6px" oninput="liveCalcDetail('price')">
 </div>
-<!-- === БЛОК: КІЛЬКІСТЬ / ЗАЛИШКИ (завжди видимий, вміст перемикається) === -->
-<div class="dfield" id="dfield-qty" style="border-bottom:1px solid var(--border);padding:14px 0;min-height:80px">
-  <!-- Заголовок view mode -->
-  <div class="dfield-label" id="dQtyLabelView" style="font-size:11px;color:var(--sub);font-family:var(--font-d);margin-bottom:8px;letter-spacing:.2px">Залишки матеріалу на складі</div>
-  <!-- Заголовок edit mode (прихований через JS, не CSS) -->
-  <div class="dfield-label" id="dQtyLabelEdit" style="font-size:11px;color:var(--sub);font-family:var(--font-d);margin-bottom:8px;letter-spacing:.2px;display:none">Кількість матеріалів</div>
-
-  <!-- View mode: велике число + бейдж -->
-  <div id="dQtyViewBlock" style="display:flex;align-items:center;gap:10px">
-    <span id="dQtyMat" style="font-family:var(--font-d);font-size:36px;font-weight:700;color:var(--green);line-height:1">—</span>
-    <span id="dUnitLabel" style="font-size:13px;font-weight:500;color:var(--sub);text-transform:uppercase;letter-spacing:.5px">одиниць</span>
-    <span id="dStatusBadge" style="height:26px;padding:0 12px;border-radius:100px;font-family:var(--font-d);font-size:11.5px;font-weight:600;display:inline-flex;align-items:center;background:var(--green-s);color:var(--green)"></span>
-  </div>
-
+<!-- === БЛОК: КІЛЬКІСТЬ МАТЕРІАЛІВ (тільки edit mode) === -->
+<div class="dfield hide-view" id="dfield-qty" style="border-bottom:1px solid var(--border);padding:14px 0;min-height:80px">
+  <div class="dfield-label" style="font-size:11px;color:var(--sub);font-family:var(--font-d);margin-bottom:8px;letter-spacing:.2px">Кількість матеріалів</div>
   <!-- Edit mode: input + чіпи -->
   <input id="dQtyMatEdit" type="hidden">
-  <div id="dQtyEditBlock" style="display:none;align-items:center;gap:12px;flex-wrap:wrap">
+  <div id="dQtyEditBlock" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
     <input id="dQtyMatDisplay" type="number" min="0" step="1" placeholder="0" oninput="calcPortionsFromQty()" style="width:120px;height:42px;padding:0 14px;background:var(--bg);border:1.5px solid var(--blue);border-radius:10px;color:var(--text);font-family:var(--font-d);font-size:18px;font-weight:600;outline:none;-webkit-appearance:none;flex-shrink:0">
     <div class="dunit-chips" id="dUnitChips" style="margin-top:0;flex-wrap:nowrap;gap:6px;display:flex">
       <button class="dunit-chip" data-unit="гр" onclick="selectChip(this,'dUnitChips')">гр</button>
@@ -197,15 +186,6 @@ html,body{background:#1c1f26!important;overflow-x:hidden!important}.t-container,
   <span id="dUnitText" style="display:none"></span>
 </div>
 
-<!-- Поточний статус в edit mode (preview) -->
-<div class="dfield" id="dQtyPreviewEditBlock" style="display:none;border-bottom:1px solid var(--border);padding:14px 0">
-  <div class="dfield-label" style="font-size:11px;color:var(--sub);font-family:var(--font-d);margin-bottom:8px;letter-spacing:.2px">Залишки матеріалу на складі</div>
-  <div style="display:flex;align-items:center;gap:10px">
-    <span id="dQtyMatEditPreview" style="font-family:var(--font-d);font-size:36px;font-weight:700;color:var(--green);line-height:1">—</span>
-    <span id="dUnitLabelPreview" style="font-size:13px;font-weight:500;color:var(--sub);text-transform:uppercase;letter-spacing:.5px">шт</span>
-    <span id="dStatusBadgePreview" style="height:26px;padding:0 12px;border-radius:100px;font-family:var(--font-d);font-size:11.5px;font-weight:600;display:inline-flex;align-items:center;background:var(--amber-s);color:var(--amber)"></span>
-  </div>
-</div>
 <div class="dfield" id="dfield-pp"><div class="dfield-label">Ціна за порцію (грн)</div><div class="dfield-val"><span class="dval-text dval-text-num" id="dPortionPrice">—</span><input class="dval-edit-num" id="dPortionPriceEdit" type="number" min="0" step="0.01" placeholder="0.00" style="flex:1"></div></div>
 <div class="dfield hide-view"><div class="dfield-label">Кількість порцій</div><div class="dfield-val"><span class="dval-text dval-text-num" id="dPortions">—</span><input class="dval-edit-num" id="dPortionsEdit" type="number" min="0" step="0.01" placeholder="0" style="flex:1" oninput="calcPortionsFromQty()"></div></div>
 
@@ -241,6 +221,16 @@ html,body{background:#1c1f26!important;overflow-x:hidden!important}.t-container,
     <span style="font-size:15px;font-weight:400;color:var(--sub)">грн</span>
   </div>
   <span id="dPortionCost" style="display:none" class="dval-text-num"></span>
+</div>
+
+<!-- === БЛОК: ЗАЛИШКИ МАТЕРІАЛУ НА СКЛАДІ (завжди видимий) === -->
+<div class="dfield" id="dfield-stock-qty" style="border-bottom:1px solid var(--border);padding:14px 0;min-height:80px">
+  <div class="dfield-label" style="font-size:11px;color:var(--sub);font-family:var(--font-d);margin-bottom:8px;letter-spacing:.2px">Залишки матеріалу на складі</div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <span id="dQtyMat" style="font-family:var(--font-d);font-size:36px;font-weight:700;color:var(--green);line-height:1">—</span>
+    <span id="dUnitLabel" style="font-size:13px;font-weight:500;color:var(--sub);text-transform:uppercase;letter-spacing:.5px">одиниць</span>
+    <span id="dStatusBadge" style="height:26px;padding:0 12px;border-radius:100px;font-family:var(--font-d);font-size:11.5px;font-weight:600;display:inline-flex;align-items:center;background:var(--green-s);color:var(--green)"></span>
+  </div>
 </div>
 
 <!-- === ТАБЛИЦЯ ОБ'ЄМУ СКЛАДУ — видима завжди === -->
@@ -979,14 +969,8 @@ const imgEl=document.getElementById('dImg');if(i.photo){imgEl.innerHTML='<img sr
 }
 function toggleEditMode(){const modal=document.querySelector('#ov-detail .modal');const btn=document.getElementById('dEditBtn');const isEditing=modal.classList.contains('detail-edit-mode');
 function _qtyMode(edit){
-  var vb=document.getElementById('dQtyViewBlock');var eb=document.getElementById('dQtyEditBlock');
-  var lv=document.getElementById('dQtyLabelView');var le=document.getElementById('dQtyLabelEdit');
-  var pb=document.getElementById('dQtyPreviewEditBlock');
-  if(vb)vb.style.display=edit?'none':'flex';
-  if(eb)eb.style.display=edit?'flex':'none';
-  if(lv)lv.style.display=edit?'none':'block';
-  if(le)le.style.display=edit?'block':'none';
-  if(pb)pb.style.display=edit?'flex':'none';
+  var fq=document.getElementById('dfield-qty');
+  if(fq)fq.style.display=edit?'block':'none';
 }
 if(isEditing){saveDetail();modal.classList.remove('detail-edit-mode');btn.classList.remove('active');var _sw=document.getElementById('dSupplierWrap');if(_sw)_sw.style.display='none';var _mpw=document.getElementById('mapPhotoPreviewWrap');if(_mpw)_mpw.style.display='none';btn.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg> Редагувати';
 _qtyMode(false);
