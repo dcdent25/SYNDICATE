@@ -195,7 +195,7 @@ html,body{background:#1c1f26!important;overflow-x:hidden!important}.t-container,
 </div><!-- Вартість залишків -->
 
 <!-- === БЛОК: ВАРТІСТЬ ЗАЛИШКІВ === -->
-<div class="dfield" style="border-bottom:1px solid var(--border);padding:14px 0">
+<div class="dfield" style="border-bottom:1px solid var(--border);padding:14px 0;min-height:70px">
   <div class="dfield-label" style="font-size:11px;color:var(--sub);font-family:var(--font-d);margin-bottom:6px;letter-spacing:.2px">Вартість залишків на складі</div>
   <div style="font-family:var(--font-d);font-size:26px;font-weight:700;color:var(--text);display:flex;align-items:baseline;gap:6px">
     <span id="dStockCost">—</span>
@@ -206,8 +206,10 @@ html,body{background:#1c1f26!important;overflow-x:hidden!important}.t-container,
 
 <!-- === БЛОК: КІЛЬКІСТЬ МАТЕРІАЛІВ (view + edit) === -->
 <div class="dfield" id="dfield-qty" style="border-bottom:1px solid var(--border);padding:14px 0">
-  <div class="dval-text dfield-label" style="font-size:11px;color:var(--sub);font-family:var(--font-d);margin-bottom:8px;letter-spacing:.2px">Залишки матеріалу на складі</div>
-  <div class="detail-edit-only dfield-label" style="display:none;font-size:11px;color:var(--sub);font-family:var(--font-d);margin-bottom:8px;letter-spacing:.2px">Кількість матеріалів</div>
+  <div class="dfield-label" style="font-size:11px;color:var(--sub);font-family:var(--font-d);margin-bottom:8px;letter-spacing:.2px">
+    <span class="dval-text">Залишки матеріалу на складі</span>
+    <span class="detail-edit-only" style="display:none">Кількість матеріалів</span>
+  </div>
   <div class="dval-text" style="display:flex;align-items:center;gap:10px">
     <span id="dQtyMat" style="font-family:var(--font-d);font-size:36px;font-weight:700;color:var(--green);line-height:1">—</span>
     <span id="dUnitLabel" style="font-size:13px;font-weight:500;color:var(--sub);text-transform:uppercase;letter-spacing:.5px">одиниць</span>
