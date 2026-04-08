@@ -1775,15 +1775,15 @@ function renderSuppList(){
 function openSuppView(name) {
   var suppData = JSON.parse(localStorage.getItem('suppData_'+name)||'{}');
   var fields = [
-    {label:'Назва контрагента', val: suppData.name||name},
-    {label:'Скорочена назва', val: suppData.short||''},
-    {label:'ЄДРПОУ', val: suppData.edrpou||''},
-    {label:'Юридична адреса', val: suppData.addr||''},
-    {label:'Поштова адреса', val: suppData.post||''},
-    {label:'IBAN', val: suppData.iban||''},
-    {label:'ІПН', val: suppData.ipn||''},
-    {label:'тел.', val: suppData.phone||''},
-    {label:'e-mail', val: suppData.email||''},
+    {label:'Назва контрагента', val: suppData.name||name, type:'text'},
+    {label:'Скорочена назва', val: suppData.short||'', type:'text'},
+    {label:'ЄДРПОУ', val: suppData.edrpou||'', type:'text'},
+    {label:'Юридична адреса', val: suppData.addr||'', type:'text'},
+    {label:'Поштова адреса', val: suppData.post||'', type:'text'},
+    {label:'IBAN', val: suppData.iban||'', type:'text'},
+    {label:'ІПН', val: suppData.ipn||'', type:'text'},
+    {label:'тел.', val: suppData.phone||'', type:'phone'},
+    {label:'e-mail', val: suppData.email||'', type:'email'},
   ].filter(function(f){ return f.val; });
 
   var ov = document.createElement('div');
@@ -1806,9 +1806,22 @@ function openSuppView(name) {
     body.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:24px 0">Детальні дані не заповнені.<br><span style="font-size:12px">Відкрийте «Контрагенти» щоб заповнити картку.</span></div>';
   } else {
     body.innerHTML = fields.map(function(f){
+      var actionBtn = '';
+      if(f.type === 'phone') {
+        actionBtn = '<a href="tel:'+_esc(f.val)+'" style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:var(--green-s);border:1.5px solid rgba(129,201,149,.3);color:var(--green);flex-shrink:0;text-decoration:none" title="Зателефонувати">'+
+          '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>'+
+          '</a>';
+      } else if(f.type === 'email') {
+        actionBtn = '<a href="mailto:'+_esc(f.val)+'" style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:var(--blue-s);border:1.5px solid rgba(138,180,248,.3);color:var(--blue);flex-shrink:0;text-decoration:none" title="Надіслати листа">'+
+          '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/></svg>'+
+          '</a>';
+      }
       return '<div style="margin-bottom:14px">'+
-        '<div style="font-size:11px;color:var(--sub);font-family:var(--font-d);margin-bottom:4px">'+f.label+'</div>'+
-        '<div style="font-family:var(--font-d);font-size:15px;font-weight:500;color:var(--text)">'+_esc(f.val)+'</div>'+
+        '<div style="font-size:11px;color:var(--sub);font-family:var(--font-d);margin-bottom:6px">'+f.label+'</div>'+
+        '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px">'+
+          '<div style="font-family:var(--font-d);font-size:15px;font-weight:500;color:var(--text);flex:1">'+_esc(f.val)+'</div>'+
+          actionBtn+
+        '</div>'+
         '</div>';
     }).join('');
   }
