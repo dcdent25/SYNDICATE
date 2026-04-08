@@ -194,29 +194,33 @@ html,body{background:#1c1f26!important;overflow-x:hidden!important}.t-container,
   <input class="dval-edit" id="dPortionUnitEdit" type="text" style="display:none!important">
 </div><!-- Вартість залишків -->
 
-<!-- === БЛОК: ВАРТІСТЬ ЗАЛИШКІВ === -->
-<div class="dfield" style="border-bottom:1px solid var(--border);padding:14px 0;min-height:70px">
+<!-- === БЛОК: ВАРТІСТЬ ЗАЛИШКІВ (завжди видимий) === -->
+<div class="dfield" style="border-bottom:1px solid var(--border);padding:14px 0">
   <div class="dfield-label" style="font-size:11px;color:var(--sub);font-family:var(--font-d);margin-bottom:6px;letter-spacing:.2px">Вартість залишків на складі</div>
-  <div style="font-family:var(--font-d);font-size:26px;font-weight:700;color:var(--text);display:flex;align-items:baseline;gap:6px">
+  <div style="font-family:var(--font-d);font-size:26px;font-weight:700;color:var(--text);display:flex;align-items:baseline;gap:6px;min-height:36px">
     <span id="dStockCost">—</span>
     <span style="font-size:15px;font-weight:400;color:var(--sub)">грн</span>
   </div>
   <span id="dPortionCost" style="display:none" class="dval-text-num"></span>
 </div>
 
-<!-- === БЛОК: КІЛЬКІСТЬ МАТЕРІАЛІВ (view + edit) === -->
-<div class="dfield" id="dfield-qty" style="border-bottom:1px solid var(--border);padding:14px 0">
-  <div class="dfield-label" style="font-size:11px;color:var(--sub);font-family:var(--font-d);margin-bottom:8px;letter-spacing:.2px">
-    <span class="dval-text">Залишки матеріалу на складі</span>
-    <span class="detail-edit-only" style="display:none">Кількість матеріалів</span>
-  </div>
-  <div class="dval-text" style="display:flex;align-items:center;gap:10px">
+<!-- === БЛОК: КІЛЬКІСТЬ / ЗАЛИШКИ (завжди видимий, вміст перемикається) === -->
+<div class="dfield" id="dfield-qty" style="border-bottom:1px solid var(--border);padding:14px 0;min-height:80px">
+  <!-- Заголовок view mode -->
+  <div class="dfield-label" id="dQtyLabelView" style="font-size:11px;color:var(--sub);font-family:var(--font-d);margin-bottom:8px;letter-spacing:.2px">Залишки матеріалу на складі</div>
+  <!-- Заголовок edit mode (прихований через JS, не CSS) -->
+  <div class="dfield-label" id="dQtyLabelEdit" style="font-size:11px;color:var(--sub);font-family:var(--font-d);margin-bottom:8px;letter-spacing:.2px;display:none">Кількість матеріалів</div>
+
+  <!-- View mode: велике число + бейдж -->
+  <div id="dQtyViewBlock" style="display:flex;align-items:center;gap:10px">
     <span id="dQtyMat" style="font-family:var(--font-d);font-size:36px;font-weight:700;color:var(--green);line-height:1">—</span>
     <span id="dUnitLabel" style="font-size:13px;font-weight:500;color:var(--sub);text-transform:uppercase;letter-spacing:.5px">одиниць</span>
     <span id="dStatusBadge" style="height:26px;padding:0 12px;border-radius:100px;font-family:var(--font-d);font-size:11.5px;font-weight:600;display:inline-flex;align-items:center;background:var(--green-s);color:var(--green)"></span>
   </div>
+
+  <!-- Edit mode: input + чіпи -->
   <input id="dQtyMatEdit" type="hidden">
-  <div class="detail-edit-only" style="display:none;align-items:center;gap:12px;flex-wrap:wrap">
+  <div id="dQtyEditBlock" style="display:none;align-items:center;gap:12px;flex-wrap:wrap">
     <input id="dQtyMatDisplay" type="number" min="0" step="1" placeholder="0" oninput="calcPortionsFromQty()" style="width:120px;height:42px;padding:0 14px;background:var(--bg);border:1.5px solid var(--blue);border-radius:10px;color:var(--text);font-family:var(--font-d);font-size:18px;font-weight:600;outline:none;-webkit-appearance:none;flex-shrink:0">
     <div class="dunit-chips" id="dUnitChips" style="margin-top:0;flex-wrap:nowrap;gap:6px;display:flex">
       <button class="dunit-chip" data-unit="гр" onclick="selectChip(this,'dUnitChips')">гр</button>
@@ -227,11 +231,11 @@ html,body{background:#1c1f26!important;overflow-x:hidden!important}.t-container,
     </div>
   </div>
   <span id="dUnitSuffix" style="display:none"></span>
-  <span class="dval-text" id="dUnitText" style="display:none"></span>
+  <span id="dUnitText" style="display:none"></span>
 </div>
 
-<!-- === БЛОК: ПОТОЧНИЙ СТАТУС (тільки edit mode, preview) === -->
-<div class="detail-edit-only dfield" id="dQtyPreviewEditBlock" style="display:none;border-bottom:1px solid var(--border);padding:14px 0">
+<!-- Поточний статус в edit mode (preview) -->
+<div class="dfield" id="dQtyPreviewEditBlock" style="display:none;border-bottom:1px solid var(--border);padding:14px 0">
   <div class="dfield-label" style="font-size:11px;color:var(--sub);font-family:var(--font-d);margin-bottom:8px;letter-spacing:.2px">Залишки матеріалу на складі</div>
   <div style="display:flex;align-items:center;gap:10px">
     <span id="dQtyMatEditPreview" style="font-family:var(--font-d);font-size:36px;font-weight:700;color:var(--green);line-height:1">—</span>
@@ -974,20 +978,21 @@ const imgEl=document.getElementById('dImg');if(i.photo){imgEl.innerHTML='<img sr
   var _mpArr=i.mapPhotos||(i.mapPhoto?[i.mapPhoto]:[]);window._currentMapPhotos=_mpArr;
   if(_mpArr.length){renderMapPhotoPreview(_mpArr);}else{var _w=document.getElementById('mapPhotoPreviewWrap');if(_w)_w.innerHTML='';}
 }
-function toggleEditMode(){const modal=document.querySelector('#ov-detail .modal');const btn=document.getElementById('dEditBtn');const isEditing=modal.classList.contains('detail-edit-mode');if(isEditing){saveDetail();modal.classList.remove('detail-edit-mode');btn.classList.remove('active');var _sw=document.getElementById('dSupplierWrap');if(_sw)_sw.style.display='none';var _mpw=document.getElementById('mapPhotoPreviewWrap');if(_mpw)_mpw.style.display='none';btn.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg> Редагувати';const _inp2=document.getElementById('dQtyMatEditWrap');if(_inp2)_inp2.style.display='none';
-// View mode: Ціна за порцію before Залишки матеріалу (original HTML order)
-var _fqty2=document.getElementById('dfield-qty');var _fpp2=document.getElementById('dfield-pp');
-if(_fqty2&&_fpp2){_fpp2.parentNode.insertBefore(_fpp2,_fqty2);}
-}else{modal.classList.add('detail-edit-mode');btn.classList.add('active');var _sw=document.getElementById('dSupplierWrap');if(_sw)_sw.style.display='block';var _mpw2=document.getElementById('mapPhotoPreviewWrap');if(_mpw2)_mpw2.style.display='grid';btn.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4zm-5 16a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm3-10H5V5h10v4z"/></svg> Зберегти';setTimeout(()=>document.getElementById('dNameEdit').focus(),50);const _inp=document.getElementById('dQtyMatEditWrap');if(_inp)_inp.style.display='flex';const _iqd=document.getElementById('dQtyMatDisplay');const _ci=stock.find(x=>x.id===currentDetailId);if(_iqd&&_ci)_iqd.value=_ci.qty;
-// Edit mode: qty before hidden fields, pp after hidden fields
-var _fqty=document.getElementById('dfield-qty');var _fpp=document.getElementById('dfield-pp');
-if(_fqty&&_fpp){
-  var _hvs=_fpp.parentNode.querySelectorAll('.dfield.hide-view');
-  var _first=_hvs[0];var _last=_hvs[_hvs.length-1];
-  if(_first)_fpp.parentNode.insertBefore(_fqty,_first);
-  if(_last&&_last.nextSibling)_fpp.parentNode.insertBefore(_fpp,_last.nextSibling);
-  else if(_last)_last.parentNode.appendChild(_fpp);
+function toggleEditMode(){const modal=document.querySelector('#ov-detail .modal');const btn=document.getElementById('dEditBtn');const isEditing=modal.classList.contains('detail-edit-mode');
+function _qtyMode(edit){
+  var vb=document.getElementById('dQtyViewBlock');var eb=document.getElementById('dQtyEditBlock');
+  var lv=document.getElementById('dQtyLabelView');var le=document.getElementById('dQtyLabelEdit');
+  var pb=document.getElementById('dQtyPreviewEditBlock');
+  if(vb)vb.style.display=edit?'none':'flex';
+  if(eb)eb.style.display=edit?'flex':'none';
+  if(lv)lv.style.display=edit?'none':'block';
+  if(le)le.style.display=edit?'block':'none';
+  if(pb)pb.style.display=edit?'flex':'none';
 }
+if(isEditing){saveDetail();modal.classList.remove('detail-edit-mode');btn.classList.remove('active');var _sw=document.getElementById('dSupplierWrap');if(_sw)_sw.style.display='none';var _mpw=document.getElementById('mapPhotoPreviewWrap');if(_mpw)_mpw.style.display='none';btn.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg> Редагувати';
+_qtyMode(false);
+}else{modal.classList.add('detail-edit-mode');btn.classList.add('active');var _sw=document.getElementById('dSupplierWrap');if(_sw)_sw.style.display='block';var _mpw2=document.getElementById('mapPhotoPreviewWrap');if(_mpw2)_mpw2.style.display='grid';btn.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4zm-5 16a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm3-10H5V5h10v4z"/></svg> Зберегти';setTimeout(()=>document.getElementById('dNameEdit').focus(),50);const _iqd=document.getElementById('dQtyMatDisplay');const _ci=stock.find(x=>x.id===currentDetailId);if(_iqd&&_ci)_iqd.value=_ci.qty;
+_qtyMode(true);
 }}
 function saveDetail(){const i=stock.find(x=>x.id===currentDetailId);if(!i)return;const newQty=parseFloat(document.getElementById('dQtyMatDisplay')?.value);if(!isNaN(newQty))i.qty=newQty;const newCat=document.getElementById('dCatEdit')?.value;if(newCat)i.cat=newCat;const newName=document.getElementById('dNameEdit').value.trim();const newSup=document.getElementById('dSupplierEdit').value.trim();const newLink=document.getElementById('dLinkEdit').value.trim();const newPrice=parseFloat(document.getElementById('dPriceEdit').value);const newMin=parseInt(document.getElementById('dMinEdit').value);if(newName)i.name=newName;i.sup=newSup||'—';i.link=newLink;if(!isNaN(newPrice))i.price=newPrice;if(!isNaN(newMin)&&newMin>0)i.min=newMin;i.comment=document.getElementById('dComment').value;i.unit=document.querySelector('#dUnitChips .dunit-chip.sel')?.dataset.unit||i.unit||'шт';const newMP=parseFloat(document.getElementById('dMarketPriceEdit')?.value);if(!isNaN(newMP))i.marketPrice=newMP;const newPortions=parseFloat(document.getElementById('dPortionsEdit').value);if(!isNaN(newPortions))i.portions=newPortions;const _puChipSel=document.querySelector('#dPortionUnitChips .dunit-chip.sel');const newPortionUnit=_puChipSel?_puChipSel.dataset.unit:(document.getElementById('dPortionUnitEdit').value.trim());if(newPortionUnit)i.portionUnit=newPortionUnit;const newPortionComp=parseFloat(document.getElementById('dPortionCompEdit').value);if(!isNaN(newPortionComp))i.portionComp=newPortionComp;const newPortionPrice=parseFloat(document.getElementById('dPortionPriceEdit').value);if(!isNaN(newPortionPrice))i.portionPrice=newPortionPrice;document.getElementById('dTitle').textContent=i.name;document.getElementById('dCatLabel').textContent='Категорія: '+i.cat;document.getElementById('dName').textContent=i.name;document.getElementById('dSupplier').textContent=i.sup||'—';document.getElementById('dPrice').textContent='грн '+(i.price||0).toLocaleString('uk',{minimumFractionDigits:2});document.getElementById('dMinVal').textContent=String(i.min);document.getElementById('dUnitText').textContent=i.unit;const mpD=document.getElementById('dMarketPrice');if(mpD)mpD.textContent=i.marketPrice?'грн '+(i.marketPrice||0).toLocaleString('uk',{minimumFractionDigits:2}):'—';calcItem(i);
 var _dp=document.getElementById('dPortions');if(_dp)_dp.textContent=i.portions!=null?i.portions.toLocaleString('uk'):'—';if(document.getElementById('dMatType'))document.getElementById('dMatType').textContent=i.matType||'—';document.getElementById('dPortionUnit').textContent=i.portionUnit||'—';var _puu=document.getElementById('dPortionCompUnit');if(_puu)_puu.textContent=i.portionUnit||'гр';var _puchips=document.getElementById('dPortionUnitChips');if(_puchips)_puchips.querySelectorAll('.dunit-chip').forEach(function(c){c.classList.toggle('sel',c.dataset.unit===(i.portionUnit||'гр'));});document.getElementById('dPortionComp').textContent=i.portionComp!=null?String(i.portionComp):'—';document.getElementById('dPortionPrice').textContent=i.portionPrice?'грн '+(i.portionPrice||0).toLocaleString('uk',{minimumFractionDigits:2}):'—';const portionCost2=(i.portions||0)*(i.portionPrice||0);document.getElementById('dPortionCost').textContent=portionCost2?'грн '+portionCost2.toLocaleString('uk',{minimumFractionDigits:2}):'—';document.getElementById('dLink').textContent=i.link||'—';document.getElementById('dLink').href=i.link||'#';if(document.getElementById('dStorage'))document.getElementById('dStorage').textContent=i.storage||'—';if(document.getElementById('dRoom'))document.getElementById('dRoom').textContent=i.room||'—';if(document.getElementById('dSup2'))document.getElementById('dSup2').textContent=i.sup||'—';updateStorageDisplay(i);_fillLocationSelects(i);document.getElementById('dStockCost').textContent=(((i.stockQty!=null?i.stockQty:i.qty)||0)*(i.price||0)).toLocaleString('uk',{minimumFractionDigits:2});const _min=i.min||1;document.getElementById('dv1a').textContent=_min;document.getElementById('dv1b').textContent='∞';document.getElementById('dv2a').textContent=Math.ceil(_min*0.3);document.getElementById('dv2b').textContent=_min;document.getElementById('dv3a').textContent=0;document.getElementById('dv3b').textContent=Math.ceil(_min*0.3);var _rSel=document.getElementById('dRoomSel');var _cSel=document.getElementById('dCellSel');var _conSel=document.getElementById('dConSel');if(_rSel&&_rSel.value)i.room=_rSel.value;if(_cSel&&_cSel.value)i.storage=_cSel.value;if(_conSel&&_conSel.value)i.con=_conSel.value;const _newT1=parseInt(document.getElementById('dv1a_edit')?.value);const _newT2=parseInt(document.getElementById('dv3b_edit')?.value);if(!isNaN(_newT1))i.threshOk=_newT1;if(!isNaN(_newT2))i.threshMid=_newT2;renderAll();renderHistory();toast('Збережено — '+i.name);forceSyncToSheets();}
