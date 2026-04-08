@@ -921,7 +921,7 @@ function openModal(type){
     document.getElementById('inItem').innerHTML=opts;
     var _id=document.getElementById('inSupp');if(_id)_id.value='';
     var _dd=document.getElementById('inSuppDisplay');if(_dd){_dd.textContent='Назва постачальника';_dd.style.color='var(--muted)';}
-    var _inv=document.getElementById('inInvoice');if(_inv)_inv.value=_nextInvoiceNum('in');
+    var _inv=document.getElementById('inInvoice');if(_inv)_inv.value='';
     setTimeout(()=>updateOpPreview('in'),0);
   }
   if(type==='out'){
