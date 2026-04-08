@@ -854,15 +854,25 @@ function openOpSuppPicker(inputId) {
   setTimeout(function(){ searchInp.focus(); }, 80);
 }
 
-function _nextInvoiceNum(){
+function _nextInvoiceNum(type){
   var max=0;
-  history.forEach(function(h){
-    if(h.invoice){
-      var m=h.invoice.match(/^N(\d+)$/);
-      if(m) max=Math.max(max,parseInt(m[1]));
-    }
-  });
-  return 'N'+(max+1);
+  if(type==='in'){
+    history.forEach(function(h){
+      if(h.type==='in'&&h.invoice){
+        var m=h.invoice.match(/НН-(\d+)/);
+        if(m) max=Math.max(max,parseInt(m[1]));
+      }
+    });
+    return 'НН-'+String(max+1).padStart(4,'0');
+  } else {
+    history.forEach(function(h){
+      if((h.type==='give'||h.type==='out')&&h.invoice){
+        var m=h.invoice.match(/^N(\d+)$/);
+        if(m) max=Math.max(max,parseInt(m[1]));
+      }
+    });
+    return 'N'+(max+1);
+  }
 }
 function openModal(type){
   const opts=stock.map(i=>'<option value="'+(i.id)+'">'+(i.name)+'</option>').join('');
@@ -870,13 +880,13 @@ function openModal(type){
     document.getElementById('inItem').innerHTML=opts;
     var _id=document.getElementById('inSupp');if(_id)_id.value='';
     var _dd=document.getElementById('inSuppDisplay');if(_dd){_dd.textContent='Назва постачальника';_dd.style.color='var(--muted)';}
-    var _inv=document.getElementById('inInvoice');if(_inv)_inv.value=_nextInvoiceNum();
+    var _inv=document.getElementById('inInvoice');if(_inv)_inv.value=_nextInvoiceNum('in');
     setTimeout(()=>updateOpPreview('in'),0);
   }
   if(type==='out'){
     document.getElementById('outItem').innerHTML=opts;
     ['outDoc','outRoom','outDoctor','outNote'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
-    var nextNum=_nextInvoiceNum();
+    var nextNum=_nextInvoiceNum('out');
     var _oag=document.getElementById('outActGive');if(_oag)_oag.value=nextNum;
     var _oaw=document.getElementById('outActWrite');if(_oaw)_oaw.value=nextNum;
     setTimeout(()=>updateOpPreview('out'),0);
@@ -885,7 +895,7 @@ function openModal(type){
     document.getElementById('giveItem').innerHTML=opts;
     var _gd=document.getElementById('giveSup');if(_gd)_gd.value='';
     ['giveDoc','giveRoom','giveDoctor','giveRecipient'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
-    var _ginv=document.getElementById('giveInvoice');if(_ginv)_ginv.value=_nextInvoiceNum();
+    var _ginv=document.getElementById('giveInvoice');if(_ginv)_ginv.value=_nextInvoiceNum('give');
     setTimeout(()=>updateOpPreview('give'),0);
   }
   document.getElementById('ov-'+type).classList.add('open');
