@@ -830,7 +830,19 @@ function openOpSuppPicker(inputId) {
   setTimeout(function(){ searchInp.focus(); }, 80);
 }
 
-function openModal(type){const opts=stock.map(i=>'<option value="'+(i.id)+'">'+(i.name)+'</option>').join('');if(type==='in'){document.getElementById('inItem').innerHTML=opts;var _id=document.getElementById('inSupp');if(_id)_id.value='';var _dd=document.getElementById('inSuppDisplay');if(_dd){_dd.textContent='Назва постачальника';_dd.style.color='var(--muted)';}setTimeout(()=>updateOpPreview('in'),0);}if(type==='out'){document.getElementById('outItem').innerHTML=opts;setTimeout(()=>updateOpPreview('out'),0);}if(type==='give'){document.getElementById('giveItem').innerHTML=opts;var _gd=document.getElementById('giveSup');if(_gd)_gd.value='';var _gdd=document.getElementById('giveSuppDisplay');if(_gdd){_gdd.textContent='Назва постачальника';_gdd.style.color='var(--muted)';}setTimeout(()=>updateOpPreview('give'),0);}document.getElementById('ov-'+type).classList.add('open');}
+function _nextInvoiceNum(){
+  // Знаходимо всі існуючі номери накладних у форматі НН-XXXX
+  var max=0;
+  history.forEach(function(h){
+    if(h.invoice){
+      var m=h.invoice.match(/НН-(\d+)/);
+      if(m) max=Math.max(max,parseInt(m[1]));
+    }
+  });
+  var next=max+1;
+  return 'НН-'+String(next).padStart(4,'0');
+}
+function openModal(type){const opts=stock.map(i=>'<option value="'+(i.id)+'">'+(i.name)+'</option>').join('');if(type==='in'){document.getElementById('inItem').innerHTML=opts;var _id=document.getElementById('inSupp');if(_id)_id.value='';var _dd=document.getElementById('inSuppDisplay');if(_dd){_dd.textContent='Назва постачальника';_dd.style.color='var(--muted)';}var _inv=document.getElementById('inInvoice');if(_inv)_inv.value=_nextInvoiceNum();setTimeout(()=>updateOpPreview('in'),0);}if(type==='out'){document.getElementById('outItem').innerHTML=opts;setTimeout(()=>updateOpPreview('out'),0);}if(type==='give'){document.getElementById('giveItem').innerHTML=opts;var _gd=document.getElementById('giveSup');if(_gd)_gd.value='';var _gdd=document.getElementById('giveSuppDisplay');if(_gdd){_gdd.textContent='Назва постачальника';_gdd.style.color='var(--muted)';}var _ginv=document.getElementById('giveInvoice');if(_ginv)_ginv.value=_nextInvoiceNum();setTimeout(()=>updateOpPreview('give'),0);}document.getElementById('ov-'+type).classList.add('open');}
 function closeModal(t){document.getElementById('ov-'+t).classList.remove('open');}
 function preIn(id){openModal('in');document.getElementById('inItem').value=id;}
 function preOut(id){openModal('out');document.getElementById('outItem').value=id;}
@@ -1808,12 +1820,12 @@ function openSuppView(name) {
     body.innerHTML = fields.map(function(f){
       var actionBtn = '';
       if(f.type === 'phone') {
-        actionBtn = '<a href="tel:'+_esc(f.val)+'" style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:var(--green-s);border:1.5px solid rgba(129,201,149,.3);color:var(--green);flex-shrink:0;text-decoration:none" title="Зателефонувати">'+
-          '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>'+
+        actionBtn = '<a href="tel:'+_esc(f.val)+'" style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;background:var(--green-s);border:1.5px solid rgba(129,201,149,.35);color:var(--green);flex-shrink:0;text-decoration:none" title="Зателефонувати">'+
+          '<svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>'+
           '</a>';
       } else if(f.type === 'email') {
-        actionBtn = '<a href="mailto:'+_esc(f.val)+'" style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:var(--blue-s);border:1.5px solid rgba(138,180,248,.3);color:var(--blue);flex-shrink:0;text-decoration:none" title="Надіслати листа">'+
-          '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/></svg>'+
+        actionBtn = '<a href="mailto:'+_esc(f.val)+'" style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;background:var(--blue-s);border:1.5px solid rgba(138,180,248,.35);color:var(--blue);flex-shrink:0;text-decoration:none" title="Надіслати листа">'+
+          '<svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/></svg>'+
           '</a>';
       }
       return '<div style="margin-bottom:14px">'+
