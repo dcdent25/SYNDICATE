@@ -187,10 +187,6 @@ html,body{background:#1c1f26!important;overflow-x:hidden!important}.t-container,
 </div>
 <div class="dfield hide-view"><div class="dfield-label">Кількість порцій</div><div class="dfield-val"><span class="dval-text dval-text-num" id="dPortions">—</span><input class="dval-edit-num" id="dPortionsEdit" type="number" min="0" step="0.01" placeholder="0" style="flex:1" oninput="calcPortionsFromQty()"></div></div>
 
-<div class="dfield" id="dfield-pp"><div class="dfield-label">Ціна за порцію (грн)</div><div class="dfield-val"><span class="dval-text dval-text-num" id="dPortionPrice">—</span><input class="dval-edit-num" id="dPortionPriceEdit" type="number" min="0" step="0.01" placeholder="0.00" style="flex:1"></div></div>
-
-
-
 <div class="dfield hide-view">
   <div class="dval-text dfield-label">Склад порції</div>
   <div class="detail-edit-only" style="display:none;align-items:center;margin-bottom:6px">
@@ -212,6 +208,11 @@ html,body{background:#1c1f26!important;overflow-x:hidden!important}.t-container,
   <span id="dPortionCompUnit" style="display:none"></span>
   <input class="dval-edit" id="dPortionUnitEdit" type="text" style="display:none!important">
 </div><!-- Вартість залишків -->
+
+<div class="dfield" id="dfield-pp"><div class="dfield-label">Ціна за порцію (грн)</div><div class="dfield-val"><span class="dval-text dval-text-num" id="dPortionPrice">—</span><input class="dval-edit-num" id="dPortionPriceEdit" type="number" min="0" step="0.01" placeholder="0.00" style="flex:1"></div></div>
+
+
+
 
 <!-- === БЛОК: ВАРТІСТЬ ЗАЛИШКІВ (завжди видимий) === -->
 <div class="dfield" style="border-bottom:1px solid var(--border);padding:14px 0">
