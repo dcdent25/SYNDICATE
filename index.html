@@ -702,8 +702,6 @@ function openHistoryDetail(idx) {
   html += '<button onclick="this.closest(\'div\').parentElement.parentElement.remove()" style="background:var(--bg);border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;color:var(--sub);font-size:16px;display:flex;align-items:center;justify-content:center">✕</button>';
   html += '</div>';
 
-  if(photo) html += '<img src="'+photo+'" style="width:calc(100% + 40px);margin-left:-20px;max-height:220px;object-fit:cover;border-radius:0;margin-bottom:20px;cursor:pointer" onclick="window.open(this.src,\'_blank\')">';
-
   rows.forEach(function(r){
     html += '<div style="padding:12px 0;border-bottom:1px solid var(--border)">';
     html += '<div style="font-size:11px;color:var(--sub);font-family:var(--font-d);margin-bottom:3px">'+r.label+'</div>';
