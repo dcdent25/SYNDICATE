@@ -841,6 +841,97 @@ document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{
 function updateFAB(){}
 updateFAB();window.addEventListener('resize',updateFAB);
 function hidePreloader(){const pre=document.getElementById('preloader');if(!pre)return;const st=document.getElementById('preStatus');if(st){st.style.color='var(--green)';st.textContent='Готово ✓';}setTimeout(()=>pre.classList.add('hidden'),600);}
+function importFromExcel(e) {
+  var file = e.target.files[0];
+  if(!file) return;
+  e.target.value = '';
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      var wb = XLSX.read(ev.target.result, {type:'binary'});
+      var ws = wb.Sheets[wb.SheetNames[0]];
+      var rows = XLSX.utils.sheet_to_json(ws, {defval:''});
+      if(!rows.length){ toast('⚠ Файл порожній'); return; }
+
+      var imported = 0;
+      var maxId = stock.length ? Math.max(...stock.map(x=>x.id)) : 0;
+
+      rows.forEach(function(row) {
+        var name = String(row['Назва'] || row['name'] || row['Name'] || row['назва'] || '').trim();
+        if(!name) return;
+        maxId++;
+        var qty  = parseFloat(row['Кількість'] || row['qty'] || row['Qty'] || 0) || 0;
+        var min  = parseFloat(row['Мінімум'] || row['min'] || row['Min'] || row['Мін'] || 5) || 5;
+        var price= parseFloat(row['Ціна'] || row['price'] || row['Price'] || 0) || 0;
+        var cat  = String(row['Категорія'] || row['cat'] || row['Category'] || '').trim() || (categories[0]||'Загальний');
+        var sup  = '—';
+        var room = String(row['Приміщення'] || row['room'] || '').trim();
+        var cell = String(row['Комірка'] || row['storage'] || '').trim();
+        var con  = String(row['Контейнер'] || row['con'] || '').trim();
+        var comment = String(row['Коментар'] || row['comment'] || '').trim();
+        var unit = String(row['Одиниця'] || row['unit'] || 'шт').trim() || 'шт';
+        var threshOk = parseInt(row['Достатньо від'] || min) || min;
+        var threshMid = parseInt(row['Мало від'] || Math.ceil(min*0.3)) || Math.ceil(min*0.3);
+
+        var newItm = {
+          id:maxId, name, cat, qty, stockQty:qty, min, price,
+          marketPrice:price, sup, storage:cell, room, con, comment, unit,
+          threshOk, threshMid, portions:0, portionComp:1, portionPrice:0
+        };
+        calcItem(newItm);
+        stock.push(newItm);
+        imported++;
+      });
+
+      renderAll(); renderHistory();
+      forceSyncToSheets();
+      toast('✓ Імпортовано ' + imported + ' позицій');
+    } catch(err) {
+      toast('⚠ Помилка імпорту: ' + err.message);
+    }
+  };
+  reader.readAsBinaryString(file);
+}
+
+function deleteAllStockWithPassword() {
+  var ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box';
+  ov.onclick = function(e){ if(e.target===ov) document.body.removeChild(ov); };
+
+  var box = document.createElement('div');
+  box.style.cssText = 'background:var(--surface);border-radius:20px;padding:24px;max-width:340px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.5)';
+  box.onclick = function(e){ e.stopPropagation(); };
+
+  box.innerHTML =
+    '<div style="font-family:var(--font-d);font-size:18px;font-weight:700;color:var(--red);margin-bottom:8px">⚠ Видалити всі картки?</div>'+
+    '<div style="font-size:13px;color:var(--sub);margin-bottom:16px">Це видалить усі позиції зі складу. Дію неможливо скасувати.<br><br>Введіть пароль для підтвердження:</div>'+
+    '<input id="_delPassInp" type="password" placeholder="Пароль" style="width:100%;height:46px;padding:0 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--font-d);font-size:15px;outline:none;box-sizing:border-box;margin-bottom:14px">'+
+    '<div id="_delPassErr" style="color:var(--red);font-size:12px;margin-bottom:10px;display:none">Невірний пароль</div>'+
+    '<div style="display:flex;gap:10px">'+
+    '<button id="_delCancel" style="flex:1;height:44px;background:transparent;border:1.5px solid var(--border);border-radius:12px;font-family:var(--font-d);font-size:14px;color:var(--sub);cursor:pointer">Скасувати</button>'+
+    '<button id="_delConfirm" style="flex:1;height:44px;background:var(--red);border:none;border-radius:12px;font-family:var(--font-d);font-size:14px;font-weight:700;color:#1c1f26;cursor:pointer">Видалити</button>'+
+    '</div>';
+
+  document.body.appendChild(ov);
+  ov.appendChild(box);
+
+  var inp = box.querySelector('#_delPassInp');
+  var err = box.querySelector('#_delPassErr');
+  box.querySelector('#_delCancel').addEventListener('click', function(){ document.body.removeChild(ov); });
+  box.querySelector('#_delConfirm').addEventListener('click', function(){
+    if(inp.value !== '2517'){ err.style.display='block'; inp.focus(); return; }
+    document.body.removeChild(ov);
+    stock = [];
+    history = [];
+    renderAll();
+    renderHistory();
+    forceSyncToSheets();
+    toast('✓ Всі картки видалено');
+  });
+  inp.addEventListener('keydown', function(e){ if(e.key==='Enter') box.querySelector('#_delConfirm').click(); });
+  setTimeout(function(){ inp.focus(); }, 50);
+}
+
 function setPreloaderStatus(msg){const st=document.getElementById('preStatus');if(st)st.textContent=msg;}
 function showSyncStatus(state,msg){const el=document.getElementById('syncStatus');if(!el)return;const map={loading:['⟳','Завантаження…','var(--blue)'],saving:['⟳','Збереження…','var(--amber)'],ok:['✓','Синхронізовано','var(--green)'],error:['✕',msg?'Помилка: '+String(msg).substring(0,30):'Помилка','var(--red)']};const[icon,text,color]=map[state]||map.error;el.style.color=color;el.style.opacity='1';el.innerHTML='<span>'+(icon)+'</span>'+(text);if(state==='ok')setTimeout(()=>{el.style.opacity='0';},3000);}
 
