@@ -849,7 +849,8 @@ function importFromExcel(e) {
   reader.onload = function(ev) {
     try {
       var wb = XLSX.read(ev.target.result, {type:'binary'});
-      var ws = wb.Sheets[wb.SheetNames[0]];
+      var sheetName = wb.SheetNames.find(function(n){ return n==='Матеріали'; }) || wb.SheetNames[0];
+      var ws = wb.Sheets[sheetName];
       var rows = XLSX.utils.sheet_to_json(ws, {defval:''});
       if(!rows.length){ toast('⚠ Файл порожній'); return; }
 
@@ -857,27 +858,32 @@ function importFromExcel(e) {
       var maxId = stock.length ? Math.max(...stock.map(x=>x.id)) : 0;
 
       rows.forEach(function(row) {
-        var name = String(row['Назва'] || row['name'] || row['Name'] || row['назва'] || '').trim();
+        var name = String(row['Назва матеріалу'] || row['Назва'] || row['name'] || '').trim();
         if(!name) return;
         maxId++;
-        var qty  = parseFloat(row['Кількість'] || row['qty'] || row['Qty'] || 0) || 0;
-        var min  = parseFloat(row['Мінімум'] || row['min'] || row['Min'] || row['Мін'] || 5) || 5;
-        var price= parseFloat(row['Ціна'] || row['price'] || row['Price'] || 0) || 0;
-        var cat  = String(row['Категорія'] || row['cat'] || row['Category'] || '').trim() || (categories[0]||'Загальний');
-        var sup  = '—';
-        var room = String(row['Приміщення'] || row['room'] || '').trim();
-        var cell = String(row['Комірка'] || row['storage'] || '').trim();
-        var con  = String(row['Контейнер'] || row['con'] || '').trim();
+        var qty    = parseFloat(row['Кількість матеріалу'] || row['Кількість'] || row['qty'] || 0) || 0;
+        var min    = parseFloat(row['Мінімум'] || row['min'] || 5) || 5;
+        var price  = parseFloat(row['Ціна за одиницю'] || row['Ціна'] || row['price'] || 0) || 0;
+        var mPrice = parseFloat(row['Ринкова ціна матеріалу'] || row['marketPrice'] || price) || price;
+        var sup    = String(row['Контрагент'] || row['Постачальник'] || '—').trim() || '—';
+        var link   = String(row['Посилання на веб сайт'] || row['link'] || '').trim();
+        var unit   = String(row['Одиниця виміру матеріалу'] || row['Одиниця'] || row['unit'] || 'шт').trim() || 'шт';
+        var portions = parseFloat(row['Кількість порцій'] || row['portions'] || 0) || 0;
+        var portionComp = parseFloat(row['Склад порції'] || row['portionComp'] || 1) || 1;
+        var portionUnit = String(row['Одиниця виміру'] || unit).trim() || unit;
         var comment = String(row['Коментар'] || row['comment'] || '').trim();
-        var unit = String(row['Одиниця'] || row['unit'] || 'шт').trim() || 'шт';
-        var threshOk = parseInt(row['Достатньо від'] || min) || min;
+        var room   = String(row['Приміщення'] || row['room'] || '').trim();
+        var cell   = String(row['Комірка'] || row['storage'] || '').trim();
+        var con    = String(row['Контейнер'] || row['con'] || '').trim();
+        var cat    = 'Загальний';
+        var threshOk  = parseInt(row['Достатньо від'] || min) || min;
         var threshMid = parseInt(row['Мало від'] || Math.ceil(min*0.3)) || Math.ceil(min*0.3);
+        var portionPrice = price > 0 && portionComp > 0 ? Math.round(price * portionComp * 100) / 100 : 0;
 
-        var newItm = {
-          id:maxId, name, cat, qty, stockQty:qty, min, price,
-          marketPrice:price, sup, storage:cell, room, con, comment, unit,
-          threshOk, threshMid, portions:0, portionComp:1, portionPrice:0
-        };
+        var newItm = {id:maxId, name, cat, qty, stockQty:qty, min, price,
+          marketPrice:mPrice||price, sup, storage:cell, room, con,
+          comment, unit, link, portions, portionComp, portionUnit,
+          portionPrice, threshOk, threshMid};
         calcItem(newItm);
         stock.push(newItm);
         imported++;
@@ -885,13 +891,14 @@ function importFromExcel(e) {
 
       renderAll(); renderHistory();
       forceSyncToSheets();
-      toast('✓ Імпортовано ' + imported + ' позицій');
+      toast('\u2713 \u0406\u043c\u043f\u043e\u0440\u0442\u043e\u0432\u0430\u043d\u043e ' + imported + ' \u043f\u043e\u0437\u0438\u0446\u0456\u0439 \u0437 "' + sheetName + '"');
     } catch(err) {
-      toast('⚠ Помилка імпорту: ' + err.message);
+      toast('\u26a0 \u041f\u043e\u043c\u0438\u043b\u043a\u0430: ' + err.message);
     }
   };
   reader.readAsBinaryString(file);
 }
+
 
 function deleteAllStockWithPassword() {
   var ov = document.createElement('div');
