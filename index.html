@@ -189,25 +189,20 @@ html,body{background:#1c1f26!important;overflow-x:hidden!important}.t-container,
     <span id="dUnitLabel" style="font-size:13px;font-weight:500;color:var(--sub);text-transform:uppercase;letter-spacing:.5px">одиниць</span>
     <span id="dStatusBadge" style="height:26px;padding:0 12px;border-radius:100px;font-family:var(--font-d);font-size:11.5px;font-weight:600;display:inline-flex;align-items:center;background:var(--green-s);color:var(--green)"></span>
   </div>
-  <!-- Тільки edit mode: input + одиниця виміру в один рядок -->
+  <!-- Тільки edit mode: input + чіпи одиниці в один рядок -->
   <input id="dQtyMatEdit" type="hidden">
-  <div class="detail-edit-only" style="display:none;align-items:center;gap:10px">
-    <input id="dQtyMatDisplay" type="number" min="0" step="1" placeholder="0" oninput="calcPortionsFromQty()" style="width:130px;height:42px;padding:0 14px;background:var(--bg);border:1.5px solid var(--blue);border-radius:10px;color:var(--text);font-family:var(--font-d);font-size:18px;font-weight:600;outline:none;-webkit-appearance:none">
-    <span id="dUnitSuffix" style="font-size:14px;font-weight:500;color:var(--sub)">шт</span>
+  <div class="detail-edit-only" style="display:none;align-items:center;gap:12px;flex-wrap:wrap">
+    <input id="dQtyMatDisplay" type="number" min="0" step="1" placeholder="0" oninput="calcPortionsFromQty()" style="width:120px;height:42px;padding:0 14px;background:var(--bg);border:1.5px solid var(--blue);border-radius:10px;color:var(--text);font-family:var(--font-d);font-size:18px;font-weight:600;outline:none;-webkit-appearance:none;flex-shrink:0">
+    <div class="dunit-chips" id="dUnitChips" style="margin-top:0;flex-wrap:nowrap;gap:6px;display:flex">
+      <button class="dunit-chip" data-unit="гр" onclick="selectChip(this,'dUnitChips')">гр</button>
+      <button class="dunit-chip" data-unit="мл" onclick="selectChip(this,'dUnitChips')">мл</button>
+      <button class="dunit-chip sel" data-unit="шт" onclick="selectChip(this,'dUnitChips')">шт</button>
+      <button class="dunit-chip" data-unit="уп" onclick="selectChip(this,'dUnitChips')">уп</button>
+      <button class="dunit-chip" data-unit="см" onclick="selectChip(this,'dUnitChips')">см</button>
+    </div>
   </div>
+  <span id="dUnitSuffix" style="display:none"></span>
   <span class="dval-text" id="dUnitText" style="display:none"></span>
-</div>
-
-<!-- === БЛОК: ОДИНИЦЯ ВИМІРУ (тільки edit mode) === -->
-<div class="detail-edit-only dfield" style="display:none;border-bottom:1px solid var(--border);padding:14px 0">
-  <div class="dfield-label" style="font-size:11px;color:var(--sub);font-family:var(--font-d);margin-bottom:8px;letter-spacing:.2px">Одиниця виміру</div>
-  <div class="dunit-chips" id="dUnitChips" style="margin-top:0;flex-wrap:nowrap;gap:6px;display:flex">
-    <button class="dunit-chip" data-unit="гр" onclick="selectChip(this,'dUnitChips')">гр</button>
-    <button class="dunit-chip" data-unit="мл" onclick="selectChip(this,'dUnitChips')">мл</button>
-    <button class="dunit-chip sel" data-unit="шт" onclick="selectChip(this,'dUnitChips')">шт</button>
-    <button class="dunit-chip" data-unit="уп" onclick="selectChip(this,'dUnitChips')">уп</button>
-    <button class="dunit-chip" data-unit="см" onclick="selectChip(this,'dUnitChips')">см</button>
-  </div>
 </div>
 
 <!-- === БЛОК: ПОТОЧНИЙ СТАТУС (тільки edit mode, preview) === -->
