@@ -168,61 +168,96 @@ html,body{background:#1c1f26!important;overflow-x:hidden!important}.t-container,
   <input class="dval-edit" id="dPortionUnitEdit" type="text" style="display:none!important">
 </div><!-- Вартість залишків -->
 
-<div class="dfield"><div class="dfield-label">Залишки матеріалу на складі</div>
-  <div class="dstock-qty" style="color:var(--blue);margin-top:4px"><span id="dStockCost">—</span><span style="font-size:14px;font-weight:400;color:var(--sub)">грн</span></div>
+<!-- === БЛОК: ВАРТІСТЬ ЗАЛИШКІВ === -->
+<div class="dfield" style="border-bottom:1px solid var(--border);padding:14px 0">
+  <div class="dfield-label" style="font-size:11px;color:var(--sub);font-family:var(--font-d);margin-bottom:6px;letter-spacing:.2px">Вартість залишків на складі</div>
+  <div style="font-family:var(--font-d);font-size:26px;font-weight:700;color:var(--text);display:flex;align-items:baseline;gap:6px">
+    <span id="dStockCost">—</span>
+    <span style="font-size:15px;font-weight:400;color:var(--sub)">грн</span>
+  </div>
   <span id="dPortionCost" style="display:none" class="dval-text-num"></span>
 </div>
 
-<div class="dfield" id="dfield-qty">
-  <div class="dfield-val" style="flex-direction:column;align-items:flex-start;gap:4px;margin-top:4px">
-    <span style="font-size:11px;color:var(--sub);font-family:var(--font-d);letter-spacing:.2px">Залишки матеріалу на складі</span>
-    <div style="display:flex;align-items:center;gap:10px">
-      <span class="dval-text-num" id="dQtyMat" style="font-family:var(--font-d);font-size:28px;font-weight:700;color:var(--green)">—</span>
-      <span id="dUnitLabel" class="dval-text" style="font-size:14px;color:var(--sub)">шт</span>
-      <span id="dStatusBadge" class="dval-text" style="height:24px;padding:0 10px;border-radius:100px;font-family:var(--font-d);font-size:11px;font-weight:600;align-items:center"></span>
-    </div>
+<!-- === БЛОК: ЗАЛИШКИ МАТЕРІАЛУ === -->
+<div class="dfield" id="dfield-qty" style="border-bottom:1px solid var(--border);padding:14px 0">
+  <div class="dfield-label" style="font-size:11px;color:var(--sub);font-family:var(--font-d);margin-bottom:8px;letter-spacing:.2px">Залишки матеріалу на складі</div>
+  <!-- View mode -->
+  <div class="dval-text" style="display:flex;align-items:center;gap:10px">
+    <span id="dQtyMat" style="font-family:var(--font-d);font-size:36px;font-weight:700;color:var(--green);line-height:1">—</span>
+    <span id="dUnitLabel" style="font-size:13px;font-weight:500;color:var(--sub);text-transform:uppercase;letter-spacing:.5px">одиниць</span>
+    <span id="dStatusBadge" style="height:26px;padding:0 12px;border-radius:100px;font-family:var(--font-d);font-size:11.5px;font-weight:600;display:inline-flex;align-items:center;background:var(--green-s);color:var(--green)"></span>
   </div>
+  <!-- Edit mode -->
   <input id="dQtyMatEdit" type="hidden">
-  <div class="detail-edit-only" style="display:none;flex-direction:column;gap:8px;margin-top:6px">
+  <div class="detail-edit-only" style="display:none;flex-direction:column;gap:10px;margin-top:4px">
     <div style="display:flex;flex-direction:row;align-items:center;gap:12px">
-    <input id="dQtyMatDisplay" type="number" min="0" step="1" placeholder="0" oninput="calcPortionsFromQty()" style="width:100px;flex-shrink:0;height:36px;padding:0 10px;background:var(--bg);border:1.5px solid var(--blue);border-radius:8px;color:var(--text);font-family:var(--font-d);font-size:15px;font-weight:500;outline:none;-webkit-appearance:none">
-    <div class="dunit-chips" id="dUnitChips" style="margin-top:0;flex-wrap:nowrap;gap:6px">
-      <button class="dunit-chip" data-unit="гр" onclick="selectChip(this,'dUnitChips')">гр</button>
-      <button class="dunit-chip" data-unit="мл" onclick="selectChip(this,'dUnitChips')">мл</button>
-      <button class="dunit-chip sel" data-unit="шт" onclick="selectChip(this,'dUnitChips')">шт</button>
-      <button class="dunit-chip" data-unit="уп" onclick="selectChip(this,'dUnitChips')">уп</button>
-      <button class="dunit-chip" data-unit="см" onclick="selectChip(this,'dUnitChips')">см</button>
+      <input id="dQtyMatDisplay" type="number" min="0" step="1" placeholder="0" oninput="calcPortionsFromQty()" style="width:110px;flex-shrink:0;height:40px;padding:0 12px;background:var(--bg);border:1.5px solid var(--blue);border-radius:10px;color:var(--text);font-family:var(--font-d);font-size:16px;font-weight:600;outline:none;-webkit-appearance:none">
+      <div class="dunit-chips" id="dUnitChips" style="margin-top:0;flex-wrap:nowrap;gap:6px">
+        <button class="dunit-chip" data-unit="гр" onclick="selectChip(this,'dUnitChips')">гр</button>
+        <button class="dunit-chip" data-unit="мл" onclick="selectChip(this,'dUnitChips')">мл</button>
+        <button class="dunit-chip sel" data-unit="шт" onclick="selectChip(this,'dUnitChips')">шт</button>
+        <button class="dunit-chip" data-unit="уп" onclick="selectChip(this,'dUnitChips')">уп</button>
+        <button class="dunit-chip" data-unit="см" onclick="selectChip(this,'dUnitChips')">см</button>
+      </div>
     </div>
-  </div>
+    <!-- Edit preview -->
+    <div style="display:flex;align-items:center;gap:8px;margin-top:2px">
+      <span id="dQtyMatEditPreview" style="font-family:var(--font-d);font-size:28px;font-weight:700;color:var(--green)">—</span>
+      <span id="dUnitLabelPreview" style="font-size:13px;color:var(--sub)">шт</span>
+      <span id="dStatusBadgePreview" style="height:24px;padding:0 10px;border-radius:100px;font-family:var(--font-d);font-size:11px;font-weight:600;display:inline-flex;align-items:center;background:var(--amber-s);color:var(--amber)"></span>
+    </div>
   </div>
   <span id="dUnitSuffix" style="display:none"></span>
   <span class="dval-text" id="dUnitText" style="display:none"></span>
 </div>
 
-<div class="detail-edit-only" id="dQtyPreviewBlock" style="display:none;padding:14px 0;border-bottom:1px solid var(--border);flex-direction:column!important">
-  
-  <div style="display:flex;align-items:baseline;gap:8px;margin-top:6px">
-    <span id="dQtyMatEditPreview" style="font-family:var(--font-d);font-size:28px;font-weight:700;color:var(--green)">—</span>
-    <span id="dUnitLabelPreview" style="font-size:14px;color:var(--sub)">шт</span>
-    <span id="dStatusBadgePreview" style="height:24px;padding:0 10px;border-radius:100px;font-family:var(--font-d);font-size:11px;font-weight:600;display:inline-flex;align-items:center;background:var(--amber-s);color:var(--amber)"></span>
-  </div>
+<!-- === ТАБЛИЦЯ ОБ'ЄМУ СКЛАДУ — видима завжди === -->
+<div style="margin-top:14px;margin-bottom:4px">
+  <table style="width:100%;border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden;background:var(--surface2);border:1px solid var(--border)">
+    <thead>
+      <tr style="background:var(--surface2)">
+        <th style="text-align:left;padding:9px 14px;font-size:11px;font-weight:600;color:var(--sub);font-family:var(--font-d);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)">Об'єм складу</th>
+        <th style="text-align:center;padding:9px 14px;font-size:11px;font-weight:600;color:var(--sub);font-family:var(--font-d);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)">Від</th>
+        <th style="text-align:center;padding:9px 14px;font-size:11px;font-weight:600;color:var(--sub);font-family:var(--font-d);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)">До</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Достатньо -->
+      <tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:11px 14px;font-family:var(--font-d);font-size:13.5px;font-weight:600;color:var(--green)">Достатньо</td>
+        <td style="padding:11px 14px;text-align:center">
+          <span class="dval-text" id="dv1a" style="font-family:var(--font-d);font-size:13px;font-weight:600;color:var(--text)">—</span>
+          <input class="dval-edit-num" id="dv1a_edit" type="number" min="0" readonly style="width:64px;text-align:center;padding:4px 8px;height:32px;font-size:13px;border-radius:8px;opacity:.55;cursor:not-allowed;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--font-d);outline:none">
+        </td>
+        <td style="padding:11px 14px;text-align:center;font-family:var(--font-d);font-size:13px;font-weight:600;color:var(--sub)"><span id="dv1b">∞</span></td>
+      </tr>
+      <!-- Середні запаси -->
+      <tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:11px 14px;font-family:var(--font-d);font-size:13.5px;font-weight:600;color:var(--amber)">Середні запаси</td>
+        <td style="padding:11px 14px;text-align:center">
+          <span class="dval-text" id="dv2a" style="font-family:var(--font-d);font-size:13px;font-weight:600;color:var(--text)">—</span>
+          <input class="dval-edit-num" id="dv2a_edit" type="number" min="0" readonly style="width:64px;text-align:center;padding:4px 8px;height:32px;font-size:13px;border-radius:8px;opacity:.55;cursor:not-allowed;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--font-d);outline:none">
+        </td>
+        <td style="padding:11px 14px;text-align:center">
+          <span class="dval-text" id="dv2b" style="font-family:var(--font-d);font-size:13px;font-weight:600;color:var(--text)">—</span>
+          <input class="dval-edit-num" id="dv2b_edit" type="number" min="0" oninput="syncDvolBounds()" style="width:64px;text-align:center;padding:4px 8px;height:32px;font-size:13px;border-radius:8px;background:var(--bg);border:1.5px solid var(--border);color:var(--text);font-family:var(--font-d);outline:none" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'">
+        </td>
+      </tr>
+      <!-- Мало залишків -->
+      <tr>
+        <td style="padding:11px 14px;font-family:var(--font-d);font-size:13.5px;font-weight:600;color:var(--red)">Мало залишків</td>
+        <td style="padding:11px 14px;text-align:center;font-family:var(--font-d);font-size:13px;font-weight:600;color:var(--text)"><span id="dv3a">0</span></td>
+        <td style="padding:11px 14px;text-align:center">
+          <span class="dval-text" id="dv3b" style="font-family:var(--font-d);font-size:13px;font-weight:600;color:var(--text)">—</span>
+          <input class="dval-edit-num" id="dv3b_edit" type="number" min="0" oninput="syncDvolBounds()" style="width:64px;text-align:center;padding:4px 8px;height:32px;font-size:13px;border-radius:8px;background:var(--bg);border:1.5px solid var(--border);color:var(--text);font-family:var(--font-d);outline:none" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'">
+        </td>
+      </tr>
+    </tbody>
+  </table>
 </div>
 
-<!-- Таблиця об'єм складу -->
-<div class="detail-edit-only" style="display:none;margin-top:16px"><table class="dvol-table" style="width:100%;border-radius:10px;overflow:hidden">
-  <thead><tr><th style="text-align:left">Об'єм складу</th><th>Від</th><th>До</th></tr></thead>
-  <tbody>
-    <tr class="dvol-row-ok"><td>Достатньо</td>
-      <td><span class="dval-text" id="dv1a">—</span><input class="dval-edit-num" id="dv1a_edit" type="number" min="0" readonly style="width:60px;text-align:center;padding:2px 6px;height:30px;font-size:13px;opacity:.55;cursor:not-allowed;background:var(--surface2);border-color:var(--border)"></td>
-      <td><span id="dv1b">∞</span></td></tr>
-    <tr class="dvol-row-mid"><td>Середні запаси</td>
-      <td><span class="dval-text" id="dv2a">—</span><input class="dval-edit-num" id="dv2a_edit" type="number" min="0" readonly style="width:60px;text-align:center;padding:2px 6px;height:30px;font-size:13px;opacity:.55;cursor:not-allowed;background:var(--surface2);border-color:var(--border)"></td>
-      <td><span class="dval-text" id="dv2b">—</span><input class="dval-edit-num" id="dv2b_edit" type="number" min="0" oninput="syncDvolBounds()" style="width:60px;text-align:center;padding:2px 6px;height:30px;font-size:13px"></td></tr>
-    <tr class="dvol-row-low"><td>Мала кількість</td>
-      <td><span id="dv3a">0</span></td>
-      <td><span class="dval-text" id="dv3b">—</span><input class="dval-edit-num" id="dv3b_edit" type="number" min="0" oninput="syncDvolBounds()" style="width:60px;text-align:center;padding:2px 6px;height:30px;font-size:13px"></td></tr>
-  </tbody>
-</table></div>
+<!-- hidden compat block removed, replaced above -->
+<div id="dQtyPreviewBlock" style="display:none"></div>
 
 <!-- Місце зберігання -->
 <div class="dfield"><div class="dfield-label">Місце зберігання</div>
@@ -377,21 +412,35 @@ html,body{background:#1c1f26!important;overflow-x:hidden!important}.t-container,
 
 
 <!-- Об'єм складу -->
-<div class="dfield"><div class="dfield-label" style="margin-bottom:10px">Об'єм складу</div>
-<table class="dvol-table" style="width:100%;border-radius:10px;overflow:hidden">
-  <thead><tr><th style="text-align:left">Об'єм складу</th><th>Від</th><th>До</th></tr></thead>
-  <tbody>
-    <tr class="dvol-row-ok"><td>Достатньо</td>
-      <td><input id="newDv1a" type="number" min="0" readonly style="width:60px;text-align:center;padding:2px 6px;height:30px;font-size:13px;opacity:.55;cursor:not-allowed;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--font-d)"></td>
-      <td><span>∞</span></td></tr>
-    <tr class="dvol-row-mid"><td>Середні запаси</td>
-      <td><input id="newDv2a" type="number" min="0" readonly style="width:60px;text-align:center;padding:2px 6px;height:30px;font-size:13px;opacity:.55;cursor:not-allowed;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--font-d)"></td>
-      <td><input id="newDv2b" type="number" min="0" oninput="syncNewDvolBounds()" style="width:60px;text-align:center;padding:2px 6px;height:30px;font-size:13px;background:var(--bg);border:1.5px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--font-d);outline:none" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'"></td></tr>
-    <tr class="dvol-row-low"><td>Мала кількість</td>
-      <td><span>0</span></td>
-      <td><input id="newDv3b" type="number" min="0" oninput="syncNewDvolBounds()" style="width:60px;text-align:center;padding:2px 6px;height:30px;font-size:13px;background:var(--bg);border:1.5px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--font-d);outline:none" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'"></td></tr>
-  </tbody>
-</table></div>
+<div class="dfield" style="margin-top:4px">
+  <div class="dfield-label" style="margin-bottom:10px">Об'єм складу</div>
+  <table style="width:100%;border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden;background:var(--surface2);border:1px solid var(--border)">
+    <thead>
+      <tr style="background:var(--surface2)">
+        <th style="text-align:left;padding:9px 14px;font-size:11px;font-weight:600;color:var(--sub);font-family:var(--font-d);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)">Об'єм складу</th>
+        <th style="text-align:center;padding:9px 14px;font-size:11px;font-weight:600;color:var(--sub);font-family:var(--font-d);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)">Від</th>
+        <th style="text-align:center;padding:9px 14px;font-size:11px;font-weight:600;color:var(--sub);font-family:var(--font-d);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)">До</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:11px 14px;font-family:var(--font-d);font-size:13.5px;font-weight:600;color:var(--green)">Достатньо</td>
+        <td style="padding:11px 14px;text-align:center"><input id="newDv1a" type="number" min="0" readonly style="width:64px;text-align:center;padding:4px 8px;height:32px;font-size:13px;opacity:.55;cursor:not-allowed;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-d);outline:none"></td>
+        <td style="padding:11px 14px;text-align:center;font-family:var(--font-d);font-size:13px;font-weight:600;color:var(--sub)">∞</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:11px 14px;font-family:var(--font-d);font-size:13.5px;font-weight:600;color:var(--amber)">Середні запаси</td>
+        <td style="padding:11px 14px;text-align:center"><input id="newDv2a" type="number" min="0" readonly style="width:64px;text-align:center;padding:4px 8px;height:32px;font-size:13px;opacity:.55;cursor:not-allowed;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-d);outline:none"></td>
+        <td style="padding:11px 14px;text-align:center"><input id="newDv2b" type="number" min="0" oninput="syncNewDvolBounds()" style="width:64px;text-align:center;padding:4px 8px;height:32px;font-size:13px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-d);outline:none" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'"></td>
+      </tr>
+      <tr>
+        <td style="padding:11px 14px;font-family:var(--font-d);font-size:13.5px;font-weight:600;color:var(--red)">Мало залишків</td>
+        <td style="padding:11px 14px;text-align:center;font-family:var(--font-d);font-size:13px;font-weight:600;color:var(--text)">0</td>
+        <td style="padding:11px 14px;text-align:center"><input id="newDv3b" type="number" min="0" oninput="syncNewDvolBounds()" style="width:64px;text-align:center;padding:4px 8px;height:32px;font-size:13px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-d);outline:none" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'"></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
 <!-- Місце зберігання -->
 <div class="dfield"><div class="dfield-label">Місце зберігання</div>
