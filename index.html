@@ -592,7 +592,56 @@ function renderMetrics(){const ok=stock.filter(i=>(i.stockQty!=null?i.stockQty:i
 function renderCategories(){const fc=document.getElementById('filterChips');if(fc){fc.innerHTML='<button class="fchip '+(activeFilter==='all'?'active':'')+'" onclick="setFilter(\'all\',this)">Всі</button>'+categories.map(c=>'<button class="fchip '+(activeFilter===c?'active':'')+'" onclick="setFilter(\''+(c.replace(/'/g,"\\'"))+'\',this)">'+(c)+'</button>').join('')+'<button class="fchip" onclick="openAddCatModal()" style="border-style:dashed;color:var(--blue);border-color:var(--blue)">⚙ Категорії</button>';}const ms=document.getElementById('mobCatSelect');if(ms){ms.innerHTML='<option value="all">Обрати категорію</option>'+categories.map(c=>'<option value="'+(c)+'" '+(activeFilter===c?'selected':'')+'>'+(c)+'</option>').join('');}const nc=document.getElementById('newCat');if(nc)nc.innerHTML=categories.map(c=>'<option>'+(c)+'</option>').join('');
 const dcs=document.getElementById('desktopCatSelect');if(dcs){_updateGroupDropdown();}
 }
-function renderHistory(){const hw=document.getElementById('histWrap');if(!hw)return;if(!history.length){hw.innerHTML='<div style="padding:24px;text-align:center;color:var(--sub);font-family:var(--font-d)">Операцій ще немає</div>';return;}hw.innerHTML=history.slice(0,10).map(h=>{const photo=h.photoKey&&window._allOpPhotos&&window._allOpPhotos[h.photoKey]?window._allOpPhotos[h.photoKey]:null;return'<div class="h-row" style="flex-direction:column;align-items:stretch;gap:8px"><div style="display:flex;align-items:center;gap:12px"><div class="h-dot '+(h.type)+'">'+(h.type==='in'?'<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z"/></svg>':'<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z"/></svg>')+'</div><div class="h-info"><div class="h-name">'+(h.name)+'</div><div class="h-note">'+(h.note||'')+'</div></div><div style="text-align:right;flex-shrink:0"><div class="h-qty '+(h.type)+'">'+(h.type==='in'?'+':'−')+(h.qty)+'</div>'+(h.cost?'<div style="font-size:11px;font-weight:600;color:var(--amber)">'+(h.cost.toLocaleString('uk'))+' ₴</div>':'')+'</div><div class="h-time">'+(fmtTime?fmtTime(h.time):h.time||'')+'</div></div>'+(photo?'<img src="'+photo+'" style="width:100%;max-height:160px;object-fit:cover;border-radius:10px;cursor:pointer" onclick="window.open(this.src,\'_blank\')">':'')+'</div>';}).join('');}
+function openHistoryDetail(idx) {
+  var h = history[idx];
+  if(!h) return;
+  var photo = h.photoKey && window._allOpPhotos && window._allOpPhotos[h.photoKey] ? window._allOpPhotos[h.photoKey] : null;
+  var typeLabel = h.type==='in' ? '📦 Прийом' : h.type==='give' ? '👨‍⚕️ Видача' : '✂ Списання';
+  var typeColor = h.type==='in' ? 'var(--green)' : h.type==='give' ? 'var(--blue)' : 'var(--red)';
+
+  var ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center';
+  ov.onclick = function(e){ if(e.target===ov) document.body.removeChild(ov); };
+
+  var box = document.createElement('div');
+  box.style.cssText = 'background:var(--surface);border-radius:24px 24px 0 0;width:100%;max-width:540px;max-height:90vh;overflow-y:auto;box-shadow:0 -4px 32px rgba(0,0,0,.4);padding:0 20px 32px';
+  box.onclick = function(e){ e.stopPropagation(); };
+
+  var rows = [
+    {label:'Тип операції', val: typeLabel, color: typeColor},
+    {label:'Позиція', val: h.name||'—'},
+    {label:'Кількість', val: (h.qty||0)+' '+(h.unit||'шт')},
+    {label:'Сума', val: h.cost ? (h.cost.toLocaleString('uk',{minimumFractionDigits:2})+' ₴') : '—', color:'var(--amber)'},
+    {label:'Ціна / од.', val: h.price ? (h.price.toLocaleString('uk',{minimumFractionDigits:2})+' грн') : '—'},
+    {label:'Постачальник', val: h.sup||'—'},
+    {label:'Накладна №', val: h.invoice||'—'},
+    {label:'Менеджер / Лікар', val: h.manager||'—'},
+    {label:'Причина', val: h.reason||'—'},
+    {label:'Примітка', val: h.comment||'—'},
+    {label:'Дата', val: fmtTime ? fmtTime(h.time) : (h.time||'—')},
+  ].filter(function(r){ return r.val && r.val !== '—'; });
+
+  var html = '<div style="width:32px;height:4px;background:var(--border2);border-radius:2px;margin:12px auto 16px"></div>';
+  html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">';
+  html += '<div style="font-family:var(--font-d);font-size:18px;font-weight:700;color:'+typeColor+'">'+typeLabel+'</div>';
+  html += '<button onclick="this.closest(\'div\').parentElement.parentElement.remove()" style="background:var(--bg);border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;color:var(--sub);font-size:16px;display:flex;align-items:center;justify-content:center">✕</button>';
+  html += '</div>';
+
+  if(photo) html += '<img src="'+photo+'" style="width:calc(100% + 40px);margin-left:-20px;max-height:220px;object-fit:cover;border-radius:0;margin-bottom:20px;cursor:pointer" onclick="window.open(this.src,\'_blank\')">';
+
+  rows.forEach(function(r){
+    html += '<div style="padding:12px 0;border-bottom:1px solid var(--border)">';
+    html += '<div style="font-size:11px;color:var(--sub);font-family:var(--font-d);margin-bottom:3px">'+r.label+'</div>';
+    html += '<div style="font-family:var(--font-d);font-size:15px;font-weight:500;color:'+(r.color||'var(--text)')+'">'+r.val+'</div>';
+    html += '</div>';
+  });
+
+  box.innerHTML = html;
+  ov.appendChild(box);
+  document.body.appendChild(ov);
+}
+
+function renderHistory(){const hw=document.getElementById('histWrap');if(!hw)return;if(!history.length){hw.innerHTML='<div style="padding:24px;text-align:center;color:var(--sub);font-family:var(--font-d)">Операцій ще немає</div>';return;}hw.innerHTML=history.slice(0,10).map(function(h,idx){const photo=h.photoKey&&window._allOpPhotos&&window._allOpPhotos[h.photoKey]?window._allOpPhotos[h.photoKey]:null;const dotColor=h.type==='in'?'in':h.type==='give'?'in':'out';return'<div class="h-row" style="flex-direction:column;align-items:stretch;gap:8px;cursor:pointer" onclick="openHistoryDetail('+idx+')"><div style="display:flex;align-items:center;gap:12px"><div class="h-dot '+dotColor+'">'+(h.type==='in'?'<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z"/></svg>':h.type==='give'?'<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>':'<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z"/></svg>')+'</div><div class="h-info"><div class="h-name">'+(h.name)+'</div><div class="h-note">'+(h.note||'')+'</div></div><div style="text-align:right;flex-shrink:0"><div class="h-qty '+(dotColor)+'">'+(h.type==='in'?'+':'−')+(h.qty)+'</div>'+(h.cost?'<div style="font-size:11px;font-weight:600;color:var(--amber)">'+(h.cost.toLocaleString('uk'))+' ₴</div>':'')+'</div><div class="h-time">'+(fmtTime?fmtTime(h.time):h.time||'')+'</div></div>'+(photo?'<img src="'+photo+'" style="width:100%;max-height:160px;object-fit:cover;border-radius:10px" onclick="event.stopPropagation();window.open(this.src,\'_blank\')">':'')+'</div>';}).join('');}
 function renderAll(){const rows=getFiltered();renderTable(rows);renderCards(rows);renderMetrics();renderCategories();setTimeout(bindTouchGlow,0);}
 function setFilter(f,el){activeFilter=f;document.querySelectorAll('.fchip').forEach(c=>c.classList.remove('active'));if(el)el.classList.add('active');const sel=document.getElementById('mobCatSelect');if(sel)sel.value=f;renderAll();}
 function setFilterFromSelect(f){activeFilter=f;document.querySelectorAll('.fchip').forEach(c=>{c.classList.toggle('active',c.textContent.trim()===(f==='all'?'Всі':f));});renderAll();}
@@ -757,15 +806,15 @@ function handleImgUpload(e){const file=e.target.files[0];if(!file)return;const r
 function handleNewImgUpload(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=async ev=>{const compressed=await compressImage(ev.target.result,800,800,0.75);newItemPhoto=compressed;const box=document.getElementById('newImgBox');box.innerHTML='<img src="'+(compressed)+'" style="width:100%;height:100%;object-fit:cover">';box.style.border='1.5px solid var(--blue)';};reader.readAsDataURL(file);e.target.value='';}
 function compressImage(dataUrl,maxW,maxH,quality){return new Promise(resolve=>{const img=new Image();img.onload=()=>{let w=img.width,h=img.height;if(w>maxW){h=Math.round(h*maxW/w);w=maxW;}if(h>maxH){w=Math.round(w*maxH/h);h=maxH;}const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);resolve(canvas.toDataURL('image/jpeg',quality||0.75));};img.src=dataUrl;});}
 function doIn(){const id=+document.getElementById('inItem').value;const qty=+document.getElementById('inQty').value;const pr=parseFloat(document.getElementById('inPrice').value);const sup=document.getElementById('inSupp').value.trim()||'—';if(!qty||qty<1){toast('⚠ Введіть кількість');return;}const i=stock.find(x=>x.id===id);if(!i)return;i.stockQty=(i.stockQty||0)+qty;if(pr>0)i.price=pr;if(sup!=='—')i.sup=sup;const now=new Date().toISOString();const inCost = Math.round(qty * (pr > 0 ? pr : i.price||0) * 100) / 100;
-const inPhotoKey='op_in_'+now.replace(/[:.]/g,'_');history.unshift({type:'in',name:i.name,qty,note:'📦 Поповнення'+(sup!=='—'?' — '+sup:''),time:now,cost:inCost,unit:i.unit||'шт',photoKey:_opPhotos['in']?inPhotoKey:null});calcItem(i);_saveOpPhotoToSheets('in',inPhotoKey);closeModal('in');_resetOpPhoto('in');document.getElementById('inPreview').style.display='none';renderAll();renderHistory();toast('Прийнято '+qty+' шт. — '+i.name);forceSyncToSheets();}
+const inPhotoKey='op_in_'+now.replace(/[:.]/g,'_');const inManager=document.getElementById('inManager').value.trim();const inInvoice=document.getElementById('inInvoice').value.trim();const inNote2=document.getElementById('inNote').value.trim();history.unshift({type:'in',name:i.name,qty,note:'📦 Поповнення'+(sup!=='—'?' — '+sup:''),time:now,cost:inCost,unit:i.unit||'шт',photoKey:_opPhotos['in']?inPhotoKey:null,sup:sup,manager:inManager,invoice:inInvoice,comment:inNote2,price:pr>0?pr:i.price||0});calcItem(i);_saveOpPhotoToSheets('in',inPhotoKey);closeModal('in');_resetOpPhoto('in');document.getElementById('inPreview').style.display='none';document.getElementById('inInvoice').value='';document.getElementById('inManager').value='';document.getElementById('inNote').value='';renderAll();renderHistory();toast('Прийнято '+qty+' шт. — '+i.name);forceSyncToSheets();}
 function doOut(){const id=+document.getElementById('outItem').value;const qty=+document.getElementById('outQty').value;const reason=document.getElementById('outReason').value;const doc=document.getElementById('outDoc').value.trim()||'—';if(!qty||qty<1){toast('⚠ Введіть кількість');return;}const i=stock.find(x=>x.id===id);if(!i)return;const now=new Date().toISOString();const outPricePerPortion = i.portionPrice || (i.portions > 0 ? (i.marketPrice||0)/i.portions : 0);
 const outPortions = i.portionComp > 0 ? qty / i.portionComp : qty;
 const outTotalCost = Math.round(outPortions * outPricePerPortion * 100) / 100;
-const outPhotoKey='op_out_'+now.replace(/[:.]/g,'_');history.unshift({type:'out',name:i.name,qty,note:'✂ Списання: '+reason+(doc!=='—'?' — '+doc:''),time:now,cost:outTotalCost,portions:outPortions,unit:i.unit||'шт',photoKey:_opPhotos['out']?outPhotoKey:null});_saveOpPhotoToSheets('out',outPhotoKey);closeModal('out');_resetOpPhoto('out');document.getElementById('outPreview').style.display='none';renderAll();renderHistory();toast('Списано '+qty+' шт. — '+i.name);forceSyncToSheets();}
+const outPhotoKey='op_out_'+now.replace(/[:.]/g,'_');const outNote2=document.getElementById('outNote').value.trim();history.unshift({type:'out',name:i.name,qty,note:'✂ Списання: '+reason+(doc!=='—'?' — '+doc:''),time:now,cost:outTotalCost,portions:outPortions,unit:i.unit||'шт',photoKey:_opPhotos['out']?outPhotoKey:null,manager:doc,reason:reason,comment:outNote2,price:i.price||0});_saveOpPhotoToSheets('out',outPhotoKey);closeModal('out');_resetOpPhoto('out');document.getElementById('outPreview').style.display='none';document.getElementById('outNote').value='';renderAll();renderHistory();toast('Списано '+qty+' шт. — '+i.name);forceSyncToSheets();}
 function doGive(){const id=+document.getElementById('giveItem').value;const qty=+document.getElementById('giveQty').value;const doc=document.getElementById('giveDoc').value.trim()||'—';const note=document.getElementById('giveNote').value.trim();if(!qty||qty<1){toast('⚠ Введіть кількість');return;}const i=stock.find(x=>x.id===id);if(!i)return;if(qty>i.stockQty){toast('⚠ Недостатньо на складі (є '+i.stockQty+')');return;}i.stockQty=(i.stockQty||0)-qty;const now=new Date().toISOString();const givePricePerPortion = i.portionPrice || (i.portions > 0 ? (i.marketPrice||0)/i.portions : 0);
 const givePortions = i.portionComp > 0 ? qty / i.portionComp : qty;
 const giveTotalCost = Math.round(givePortions * givePricePerPortion * 100) / 100;
-const givePhotoKey='op_give_'+now.replace(/[:.]/g,'_');history.unshift({type:'out',name:i.name,qty,note:'👨‍⚕️ Видано: '+doc+(note?' — '+note:''),time:now,cost:giveTotalCost,portions:givePortions,unit:i.unit||'шт',photoKey:_opPhotos['give']?givePhotoKey:null});_saveOpPhotoToSheets('give',givePhotoKey);closeModal('give');_resetOpPhoto('give');document.getElementById('givePreview').style.display='none';document.getElementById('giveDoc').value='';document.getElementById('giveNote').value='';renderAll();renderHistory();toast('Видано '+qty+' шт. — '+i.name+' → '+doc);forceSyncToSheets();}
+const givePhotoKey='op_give_'+now.replace(/[:.]/g,'_');const giveSup2=document.getElementById('giveSup').value.trim();const giveInvoice=document.getElementById('giveInvoice').value.trim();history.unshift({type:'give',name:i.name,qty,note:'👨‍⚕️ Видано: '+doc+(note?' — '+note:''),time:now,cost:giveTotalCost,portions:givePortions,unit:i.unit||'шт',photoKey:_opPhotos['give']?givePhotoKey:null,sup:giveSup2,manager:doc,invoice:giveInvoice,comment:note,price:pr>0?pr:i.price||0});_saveOpPhotoToSheets('give',givePhotoKey);closeModal('give');_resetOpPhoto('give');document.getElementById('givePreview').style.display='none';document.getElementById('giveDoc').value='';document.getElementById('giveNote').value='';document.getElementById('giveInvoice').value='';renderAll();renderHistory();toast('Видано '+qty+' шт. — '+i.name+' → '+doc);forceSyncToSheets();}
 /* ── Місце зберігання у формі нової позиції ── */
 var _newStorageVals = {room:'', cell:'', con:''};
 
