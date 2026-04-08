@@ -900,6 +900,39 @@ function importFromExcel(e) {
 }
 
 
+function resetAllStockQty() {
+  var ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box';
+  ov.onclick = function(e){ if(e.target===ov) document.body.removeChild(ov); };
+  var box = document.createElement('div');
+  box.style.cssText = 'background:var(--surface);border-radius:20px;padding:24px;max-width:340px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.5)';
+  box.onclick = function(e){ e.stopPropagation(); };
+  box.innerHTML =
+    '<div style="font-family:var(--font-d);font-size:18px;font-weight:700;color:var(--amber);margin-bottom:8px">⚠ Обнулити залишки?</div>'+
+    '<div style="font-size:13px;color:var(--sub);margin-bottom:16px">Кількість усіх позицій буде встановлена на 0.<br><br>Введіть пароль для підтвердження:</div>'+
+    '<input id="_rstPassInp" type="password" placeholder="Пароль" style="width:100%;height:46px;padding:0 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--font-d);font-size:15px;outline:none;box-sizing:border-box;margin-bottom:14px">'+
+    '<div id="_rstPassErr" style="color:var(--red);font-size:12px;margin-bottom:10px;display:none">Невірний пароль</div>'+
+    '<div style="display:flex;gap:10px">'+
+    '<button id="_rstCancel" style="flex:1;height:44px;background:transparent;border:1.5px solid var(--border);border-radius:12px;font-family:var(--font-d);font-size:14px;color:var(--sub);cursor:pointer">Скасувати</button>'+
+    '<button id="_rstConfirm" style="flex:1;height:44px;background:var(--amber);border:none;border-radius:12px;font-family:var(--font-d);font-size:14px;font-weight:700;color:#1c1f26;cursor:pointer">Обнулити</button>'+
+    '</div>';
+  document.body.appendChild(ov);
+  ov.appendChild(box);
+  var inp = box.querySelector('#_rstPassInp');
+  var err = box.querySelector('#_rstPassErr');
+  box.querySelector('#_rstCancel').addEventListener('click', function(){ document.body.removeChild(ov); });
+  box.querySelector('#_rstConfirm').addEventListener('click', function(){
+    if(inp.value !== '2517'){ err.style.display='block'; inp.focus(); return; }
+    document.body.removeChild(ov);
+    stock.forEach(function(i){ i.stockQty=0; i.qty=0; calcItem(i); });
+    renderAll(); renderHistory();
+    forceSyncToSheets();
+    toast('✓ Залишки обнулено');
+  });
+  inp.addEventListener('keydown', function(e){ if(e.key==='Enter') box.querySelector('#_rstConfirm').click(); });
+  setTimeout(function(){ inp.focus(); }, 50);
+}
+
 function deleteAllStockWithPassword() {
   var ov = document.createElement('div');
   ov.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box';
