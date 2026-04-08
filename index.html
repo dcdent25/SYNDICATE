@@ -1251,9 +1251,37 @@ function postNoCors(payload){
   });
 }
 function forceSyncToSheets(){if(!SCRIPT_URL)return;syncPending=false;syncToSheets();}
+
+/* Зберігаємо suppData в самих товарах (поле supDetail) — так вони потрапляють в Sheets через stock */
+function _embedSuppDataInStock(){
+  var cache={};
+  for(var k in localStorage){
+    if(k.indexOf('suppData_')===0){
+      var n=k.replace('suppData_','');
+      try{cache[n]=JSON.parse(localStorage.getItem(k));}catch(e){}
+    }
+  }
+  stock.forEach(function(i){
+    var s=(i.sup||'').trim();
+    if(s&&s!=='—'&&cache[s]) i.supDetail=cache[s];
+    else if(!cache[s]) delete i.supDetail;
+  });
+}
+
+/* Відновлюємо suppData з товарів в localStorage */
+function _restoreSuppDataFromStock(){
+  stock.forEach(function(i){
+    var s=(i.sup||'').trim();
+    if(s&&s!=='—'&&i.supDetail&&typeof i.supDetail==='object'){
+      var existing=localStorage.getItem('suppData_'+s);
+      if(!existing) localStorage.setItem('suppData_'+s,JSON.stringify(i.supDetail));
+    }
+  });
+}
 async function loadFromSheets(){const cached=loadLocalCache();if(cached){stock=(cached.stock||[]).map(normalizeItem);history=cached.history||[];categories=cached.categories&&cached.categories.length?cached.categories:categories;if(cached.catGroups)Object.assign(catGroups,cached.catGroups);if(cached.locations&&cached.locations.length)locations=cached.locations;renderAll();renderHistory();setPreloaderStatus('Оновлення даних...');}if(!SCRIPT_URL){hidePreloader();return;}showSyncStatus('loading');setPreloaderStatus('Підключення до сервера...');let data=null;try{data=await jsonp(SCRIPT_URL,15000);}catch(e){console.warn('[DS] JSONP failed:',e.message);try{const r=await fetch(SCRIPT_URL+'?t='+Date.now(),{mode:'cors',redirect:'follow'});const text=await r.text();if(!text||!text.trim())throw new Error('Empty response');data=JSON.parse(text);}catch(e2){console.warn('[DS] fetch also failed:',e2.message);if(!cached){showSyncStatus('error','Не вдалося завантажити');toast('⚠ Немає з\'єднання. Перевірте SCRIPT_URL або CSP сайту.');}else{showSyncStatus('ok');}renderAll();renderHistory();hidePreloader();return;}}if(data&&data.ok){if(Array.isArray(data.stock)&&data.stock.length>=0){stock=data.stock.map(normalizeItem);}if(Array.isArray(data.history))history=data.history;if(Array.isArray(data.categories)&&data.categories.length>0)categories=data.categories;if(data.catGroups)Object.assign(catGroups,data.catGroups);if(data.locations&&data.locations.length){locations=data.locations;stock=stock.map(normalizeItem);}if(data.navPhotos)Object.assign(locationPhotos,data.navPhotos);if(data.opPhotos)window._allOpPhotos=data.opPhotos;
-// Відновлюємо дані контрагентів з таблиці в localStorage
+// Відновлюємо дані контрагентів — спочатку з suppData (якщо є), потім з supDetail в товарах
 if(data.suppData&&typeof data.suppData==='object'){Object.keys(data.suppData).forEach(function(n){if(n)localStorage.setItem('suppData_'+n,JSON.stringify(data.suppData[n]));});}
+_restoreSuppDataFromStock();
 _loadNavPhotosFromLocations();showSyncStatus('ok');setPreloaderStatus('Синхронізовано ✓');}else{showSyncStatus('error',data?data.error:'empty');setPreloaderStatus('Помилка синхронізації');}renderAll();renderHistory();hidePreloader();}
 function normalizeItem(i){const n={...i,id:+i.id||0,qty:+i.qty||0,min:+i.min||1,price:+i.price||0};if(n.stockQty==null)n.stockQty=n.qty;else n.stockQty=+n.stockQty;if(!n.marketPrice)n.marketPrice=n.price;if(n.portions!=null&&n.portions>0)n._portionsManual=true;if(!n.mapPhotos&&n.mapPhoto)n.mapPhotos=[n.mapPhoto];
   /* Міграція: якщо i.con порожній а i.sup є контейнером — переносимо */
@@ -1279,8 +1307,9 @@ function normalizeItem(i){const n={...i,id:+i.id||0,qty:+i.qty||0,min:+i.min||1,
     if(supIsContainer){ if(!n.con) n.con=n.sup; n.sup='—'; }
   }
   return calcItem(n);}
-function syncToSheets(){if(!SCRIPT_URL)return;if(syncPending)return;syncPending=true;showSyncStatus('saving');setTimeout(async()=>{try{const stockClean=stock.map(i=>{const c={...i};delete c.photo;delete c.mapPhotos;delete c.mapPhoto;delete c.mapPhoto2;return c;});
-// Збираємо дані контрагентів з localStorage
+function syncToSheets(){if(!SCRIPT_URL)return;if(syncPending)return;syncPending=true;showSyncStatus('saving');setTimeout(async()=>{try{
+_embedSuppDataInStock();
+const stockClean=stock.map(i=>{const c={...i};delete c.photo;delete c.mapPhotos;delete c.mapPhoto;delete c.mapPhoto2;return c;});
 const suppDataAll={};for(var k in localStorage){if(k.indexOf('suppData_')===0){var sn=k.replace('suppData_','');try{suppDataAll[sn]=JSON.parse(localStorage.getItem(k));}catch(e){}}}
 const payload={action:'saveAll',stock:stockClean,history:history.slice(0,100),categories,catGroups,locations,navPhotos:locationPhotos,suppData:suppDataAll};await postNoCors(payload);showSyncStatus('ok');}catch(e){showSyncStatus('error',e.message);}syncPending=false;},300);}
 
@@ -1853,6 +1882,7 @@ function openSuppDetails(name) {
       localStorage.removeItem('suppData_'+name);
       renderAll();
     }
+    _embedSuppDataInStock();
     forceSyncToSheets();
     document.body.removeChild(ov);
     renderSuppList();
