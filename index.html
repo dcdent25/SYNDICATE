@@ -1522,16 +1522,11 @@ async function loadFromSheets(){
       _restoreSuppDataFromStock();
       _loadNavPhotosFromLocations();
       if(data.navPhotos){
-        // Ключі в Firebase зберігаються з __ замість :: (через обмеження Firebase)
         Object.keys(data.navPhotos).forEach(function(fbKey){
-          var key = fbKey.replace(/__/g, '::');
           var val = data.navPhotos[fbKey];
-          // Фільтруємо зіпсовані значення (рядок '+photo+' або порожні)
-          if(val && typeof val==='string' && val.length>10 && !val.includes("'+photo+'") && !val.includes("'+p+'")) {
-            locationPhotos[key] = val;
-          } else if(val) {
-            // Видаляємо зіпсований запис з Firebase
-            _fbWhenReady(function(){ _fbDb.ref('/sklad/navPhotos/'+fbKey).remove().catch(function(){}); });
+          // Фільтруємо зіпсовані значення
+          if(val && typeof val==='string' && val.length>10 && !val.includes("'+photo+'")) {
+            locationPhotos[fbKey] = val;
           }
         });
       }
@@ -1609,7 +1604,9 @@ function syncToSheets(){if(syncPending)return;syncPending=true;showSyncStatus('s
     Object.keys(locationPhotos).forEach(function(k){
       var v=locationPhotos[k];
       if(v&&typeof v==='string'&&v.startsWith('http')){
-        var fbKey=k.replace(/[.#$[\]/]/g,'__');
+        // Firebase забороняє . # $ [ ] в ключах, замінюємо тільки їх
+        // :: залишаємо як є — він дозволений
+        var fbKey=k.replace(/\./g,'-').replace(/#/g,'-').replace(/\$/g,'-').replace(/\[/g,'-').replace(/\]/g,'-');
         navPhotosClean[fbKey]=v;
       }
     });
@@ -1627,6 +1624,7 @@ function syncToSheets(){if(syncPending)return;syncPending=true;showSyncStatus('s
     });
     const payload={stock:stockClean,history:histClean,categories,catGroups,locations:locClean,navPhotos:navPhotosClean,suppData:suppDataAll};
     console.log('[FB] payload size ~', JSON.stringify(payload).length, 'chars');
+    console.log('[FB] navPhotos keys:', Object.keys(navPhotosClean));
     _fbSave(payload);
   }catch(e){showSyncStatus('error',e.message);console.warn('[FB] sync error:',e);}
   syncPending=false;
@@ -3554,6 +3552,7 @@ function nav2HandlePhoto(e) {
       // (як handleImgUpload для товарів: fresh.photo = url → forceSyncToSheets)
       var _navKey = key.replace(/::/g,'__');
       _cldUpload(_navB64, 'nav_'+_navKey).then(function(url){
+        console.log('[NAV PHOTO] Cloudinary result:', url ? 'OK: '+url.substring(0,60) : 'FAILED');
         if(url){
           locationPhotos[key] = url;
           _saveNavPhotoToLocations(key, url);
@@ -3574,7 +3573,7 @@ function _fbSaveNavPhoto(key, photo) {
   _fbWhenReady(function(){
     // Зберігаємо фото окремо по шляху /sklad/navPhotos/key
     // Ключ екрануємо — Firebase не дозволяє . # $ [ ] /
-    var fbKey = key.replace(/[.#$[\]/]/g, '__');
+    var fbKey = key.replace(/\./g,'-').replace(/#/g,'-').replace(/\$/g,'-').replace(/\[/g,'-').replace(/\]/g,'-');
     _fbDb.ref('/sklad/navPhotos/'+fbKey).set(photo).catch(function(e){
       console.warn('[FB] nav photo save error:', e.message);
     });
