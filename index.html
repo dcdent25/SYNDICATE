@@ -2432,7 +2432,7 @@ function nav2Render() {
       var s = '<div id="'+cardId+'" style="background:var(--surface2);border:1.5px solid '+border+';border-radius:12px;overflow:hidden;transition:border-color .15s">';
       /* Фото — клік активує цей рівень */
       var navFn = fieldType==='room' ? 'nav2SetActiveLevel(\'room\')' : fieldType==='cell' ? 'nav2SetActiveLevel(\'cell\')' : 'nav2SetActiveLevel(\'con\')';
-      s += '<div onclick="'+(photo?'nav2PhotoFullscreen(this.querySelector(\'img\').src)':navFn)+'" style="width:100%;aspect-ratio:1;background:var(--bg);position:relative;overflow:hidden;cursor:'+(photo?'zoom-in':'pointer')+'">';
+      s += '<div onclick="'+navFn+'" style="width:100%;aspect-ratio:1;background:var(--bg);position:relative;overflow:hidden;cursor:pointer">';
       if(photo){
         s += '<img src="'+photo+'" style="width:100%;height:100%;object-fit:cover;display:block">';
       } else {
@@ -2750,8 +2750,9 @@ function nav2Render() {
       html += '<div><div style="font-size:9px;color:var(--sub);font-family:var(--font-d);font-weight:500;margin-bottom:4px">'+label+'</div>';
       html += '<div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;height:36px;display:flex;align-items:center;padding:0 8px;font-family:var(--font-d);font-size:13px;font-weight:600;color:'+(val?'var(--text)':'var(--muted)')+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span style="color:var(--muted);margin-right:4px">–</span>'+(val||'')+'</div></div>';
     });
+    var phId='nav2ph_'+ri; window[phId]=photo;
     html += '<div><div style="font-size:9px;color:var(--sub);font-family:var(--font-d);font-weight:500;margin-bottom:4px">Мапа</div>';
-    html += '<div onclick="event.stopPropagation();nav2PhotoForKey(window[\''+pkId+'\'])" style="background:var(--blue-s);border:1.5px solid rgba(138,180,248,.3);border-radius:6px;width:44px;height:36px;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer">';
+    html += '<div onclick="event.stopPropagation();if(window[\''+phId+'\']){nav2PhotoFullscreen(window[\''+phId+'\']);}else{nav2PhotoForKey(window[\''+pkId+'\']);}" style="background:var(--blue-s);border:1.5px solid rgba(138,180,248,.3);border-radius:6px;width:44px;height:36px;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer">';
     html += photo?'<img src="'+photo+'" style="width:100%;height:100%;object-fit:cover">':'<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="color:var(--blue)"><path d="M12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7zM9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9z"/></svg>';
     html += '</div></div>';
     /* Кнопка видалення */
