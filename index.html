@@ -1013,7 +1013,7 @@ function renderNewStorageCards() {
 
   function card(label, val, photo, type) {
     var s = '<div id="nsc_'+type+'" style="background:var(--surface2);border:1.5px solid '+(val?'var(--blue)':'var(--border)')+';border-radius:12px;overflow:hidden;cursor:pointer;transition:border-color .15s">';
-    s += '<div style="width:100%;aspect-ratio:1;background:var(--bg);overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">';
+    s += '<div style="width:100%;aspect-ratio:16/9;background:var(--bg);overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">';
     if(photo) s += '<img src="'+photo+'" style="width:100%;height:100%;object-fit:cover;display:block">';
     else s += '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="color:var(--muted)"><path d="M12 15.2A3.2 3.2 0 1 1 12 8.8a3.2 3.2 0 0 1 0 6.4zM9 2L7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.17L15 2H9z"/></svg><div style="font-size:9px;color:var(--muted);font-family:var(--font-d)">Фото</div>';
     s += '</div><div style="padding:6px 8px"><div style="font-size:9px;color:var(--sub);font-family:var(--font-d);font-weight:500;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px">'+label+'</div>';
@@ -2218,7 +2218,7 @@ function renderStorageCards(i) {
 
   function card(label, val, photo, type) {
     var s = '<div id="dStorCard_'+type+'" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color .15s'+(isEditMode?';cursor:pointer':'')+'">';
-    s += '<div style="width:100%;aspect-ratio:1;background:var(--bg);position:relative;overflow:hidden">';
+    s += '<div style="width:100%;aspect-ratio:16/9;background:var(--bg);position:relative;overflow:hidden">';
     if(photo){ s += '<img src="'+photo+'" style="width:100%;height:100%;object-fit:cover;display:block">'; }
     else { s += '<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="color:var(--muted)"><path d="M12 15.2A3.2 3.2 0 1 1 12 8.8a3.2 3.2 0 0 1 0 6.4zM9 2L7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.17L15 2H9z"/></svg><div style="font-size:10px;color:var(--muted);font-family:var(--font-d)">Фото</div></div>'; }
     s += '</div><div style="padding:8px 10px">';
@@ -2229,7 +2229,7 @@ function renderStorageCards(i) {
   }
 
   var conCardHtml = '<div id="dConCard" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color .15s'+(isEditMode?';cursor:pointer':'')+'">';
-  conCardHtml += '<div style="width:100%;aspect-ratio:1;background:var(--bg);position:relative;overflow:hidden">';
+  conCardHtml += '<div style="width:100%;aspect-ratio:16/9;background:var(--bg);position:relative;overflow:hidden">';
   if(photoCon){ conCardHtml += '<img src="'+photoCon+'" style="width:100%;height:100%;object-fit:cover;display:block">'; }
   else { conCardHtml += '<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="color:var(--muted)"><path d="M12 15.2A3.2 3.2 0 1 1 12 8.8a3.2 3.2 0 0 1 0 6.4zM9 2L7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.17L15 2H9z"/></svg><div style="font-size:10px;color:var(--muted);font-family:var(--font-d)">Фото</div></div>'; }
   conCardHtml += '</div><div style="padding:8px 10px"><div style="font-size:9px;color:var(--sub);font-family:var(--font-d);font-weight:500;margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px">Контейнер</div>';
@@ -2432,7 +2432,7 @@ function nav2Render() {
       var s = '<div id="'+cardId+'" style="background:var(--surface2);border:1.5px solid '+border+';border-radius:12px;overflow:hidden;transition:border-color .15s">';
       /* Фото — клік активує цей рівень */
       var navFn = fieldType==='room' ? 'nav2SetActiveLevel(\'room\')' : fieldType==='cell' ? 'nav2SetActiveLevel(\'cell\')' : 'nav2SetActiveLevel(\'con\')';
-      s += '<div onclick="'+navFn+'" style="width:100%;aspect-ratio:1;background:var(--bg);position:relative;overflow:hidden;cursor:pointer">';
+      s += '<div onclick="'+navFn+'" style="width:100%;aspect-ratio:16/9;background:var(--bg);position:relative;overflow:hidden;cursor:pointer">';
       if(photo){
         s += '<img src="'+photo+'" style="width:100%;height:100%;object-fit:cover;display:block">';
       } else {
@@ -3448,7 +3448,7 @@ function nav2AddNew() {
       var val = vals[d.ft];
       var photo = photos[d.ft];
       return '<div id="nadd_card_'+d.ft+'" style="background:var(--surface2);border:1.5px solid '+(val?'var(--blue)':'var(--border)')+';border-radius:12px;overflow:hidden;cursor:pointer;transition:border-color .15s">'
-        +'<div style="width:100%;aspect-ratio:1;background:var(--bg);position:relative;overflow:hidden">'
+        +'<div style="width:100%;aspect-ratio:16/9;background:var(--bg);position:relative;overflow:hidden">'
         +(photo?'<img src="'+photo+'" style="width:100%;height:100%;object-fit:cover;display:block">':'<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="color:var(--muted)"><path d="M12 15.2A3.2 3.2 0 1 1 12 8.8a3.2 3.2 0 0 1 0 6.4zM9 2L7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.17L15 2H9z"/></svg><div style="font-size:10px;color:var(--muted);font-family:var(--font-d)">Фото</div></div>')
         +'</div>'
         +'<div style="padding:8px 10px">'
