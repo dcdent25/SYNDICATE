@@ -1521,7 +1521,23 @@ async function loadFromSheets(){
       if(Array.isArray(data.categories)&&data.categories.length>0)categories=data.categories;
       if(data.catGroups)Object.assign(catGroups,data.catGroups);
       if(data.locations&&data.locations.length){locations=data.locations;stock=stock.map(normalizeItem);}
-      if(data.opPhotos)window._allOpPhotos=data.opPhotos;
+      if(data.opPhotos){
+        if(!window._allOpPhotos) window._allOpPhotos = {};
+        Object.keys(data.opPhotos).forEach(function(fbKey){
+          var val = data.opPhotos[fbKey];
+          if(val && typeof val==='string' && val.length>10) {
+            // Зберігаємо і за fbKey і відновлюємо оригінальний ключ
+            window._allOpPhotos[fbKey] = val;
+          }
+        });
+        // Також зберігаємо копії з відновленими ключами (для history.photoKey)
+        history.forEach(function(h){
+          if(h.photoKey && !window._allOpPhotos[h.photoKey]) {
+            var fbKey = _fbOpKey(h.photoKey);
+            if(window._allOpPhotos[fbKey]) window._allOpPhotos[h.photoKey] = window._allOpPhotos[fbKey];
+          }
+        });
+      }
       if(data.suppData&&typeof data.suppData==='object'){Object.keys(data.suppData).forEach(function(n){if(n)localStorage.setItem('suppData_'+n,JSON.stringify(data.suppData[n]));});}
       _restoreSuppDataFromStock();
       _loadNavPhotosFromLocations();
@@ -1638,6 +1654,8 @@ function syncToSheets(){if(syncPending)return;syncPending=true;showSyncStatus('s
       return rc;
     });
     const payload={stock:stockClean,history:histClean,categories,catGroups,locations:locClean,navPhotos:navPhotosClean,suppData:suppDataAll};
+    // opPhotos зберігаємо окремо в Firebase (можуть бути великими)
+    // вони вже записуються через _fbDb.ref('/sklad/opPhotos/') в _saveOpPhotoToSheets
     console.log('[FB] payload size ~', JSON.stringify(payload).length, 'chars');
     console.log('[FB] navPhotos keys:', Object.keys(navPhotosClean));
     _fbSave(payload);
@@ -1914,12 +1932,25 @@ function handleOpPhoto(type, input) {
 function _saveOpPhotoToSheets(type, key) {
   if(!_opPhotos[type]) return;
   if(!window._allOpPhotos) window._allOpPhotos = {};
+  // Зберігаємо base64 локально одразу
   window._allOpPhotos[key] = _opPhotos[type];
-  if(!SCRIPT_URL) return;
-  postNoCors({action:'saveOpPhoto', key:key, photo:_opPhotos[type]});
+  var _b64 = _opPhotos[type];
   _opPhotos[type] = null;
+  // Завантажуємо на Cloudinary у фоні, потім зберігаємо URL в Firebase
+  _cldUpload(_b64, 'op_'+key).then(function(url){
+    var photo = url || _b64; // якщо Cloudinary не спрацював — зберігаємо base64
+    window._allOpPhotos[key] = photo;
+    // Записуємо одразу в Firebase окремо
+    _fbWhenReady(function(){
+      var fbKey = _fbOpKey(key);
+      _fbDb.ref('/sklad/opPhotos/'+fbKey).set(photo).catch(function(e){
+        console.warn('[FB] op photo save error:', e.message);
+      });
+    });
+  });
 }
 
+function _fbOpKey(key) { return key.replace(/[.#$[\]]/g,'-'); }
 function _resetOpPhoto(type) {
   _opPhotos[type] = null;
   var prev = document.getElementById(type+'PhotoPreview');
