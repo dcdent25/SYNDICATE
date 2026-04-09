@@ -683,27 +683,28 @@ const _FB_CONFIG = {
 
 var _fbApp = null, _fbDb = null, _fbReady = false, _fbQueue = [];
 (function loadFirebase(){
-  var urls = [
-    'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js',
-    'https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js'
-  ];
-  var loaded = 0;
-  urls.forEach(function(url){
-    var s = document.createElement('script');
-    s.src = url;
-    s.onload = function(){
-      if(++loaded === urls.length){
+  // Завантажуємо послідовно: спочатку app, потім database
+  var s1 = document.createElement('script');
+  s1.src = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js';
+  s1.onload = function(){
+    var s2 = document.createElement('script');
+    s2.src = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js';
+    s2.onload = function(){
+      try {
         _fbApp = firebase.initializeApp(_FB_CONFIG);
         _fbDb = firebase.database();
         _fbReady = true;
         _fbQueue.forEach(function(fn){ fn(); });
         _fbQueue = [];
         console.log('[FB] Firebase готовий');
-      }
+        try{for(var _k in localStorage){if(_k.indexOf('item_photo_')===0){var _v=localStorage.getItem(_k);if(_v&&!_v.startsWith('http')&&!_v.startsWith('data:')){localStorage.removeItem(_k);}}}}catch(e){}
+      } catch(err) { console.warn('[FB] Помилка ініціалізації:', err); }
     };
-    s.onerror = function(){ console.warn('[FB] Помилка SDK:', url); };
-    document.head.appendChild(s);
-  });
+    s2.onerror = function(){ console.warn('[FB] Помилка database SDK'); };
+    document.head.appendChild(s2);
+  };
+  s1.onerror = function(){ console.warn('[FB] Помилка app SDK'); };
+  document.head.appendChild(s1);
 })();
 
 function _fbWhenReady(fn){ if(_fbReady) fn(); else _fbQueue.push(fn); }
@@ -712,18 +713,7 @@ async function _fbLoad(){
   return new Promise(function(resolve, reject){
     _fbWhenReady(function(){
       _fbDb.ref('/sklad').once('value').then(function(snap){
-        var data = snap.val() || {};
-        // Firebase зберігає масиви як об'єкти {0:..., 1:...} — конвертуємо назад
-        function toArr(v){
-          if(!v||typeof v!=='object'||Array.isArray(v)) return v;
-          var keys=Object.keys(v);
-          var isArr=keys.length>0&&keys.every(function(k){return /^\d+$/.test(k);});
-          if(isArr) return keys.sort(function(a,b){return+a-+b;}).map(function(k){return toArr(v[k]);});
-          var r={};keys.forEach(function(k){r[k]=toArr(v[k]);});return r;
-        }
-        data = toArr(data);
-        console.log('[FB] Завантажено: stock=',data.stock&&data.stock.length,'history=',data.history&&data.history.length);
-        resolve(data);
+        resolve(snap.val() || {});
       }).catch(function(e){ console.warn('[FB] Читання:', e); reject(e); });
     });
   });
