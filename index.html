@@ -647,7 +647,6 @@ const _CLD_PRESET = 'sklad_photos';
 async function _cldUpload(base64orFile, publicId) {
   try {
     var formData = new FormData();
-    // Конвертуємо base64 в blob якщо потрібно
     if(typeof base64orFile === 'string' && base64orFile.startsWith('data:')) {
       var arr = base64orFile.split(','), mime = arr[0].match(/:(.*?);/)[1];
       var bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
@@ -656,16 +655,18 @@ async function _cldUpload(base64orFile, publicId) {
     }
     formData.append('file', base64orFile);
     formData.append('upload_preset', _CLD_PRESET);
-    if(publicId) formData.append('public_id', publicId);
+    // publicId не передаємо — дозволяємо Cloudinary генерувати автоматично
+    // (деякі preset конфіги не дозволяють custom public_id)
     var resp = await fetch('https://api.cloudinary.com/v1_1/'+_CLD_CLOUD+'/image/upload', {
       method: 'POST', body: formData
     });
+    if(!resp.ok){ console.warn('[CLD] HTTP error:', resp.status); return null; }
     var data = await resp.json();
-    if(data.secure_url) return data.secure_url;
-    console.warn('[CLD] upload error:', data);
+    if(data.secure_url){ console.log('[CLD] OK:', data.secure_url); return data.secure_url; }
+    console.warn('[CLD] upload error:', JSON.stringify(data));
     return null;
   } catch(e) {
-    console.warn('[CLD] upload failed:', e);
+    console.warn('[CLD] upload failed:', e.message);
     return null;
   }
 }
@@ -1089,12 +1090,23 @@ function _saveItemPhotoLocal(id,photo){try{localStorage.setItem('item_photo_'+id
   renderAll();
   toast('Фото оновлено, завантажую...');
   // Завантажуємо на Cloudinary у фоні
-  _cldUpload(compressed, 'item_'+i.id).then(function(url){
-    if(url){ i.photo=url; try{localStorage.setItem('item_photo_'+i.id,url);}catch(le){} renderAll(); toast('✓ Фото збережено'); }
+  _cldUpload(compressed).then(function(url){
+    if(url){
+      i.photo=url;
+      try{localStorage.setItem('item_photo_'+i.id,url);}catch(le){}
+      renderAll();
+      toast('✓ Фото збережено в хмарі');
+    } else {
+      // Cloudinary недоступний — зберігаємо base64 в Firebase напряму
+      toast('✓ Фото збережено локально');
+    }
     forceSyncToSheets();
   });
 }};reader.readAsDataURL(file);e.target.value='';}
-function handleNewImgUpload(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=async ev=>{const compressed=await compressImage(ev.target.result,800,800,0.75);newItemPhoto=compressed;const box=document.getElementById('newImgBox');box.innerHTML='<img src="'+(compressed)+'" style="width:100%;height:100%;object-fit:cover">';box.style.border='1.5px solid var(--blue)';};reader.readAsDataURL(file);e.target.value='';}
+function handleNewImgUpload(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=async ev=>{const compressed=await compressImage(ev.target.result,800,800,0.75);newItemPhoto=compressed;const box=document.getElementById('newImgBox');box.innerHTML='<img src="'+(compressed)+'" style="width:100%;height:100%;object-fit:cover">';box.style.border='1.5px solid var(--blue)';
+  // Завантажуємо на Cloudinary у фоні
+  _cldUpload(compressed).then(function(url){ if(url) newItemPhoto=url; });
+};reader.readAsDataURL(file);e.target.value='';}
 function compressImage(dataUrl,maxW,maxH,quality){return new Promise(resolve=>{const img=new Image();img.onload=()=>{let w=img.width,h=img.height;if(w>maxW){h=Math.round(h*maxW/w);w=maxW;}if(h>maxH){w=Math.round(w*maxH/h);h=maxH;}const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);resolve(canvas.toDataURL('image/jpeg',quality||0.75));};img.src=dataUrl;});}
 function doIn(){const id=+document.getElementById('inItem').value;const qty=+document.getElementById('inQty').value;const pr=parseFloat(document.getElementById('inPrice').value);const sup=document.getElementById('inSupp').value.trim()||'—';if(!qty||qty<1){toast('⚠ Введіть кількість');return;}const i=stock.find(x=>x.id===id);if(!i)return;i.stockQty=(i.stockQty||0)+qty;if(pr>0)i.price=pr;if(sup!=='—')i.sup=sup;const now=new Date().toISOString();const inCost = Math.round(qty * (pr > 0 ? pr : i.price||0) * 100) / 100;
 const inPhotoKey='op_in_'+now.replace(/[:.]/g,'_');const inManager=document.getElementById('inManager').value.trim();const inInvoice=document.getElementById('inInvoice').value.trim();const inNote2=document.getElementById('inNote').value.trim();history.unshift({type:'in',name:i.name,qty,note:'📦 Поповнення'+(sup!=='—'?' — '+sup:''),time:now,cost:inCost,unit:i.unit||'шт',photoKey:_opPhotos['in']?inPhotoKey:null,sup:sup,manager:inManager,invoice:inInvoice,comment:inNote2,price:pr>0?pr:i.price||0});calcItem(i);_saveOpPhotoToSheets('in',inPhotoKey);closeModal('in');_resetOpPhoto('in');document.getElementById('inPreview').style.display='none';document.getElementById('inInvoice').value='';document.getElementById('inManager').value='';document.getElementById('inNote').value='';renderAll();renderHistory();toast('Прийнято '+qty+' шт. — '+i.name);forceSyncToSheets();}
@@ -1544,12 +1556,11 @@ function syncToSheets(){if(syncPending)return;syncPending=true;showSyncStatus('s
     _embedSuppDataInStock();
     const stockClean=stock.map(i=>{const c={...i};delete c.photo;delete c.mapPhotos;delete c.mapPhoto;delete c.mapPhoto2;return c;});
     const suppDataAll={};for(var k in localStorage){if(k.indexOf('suppData_')===0){var sn=k.replace('suppData_','');try{suppDataAll[sn]=JSON.parse(localStorage.getItem(k));}catch(e){}}}
-    // navPhotos — Cloudinary URLs (маленькі), зберігаємо у Firebase
+    // navPhotos — зберігаємо URLs (Cloudinary) і base64 (резервно)
     var navPhotosClean={};
     Object.keys(locationPhotos).forEach(function(k){
       var v=locationPhotos[k];
-      // Зберігаємо тільки URL (не base64)
-      if(v&&(v.startsWith('http')||v.length<500)) navPhotosClean[k]=v;
+      if(v) navPhotosClean[k]=v; // зберігаємо і URL і base64
     });
     const payload={stock:stockClean,history:history.slice(0,200),categories,catGroups,locations,navPhotos:navPhotosClean,suppData:suppDataAll};
     _fbSave(payload);
@@ -3473,7 +3484,7 @@ function nav2HandlePhoto(e) {
       locationPhotos[key] = _navB64;
       // Завантажуємо на Cloudinary у фоні
       var _navKey = key.replace(/::/g,'__');
-      _cldUpload(_navB64, 'nav_'+_navKey).then(function(url){
+      _cldUpload(_navB64).then(function(url){
         if(url){ locationPhotos[key]=url; }
         forceSyncToSheets();
       });
@@ -3980,4 +3991,15 @@ function openActWritePicker() {
   ov.appendChild(box);
   document.body.appendChild(ov);
 }
+
+// ── DEBUG: тест Cloudinary (викликати з консолі: testCldUpload()) ──
+window.testCldUpload = async function(){
+  console.log('[CLD] Тест завантаження...');
+  var canvas=document.createElement('canvas');canvas.width=10;canvas.height=10;
+  var ctx=canvas.getContext('2d');ctx.fillStyle='#ff0000';ctx.fillRect(0,0,10,10);
+  var b64=canvas.toDataURL('image/jpeg',0.8);
+  var url=await _cldUpload(b64);
+  if(url){console.log('[CLD] ✓ Успішно! URL:',url);alert('Cloudinary працює! '+url);}
+  else{console.warn('[CLD] ✗ Помилка');alert('Cloudinary НЕ працює. Перевірте консоль (F12)');}
+};
 </script></body></html>
