@@ -3818,7 +3818,7 @@ function nav2PhotoZoom(key) {
 function nav2PhotoForKey(key) {
   _nav2PhotoTargetKey = key;
   var inp = document.getElementById('nav2PhotoInput');
-  if (inp) inp.click();
+  if (inp) { inp.value = ''; inp.click(); }
 }
 function nav2OpenPhoto() { nav2PhotoForKey(''); }
 function nav2HandlePhoto(e) {
@@ -3843,10 +3843,11 @@ function nav2HandlePhoto(e) {
       try { localStorage.setItem('nav_photo_'+key, _navB64); } catch(le) {}
       nav2Render();
       toast('Фото оновлено, завантажую...');
+      e.target.value = '';
       // 2) Cloudinary у фоні — тільки після успіху синхронізуємо з Firebase
       // (як handleImgUpload для товарів: fresh.photo = url → forceSyncToSheets)
       var _navKey = key.replace(/::/g,'__');
-      _cldUpload(_navB64, 'nav_'+_navKey).then(function(url){
+      _cldUpload(_navB64, 'nav_'+_navKey+'_'+Date.now()).then(function(url){
         console.log('[NAV PHOTO] Cloudinary result:', url ? 'OK: '+url.substring(0,60) : 'FAILED');
         if(url){
           locationPhotos[key] = url;
@@ -3863,7 +3864,6 @@ function nav2HandlePhoto(e) {
     img.src = ev.target.result;
   };
   reader.readAsDataURL(file);
-  e.target.value = '';
 }
 function _fbSaveNavPhoto(key, photo) {
   _fbWhenReady(function(){
