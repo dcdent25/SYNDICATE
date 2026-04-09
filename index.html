@@ -859,7 +859,7 @@ function openHistoryDetail(idx) {
 }
 
 function renderHistory(){const hw=document.getElementById('histWrap');if(!hw)return;if(!history.length){hw.innerHTML='<div style="padding:24px;text-align:center;color:var(--sub);font-family:var(--font-d)">Операцій ще немає</div>';return;}hw.innerHTML=history.slice(0,10).map(function(h,idx){const photo=h.photoKey&&window._allOpPhotos&&window._allOpPhotos[h.photoKey]?window._allOpPhotos[h.photoKey]:null;const dotColor=h.type==='in'?'in':h.type==='give'?'in':'out';return'<div class="h-row" style="flex-direction:column;align-items:stretch;gap:8px;cursor:pointer" onclick="openHistoryDetail('+idx+')"><div style="display:flex;align-items:center;gap:12px"><div class="h-dot '+dotColor+'">'+(h.type==='in'?'<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z"/></svg>':h.type==='give'?'<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>':'<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z"/></svg>')+'</div><div class="h-info"><div class="h-name">'+(h.name)+'</div><div class="h-note">'+(h.note||'')+'</div></div><div style="text-align:right;flex-shrink:0"><div class="h-qty '+(dotColor)+'">'+(h.type==='in'?'+':'−')+(h.qty)+'</div>'+(h.price?'<div style="font-size:11px;font-weight:600;color:var(--amber)">'+h.price.toLocaleString('uk',{minimumFractionDigits:2})+' ₴/од.</div>':'')+'</div><div class="h-time">'+(fmtTime?fmtTime(h.time):h.time||'')+'</div></div>'+'</div>';}).join('');}
-function renderAll(){_restorePhotosFromLocal();const rows=getFiltered();renderTable(rows);renderCards(rows);renderMetrics();renderCategories();setTimeout(bindTouchGlow,0);}
+function renderAll(){const rows=getFiltered();renderTable(rows);renderCards(rows);renderMetrics();renderCategories();setTimeout(bindTouchGlow,0);}
 function setFilter(f,el){activeFilter=f;document.querySelectorAll('.fchip').forEach(c=>c.classList.remove('active'));if(el)el.classList.add('active');const sel=document.getElementById('mobCatSelect');if(sel)sel.value=f;renderAll();}
 function setFilterFromSelect(f){activeFilter=f;document.querySelectorAll('.fchip').forEach(c=>{c.classList.toggle('active',c.textContent.trim()===(f==='all'?'Всі':f));});renderAll();}
 var _catGroupFilter='all';
@@ -1096,8 +1096,16 @@ function _saveItemPhotoLocal(id,photo){try{localStorage.setItem('item_photo_'+id
   renderAll();
   toast('Фото оновлено, завантажую...');
   // Завантажуємо на Cloudinary у фоні
-  _cldUpload(compressed, 'item_'+i.id).then(function(url){
-    if(url){ i.photo=url; try{localStorage.setItem('item_photo_'+i.id,url);}catch(le){} renderAll(); toast('✓ Фото збережено'); }
+  var _uploadedItemId = i.id;
+  _cldUpload(compressed, 'item_'+_uploadedItemId).then(function(url){
+    if(url){
+      // Знаходимо елемент знову — stock міг бути перезавантажений під час upload
+      var fresh = stock.find(function(x){ return x.id === _uploadedItemId; });
+      if(fresh){ fresh.photo = url; }
+      try{ localStorage.setItem('item_photo_'+_uploadedItemId, url); }catch(le){}
+      renderAll();
+      toast('✓ Фото збережено');
+    }
     forceSyncToSheets();
   });
 }};reader.readAsDataURL(file);e.target.value='';}
@@ -1240,98 +1248,6 @@ document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{
 function updateFAB(){}
 updateFAB();window.addEventListener('resize',updateFAB);
 function hidePreloader(){const pre=document.getElementById('preloader');if(!pre)return;const st=document.getElementById('preStatus');if(st){st.style.color='var(--green)';st.textContent='Готово ✓';}setTimeout(()=>pre.classList.add('hidden'),600);}
-function exportToExcel() {
-  try {
-    var wb = XLSX.utils.book_new();
-
-    // ── Аркуш 1: Матеріали ──
-    var stockRows = stock.map(function(i) {
-      return {
-        'ID':                         i.id,
-        'Назва матеріалу':            i.name,
-        'Категорія':                  i.cat || '',
-        'Тип матеріалу':              i.matType || 'Загальний',
-        'Кількість матеріалу':        i.stockQty != null ? i.stockQty : i.qty,
-        'Мінімум':                    i.min || 1,
-        'Одиниця виміру матеріалу':   i.unit || 'шт',
-        'Ціна за одиницю':            i.price || 0,
-        'Ринкова ціна матеріалу':     i.marketPrice || i.price || 0,
-        'Контрагент':                 i.sup || '—',
-        'Приміщення':                 i.room || '',
-        'Комірка':                    i.storage || '',
-        'Контейнер':                  i.con || '',
-        'Кількість порцій':           i.portions || 0,
-        'Склад порції':               i.portionComp || 0,
-        'Одиниця порції':             i.portionUnit || '',
-        'Ціна порції':                i.portionPrice || 0,
-        'Достатньо від':              i.threshOk != null ? i.threshOk : (i.min || 1),
-        'Мало від':                   i.threshMid != null ? i.threshMid : Math.ceil((i.min||1)*0.3),
-        'Посилання на веб сайт':      i.link || '',
-        'Коментар':                   i.comment || '',
-        'Фото URL':                   (i.photo && i.photo.startsWith('http')) ? i.photo : ''
-      };
-    });
-    var ws1 = XLSX.utils.json_to_sheet(stockRows);
-    // Ширина колонок
-    ws1['!cols'] = [
-      {wch:6},{wch:35},{wch:18},{wch:16},{wch:12},{wch:10},{wch:12},
-      {wch:14},{wch:16},{wch:22},{wch:14},{wch:12},{wch:14},
-      {wch:14},{wch:12},{wch:14},{wch:12},
-      {wch:14},{wch:10},{wch:30},{wch:25},{wch:50}
-    ];
-    XLSX.utils.book_append_sheet(wb, ws1, 'Матеріали');
-
-    // ── Аркуш 2: Історія операцій ──
-    var histRows = history.map(function(h) {
-      var typeLabel = h.type === 'in' ? 'Поповнення' : h.type === 'give' ? 'Видача' : 'Списання';
-      return {
-        'Тип операції':   typeLabel,
-        'Назва':          h.name || '',
-        'Кількість':      h.qty || 0,
-        'Одиниця':        h.unit || 'шт',
-        'Ціна/од':        h.price || 0,
-        'Сума':           h.cost || 0,
-        'Постачальник':   h.sup || '',
-        'Менеджер':       h.manager || '',
-        'Накладна №':     h.invoice || '',
-        'Акт видачі':     h.actGive || '',
-        'Акт списання':   h.actWrite || '',
-        'Приміщення':     h.room || '',
-        'Лікар':          h.doctor || '',
-        'Отримувач':      h.recipient || '',
-        'Примітка':       h.comment || h.note || '',
-        'Дата/час':       h.time ? new Date(h.time).toLocaleString('uk') : ''
-      };
-    });
-    var ws2 = XLSX.utils.json_to_sheet(histRows.length ? histRows : [{'Тип операції':'(порожньо)'}]);
-    ws2['!cols'] = [
-      {wch:14},{wch:30},{wch:10},{wch:10},{wch:10},{wch:12},
-      {wch:22},{wch:18},{wch:14},{wch:14},{wch:14},
-      {wch:14},{wch:18},{wch:18},{wch:30},{wch:20}
-    ];
-    XLSX.utils.book_append_sheet(wb, ws2, 'Історія');
-
-    // ── Аркуш 3: Категорії ──
-    var catRows = categories.map(function(c) {
-      return { 'Категорія': c, 'Група': catGroups[c] || 'general' };
-    });
-    var ws3 = XLSX.utils.json_to_sheet(catRows.length ? catRows : [{'Категорія':'(порожньо)'}]);
-    ws3['!cols'] = [{wch:25},{wch:12}];
-    XLSX.utils.book_append_sheet(wb, ws3, 'Категорії');
-
-    // Ім'я файлу з датою
-    var now = new Date();
-    var dateStr = now.getFullYear() + '-' +
-      String(now.getMonth()+1).padStart(2,'0') + '-' +
-      String(now.getDate()).padStart(2,'0');
-    XLSX.writeFile(wb, 'DC_DENT_Склад_' + dateStr + '.xlsx');
-    toast('✓ Експорт завершено');
-  } catch(err) {
-    toast('⚠ Помилка експорту: ' + err.message);
-    console.error(err);
-  }
-}
-
 function importFromExcel(e) {
   var file = e.target.files[0];
   if(!file) return;
@@ -1340,123 +1256,51 @@ function importFromExcel(e) {
   reader.onload = function(ev) {
     try {
       var wb = XLSX.read(ev.target.result, {type:'binary'});
-
-      var added = 0, updated = 0;
-
-      // ── Імпорт категорій (якщо є аркуш "Категорії") ──
-      var catSheet = wb.Sheets['Категорії'];
-      if(catSheet) {
-        var catRows = XLSX.utils.sheet_to_json(catSheet, {defval:''});
-        catRows.forEach(function(r) {
-          var cname = String(r['Категорія'] || '').trim();
-          if(cname && !categories.includes(cname)) {
-            categories.push(cname);
-            catGroups[cname] = String(r['Група'] || 'general').trim();
-          }
-        });
-      }
-
-      // ── Імпорт матеріалів (аркуш "Матеріали" або перший) ──
       var sheetName = wb.SheetNames.find(function(n){ return n==='Матеріали'; }) || wb.SheetNames[0];
       var ws = wb.Sheets[sheetName];
       var rows = XLSX.utils.sheet_to_json(ws, {defval:''});
       if(!rows.length){ toast('⚠ Файл порожній'); return; }
 
-      var maxId = stock.length ? Math.max.apply(null, stock.map(function(x){return x.id;})) : 0;
+      var imported = 0;
+      var maxId = stock.length ? Math.max(...stock.map(x=>x.id)) : 0;
 
       rows.forEach(function(row) {
         var name = String(row['Назва матеріалу'] || row['Назва'] || row['name'] || '').trim();
         if(!name) return;
+        maxId++;
+        var qty    = parseFloat(row['Кількість матеріалу'] || row['Кількість'] || row['qty'] || 0) || 0;
+        var min    = parseFloat(row['Мінімум'] || row['min'] || 5) || 5;
+        var price  = parseFloat(row['Ціна за одиницю'] || row['Ціна'] || row['price'] || 0) || 0;
+        var mPrice = parseFloat(row['Ринкова ціна матеріалу'] || row['marketPrice'] || price) || price;
+        var sup    = String(row['Контрагент'] || row['Постачальник'] || '—').trim() || '—';
+        var link   = String(row['Посилання на веб сайт'] || row['link'] || '').trim();
+        var unit   = String(row['Одиниця виміру матеріалу'] || row['Одиниця'] || row['unit'] || 'шт').trim() || 'шт';
+        var portions = parseFloat(row['Кількість порцій'] || row['portions'] || 0) || 0;
+        var portionComp = parseFloat(row['Склад порції'] || row['portionComp'] || 1) || 1;
+        var portionUnit = String(row['Одиниця виміру'] || unit).trim() || unit;
+        var comment = String(row['Коментар'] || row['comment'] || '').trim();
+        var room   = String(row['Приміщення'] || row['room'] || '').trim();
+        var cell   = String(row['Комірка'] || row['storage'] || '').trim();
+        var con    = String(row['Контейнер'] || row['con'] || '').trim();
+        var cat    = 'Загальний';
+        var threshOk  = parseInt(row['Достатньо від'] || min) || min;
+        var threshMid = parseInt(row['Мало від'] || Math.ceil(min*0.3)) || Math.ceil(min*0.3);
+        var portionPrice = price > 0 && portionComp > 0 ? Math.round(price * portionComp * 100) / 100 : 0;
 
-        var qty        = parseFloat(row['Кількість матеріалу'] || row['Кількість'] || row['qty']          || 0) || 0;
-        var min        = parseFloat(row['Мінімум']             || row['min']        || 5)                  || 5;
-        var price      = parseFloat(row['Ціна за одиницю']     || row['Ціна']       || row['price']        || 0) || 0;
-        var mPrice     = parseFloat(row['Ринкова ціна матеріалу'] || row['marketPrice'] || price)           || price;
-        var sup        = String(row['Контрагент']   || row['Постачальник'] || '—').trim() || '—';
-        var link       = String(row['Посилання на веб сайт'] || row['link'] || '').trim();
-        var unit       = String(row['Одиниця виміру матеріалу'] || row['Одиниця'] || row['unit'] || 'шт').trim() || 'шт';
-        var portions   = parseFloat(row['Кількість порцій'] || row['portions'] || 0) || 0;
-        var portionComp = parseFloat(row['Склад порції']    || row['portionComp'] || 1) || 1;
-        var portionUnit = String(row['Одиниця порції'] || row['portionUnit'] || unit).trim() || unit;
-        var portionPrice = parseFloat(row['Ціна порції'] || row['portionPrice'] || 0) || 0;
-        var comment    = String(row['Коментар'] || row['comment'] || '').trim();
-        var room       = String(row['Приміщення'] || row['room'] || '').trim();
-        var cell       = String(row['Комірка']    || row['storage'] || '').trim();
-        var con        = String(row['Контейнер']  || row['con'] || '').trim();
-        var cat        = String(row['Категорія']  || row['cat'] || 'Загальний').trim();
-        var matType    = String(row['Тип матеріалу'] || row['matType'] || 'Загальний').trim();
-        var photoUrl   = String(row['Фото URL']   || row['photo'] || '').trim();
-        var threshOk   = parseInt(row['Достатньо від'] || min)                   || min;
-        var threshMid  = parseInt(row['Мало від']      || Math.ceil(min*0.3))    || Math.ceil(min*0.3);
-        var importedId = parseInt(row['ID'] || 0) || 0;
-
-        // Додаємо категорію якщо немає
-        if(cat && !categories.includes(cat)) {
-          categories.push(cat);
-          catGroups[cat] = matType === 'Основний' ? 'dental' : 'general';
-        }
-
-        // Шукаємо існуючу позицію: спочатку за ID, потім за назвою
-        var existing = null;
-        if(importedId) existing = stock.find(function(x){ return x.id === importedId; });
-        if(!existing)  existing = stock.find(function(x){ return x.name.trim().toLowerCase() === name.toLowerCase(); });
-
-        if(existing) {
-          // Оновлюємо існуючу позицію
-          existing.name        = name;
-          existing.cat         = cat;
-          existing.matType     = matType;
-          if(qty > 0) { existing.qty = qty; existing.stockQty = qty; }
-          existing.min         = min;
-          if(price > 0) existing.price = price;
-          if(mPrice > 0) existing.marketPrice = mPrice;
-          existing.sup         = sup;
-          if(room) existing.room = room;
-          if(cell) existing.storage = cell;
-          if(con)  existing.con = con;
-          if(link) existing.link = link;
-          if(comment) existing.comment = comment;
-          existing.unit        = unit;
-          if(portions > 0) existing.portions = portions;
-          if(portionComp > 0) existing.portionComp = portionComp;
-          if(portionUnit) existing.portionUnit = portionUnit;
-          if(portionPrice > 0) existing.portionPrice = portionPrice;
-          existing.threshOk    = threshOk;
-          existing.threshMid   = threshMid;
-          // Фото — тільки якщо є URL і ще немає фото
-          if(photoUrl && photoUrl.startsWith('http') && !existing.photo) {
-            existing.photo = photoUrl;
-            try{ localStorage.setItem('item_photo_'+existing.id, photoUrl); }catch(le){}
-          }
-          calcItem(existing);
-          updated++;
-        } else {
-          // Створюємо нову позицію
-          maxId++;
-          var newId = (importedId && !stock.find(function(x){return x.id===importedId;})) ? importedId : maxId;
-          if(newId > maxId) maxId = newId;
-          var photo = (photoUrl && photoUrl.startsWith('http')) ? photoUrl : null;
-          var newItm = {
-            id: newId, name, cat, matType,
-            qty, stockQty: qty, min, price,
-            marketPrice: mPrice || price,
-            sup, storage: cell, room, con,
-            comment, unit, link, portions, portionComp, portionUnit, portionPrice,
-            threshOk, threshMid, photo: photo || null
-          };
-          if(photo) { try{ localStorage.setItem('item_photo_'+newId, photo); }catch(le){} }
-          calcItem(newItm);
-          stock.push(newItm);
-          added++;
-        }
+        var newItm = {id:maxId, name, cat, qty, stockQty:0, min, price,
+          marketPrice:mPrice||price, sup, storage:cell, room, con,
+          comment, unit, link, portions, portionComp, portionUnit,
+          portionPrice, threshOk, threshMid};
+        calcItem(newItm);
+        stock.push(newItm);
+        imported++;
       });
 
       renderAll(); renderHistory();
       forceSyncToSheets();
-      toast('\u2713 Імпорт: додано ' + added + ', оновлено ' + updated + ' позицій');
+      toast('\u2713 \u0406\u043c\u043f\u043e\u0440\u0442\u043e\u0432\u0430\u043d\u043e ' + imported + ' \u043f\u043e\u0437\u0438\u0446\u0456\u0439 \u0437 "' + sheetName + '"');
     } catch(err) {
-      toast('\u26a0 Помилка імпорту: ' + err.message);
-      console.error(err);
+      toast('\u26a0 \u041f\u043e\u043c\u0438\u043b\u043a\u0430: ' + err.message);
     }
   };
   reader.readAsBinaryString(file);
@@ -1591,7 +1435,7 @@ function _updateNewCatSelect(){
   if(!cats.length)cats=categories.slice();
   sel.innerHTML=cats.map(function(c){return'<option value="'+c+'"'+(c===cur?' selected':'')+'>'+c+'</option>';}).join('');
 }
-function saveLocalCache(){try{const sc=stock.map(function(i){const c=Object.assign({},i);delete c.photo;delete c.mapPhotos;delete c.mapPhoto;delete c.mapPhoto2;return c;});localStorage.setItem('ds_cache',JSON.stringify({stock:sc,history:history,categories:categories,catGroups:catGroups,locations:locations}));}catch(e){console.warn('[cache]',e);}}function loadLocalCache(){try{const r=localStorage.getItem('ds_cache');return r?JSON.parse(r):null;}catch(e){return null;}}function _saveItemPhotoLocal(id,photo){try{localStorage.setItem('item_photo_'+id,photo);}catch(e){console.warn('[photo save]',e);}}function _restorePhotosFromLocal(){try{stock.forEach(function(x){if(!x.photo){var p=localStorage.getItem('item_photo_'+x.id);if(p)x.photo=p;}});}catch(e){}} function jsonp(url,ms){ms=ms||12000;return new Promise((resolve,reject)=>{const cb='_dscb_'+Date.now()+'_'+Math.random().toString(36).slice(2);const s=document.createElement('script');let done=false;const timer=setTimeout(()=>{if(done)return;done=true;delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);reject(new Error('JSONP timeout'));},ms);window[cb]=data=>{if(done)return;done=true;clearTimeout(timer);delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);resolve(data);};s.onerror=()=>{if(done)return;done=true;clearTimeout(timer);delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);reject(new Error('JSONP error'));};s.src=SCRIPT_URL+(SCRIPT_URL.includes('?')?'&':'?')+'callback='+cb+'&t='+Date.now();document.head.appendChild(s);});}
+function saveLocalCache(){try{const sc=stock.map(function(i){const c=Object.assign({},i);if(c.photo&&!c.photo.startsWith('http'))delete c.photo;if(c.mapPhotos)c.mapPhotos=c.mapPhotos.filter(function(p){return p&&p.startsWith('http');});if(c.mapPhoto&&!c.mapPhoto.startsWith('http'))delete c.mapPhoto;delete c.mapPhoto2;return c;});localStorage.setItem('ds_cache',JSON.stringify({stock:sc,history:history,categories:categories,catGroups:catGroups,locations:locations}));}catch(e){console.warn('[cache]',e);}}function loadLocalCache(){try{const r=localStorage.getItem('ds_cache');return r?JSON.parse(r):null;}catch(e){return null;}}function _saveItemPhotoLocal(id,photo){try{localStorage.setItem('item_photo_'+id,photo);}catch(e){console.warn('[photo save]',e);}}function _restorePhotosFromLocal(){try{stock.forEach(function(x){var p=localStorage.getItem('item_photo_'+x.id);if(p){if(!x.photo||(p.startsWith('http')&&(!x.photo||!x.photo.startsWith('http')))){x.photo=p;}}});}catch(e){}} function jsonp(url,ms){ms=ms||12000;return new Promise((resolve,reject)=>{const cb='_dscb_'+Date.now()+'_'+Math.random().toString(36).slice(2);const s=document.createElement('script');let done=false;const timer=setTimeout(()=>{if(done)return;done=true;delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);reject(new Error('JSONP timeout'));},ms);window[cb]=data=>{if(done)return;done=true;clearTimeout(timer);delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);resolve(data);};s.onerror=()=>{if(done)return;done=true;clearTimeout(timer);delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);reject(new Error('JSONP error'));};s.src=SCRIPT_URL+(SCRIPT_URL.includes('?')?'&':'?')+'callback='+cb+'&t='+Date.now();document.head.appendChild(s);});}
 function postNoCors(payload){
   return new Promise(resolve=>{
     try{
@@ -1728,7 +1572,11 @@ function syncToSheets(){if(syncPending)return;syncPending=true;showSyncStatus('s
     // Видаляємо ВСІ base64 зображення з stock
     const stockClean=stock.map(i=>{
       const c={...i};
-      delete c.photo; delete c.mapPhotos; delete c.mapPhoto; delete c.mapPhoto2;
+      // Зберігаємо photo тільки якщо це Cloudinary URL, base64 не пишемо у Firebase
+      if(c.photo&&!c.photo.startsWith('http')) delete c.photo;
+      if(c.mapPhotos) c.mapPhotos=c.mapPhotos.filter(function(p){return p&&p.startsWith('http');});
+      if(c.mapPhoto&&!c.mapPhoto.startsWith('http')) delete c.mapPhoto;
+      delete c.mapPhoto2;
       return c;
     });
     // Видаляємо base64 з history (фото операцій)
@@ -2029,7 +1877,11 @@ function handleOpPhoto(type, input) {
 }
 
 function _saveOpPhotoToSheets(type, key) {
-  if(!_opPhotos[type] || !SCRIPT_URL) return;
+  if(!_opPhotos[type]) return;
+  // Зберігаємо фото локально щоб воно відображалось в поточній сесії
+  if(!window._allOpPhotos) window._allOpPhotos = {};
+  window._allOpPhotos[key] = _opPhotos[type];
+  if(!SCRIPT_URL) return;
   postNoCors({action:'saveOpPhoto', key:key, photo:_opPhotos[type]});
   _opPhotos[type] = null;
 }
@@ -2756,7 +2608,6 @@ function nav2PhotoFullscreen(src) {
   document.body.appendChild(ov);
 }
 function nav2Render() {
-  _restorePhotosFromLocal();
   var body = document.getElementById('nav2-body');
   var bc   = document.getElementById('nav2-breadcrumb');
   var inp  = document.getElementById('nav2-inp');
