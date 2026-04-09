@@ -1520,7 +1520,15 @@ async function loadFromSheets(){
       if(data.opPhotos)window._allOpPhotos=data.opPhotos;
       if(data.suppData&&typeof data.suppData==='object'){Object.keys(data.suppData).forEach(function(n){if(n)localStorage.setItem('suppData_'+n,JSON.stringify(data.suppData[n]));});}
       _restoreSuppDataFromStock();
-      _loadNavPhotosFromLocations();if(data.navPhotos)Object.assign(locationPhotos,data.navPhotos);_restorePhotosFromLocal();saveLocalCache();showSyncStatus('ok');setPreloaderStatus('Синхронізовано ✓');
+      _loadNavPhotosFromLocations();
+      if(data.navPhotos){
+        // Ключі в Firebase зберігаються з __ замість :: (через обмеження Firebase)
+        Object.keys(data.navPhotos).forEach(function(fbKey){
+          var key = fbKey.replace(/__/g, '::');
+          if(data.navPhotos[fbKey]) locationPhotos[key] = data.navPhotos[fbKey];
+        });
+      }
+      _restorePhotosFromLocal();saveLocalCache();showSyncStatus('ok');setPreloaderStatus('Синхронізовано ✓');
     }else{showSyncStatus('ok');setPreloaderStatus('Готово');}
   }catch(e){
     console.warn('[FB] load error:',e);
@@ -1588,11 +1596,15 @@ function syncToSheets(){if(syncPending)return;syncPending=true;showSyncStatus('s
     for(var k in localStorage){
       if(k.indexOf('suppData_')===0){var sn=k.replace('suppData_','');try{suppDataAll[sn]=JSON.parse(localStorage.getItem(k));}catch(e){}}
     }
-    // navPhotos — тільки Cloudinary URLs (не base64)
+    // navPhotos — всі фото (base64 тимчасово, Cloudinary URL постійно)
+    // Ключі екрануємо для Firebase: :: -> __
     var navPhotosClean={};
     Object.keys(locationPhotos).forEach(function(k){
       var v=locationPhotos[k];
-      if(v&&typeof v==='string'&&v.startsWith('http')) navPhotosClean[k]=v;
+      if(v&&typeof v==='string'&&v.length>0){
+        var fbKey=k.replace(/[.#$[\]/]/g,'__');
+        navPhotosClean[fbKey]=v;
+      }
     });
     // locations — видаляємо base64 фото
     var locClean=locations.map(function(r){
@@ -3531,13 +3543,17 @@ function nav2HandlePhoto(e) {
       try { localStorage.setItem('nav_photo_'+key, _navB64); } catch(le) {}
       nav2Render();
       toast('Фото оновлено, завантажую...');
-      // 2) Cloudinary у фоні — замінюємо на URL коли готово
+      // 2) Одразу зберігаємо base64 в Firebase щоб інші пристрої бачили
+      _fbSaveNavPhoto(key, _navB64);
+      // 3) Cloudinary у фоні — замінюємо на URL коли готово
       var _navKey = key.replace(/::/g,'__');
       _cldUpload(_navB64, 'nav_'+_navKey).then(function(url){
         if(url){
           locationPhotos[key] = url;
           _saveNavPhotoToLocations(key, url);
           try { localStorage.setItem('nav_photo_'+key, url); } catch(le) {}
+          // Замінюємо base64 на Cloudinary URL в Firebase
+          _fbSaveNavPhoto(key, url);
           nav2Render();
           toast('\u2713 Фото збережено');
         }
@@ -3549,6 +3565,16 @@ function nav2HandlePhoto(e) {
   };
   reader.readAsDataURL(file);
   e.target.value = '';
+}
+function _fbSaveNavPhoto(key, photo) {
+  _fbWhenReady(function(){
+    // Зберігаємо фото окремо по шляху /sklad/navPhotos/key
+    // Ключ екрануємо — Firebase не дозволяє . # $ [ ] /
+    var fbKey = key.replace(/[.#$[\]/]/g, '__');
+    _fbDb.ref('/sklad/navPhotos/'+fbKey).set(photo).catch(function(e){
+      console.warn('[FB] nav photo save error:', e.message);
+    });
+  });
 }
 function _saveNavPhotoToLocations(key, photo) {
   if (key === '__global__') return;
