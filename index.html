@@ -1886,8 +1886,19 @@ function syncToSheets(){if(syncPending)return;syncPending=true;showSyncStatus('s
       return rc;
     });
     const payload={stock:stockClean,history:histClean,categories,catGroups,locations:locClean,navPhotos:navPhotosClean,suppData:suppDataAll};
-    // opPhotos зберігаємо окремо в Firebase (можуть бути великими)
-    // вони вже записуються через _fbDb.ref('/sklad/opPhotos/') в _saveOpPhotoToSheets
+    // Включаємо opPhotos в основний payload щоб не втрачались при перезапису /sklad
+    if(window._allOpPhotos && Object.keys(window._allOpPhotos).length > 0) {
+      var opPhotosClean = {};
+      Object.keys(window._allOpPhotos).forEach(function(k) {
+        var v = window._allOpPhotos[k];
+        // Зберігаємо тільки HTTP URL (не base64)
+        if(v && typeof v === 'string' && v.startsWith('http')) {
+          var fbKey = _fbOpKey(k);
+          opPhotosClean[fbKey] = v;
+        }
+      });
+      if(Object.keys(opPhotosClean).length > 0) payload.opPhotos = opPhotosClean;
+    }
     console.log('[FB] payload size ~', JSON.stringify(payload).length, 'chars');
     console.log('[FB] navPhotos keys:', Object.keys(navPhotosClean));
     _fbSave(payload);
