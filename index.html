@@ -1526,14 +1526,11 @@ async function loadFromSheets(){
       _restoreSuppDataFromStock();
       _loadNavPhotosFromLocations();
       if(data.navPhotos){
-        var _navDirty = false;
         Object.keys(data.navPhotos).forEach(function(fbKey){
           var val = data.navPhotos[fbKey];
-          // Фільтруємо зіпсовані значення
           if(val && typeof val==='string' && val.length>10 && !val.includes("'+photo+'")) {
             locationPhotos[fbKey] = val;
-          } else {
-            _navDirty = true; // є зіпсовані — треба перезберегти
+            _fbNavPhotos[fbKey] = val; // зберігаємо окремо — не стирається при _loadNavPhotosFromLocations
           }
         });
       }
@@ -2415,6 +2412,7 @@ function _esc(str) {
 
 var NAV2 = { level: 0, room: '', cell: '', roomIdx: -1 };
 var locationPhotos = {}; // key: 'room::cell::con' or 'room' or 'room::cell'
+var _fbNavPhotos = {}; // фото з Firebase — не стираються при _loadNavPhotosFromLocations
 // level: 0=приміщення, 1=комірки, 2=контейнери
 
 function openNavModal() {
@@ -2675,9 +2673,13 @@ function nav2Render() {
       var isActive = fieldType === activeLevel;
       var border = isActive ? 'var(--blue)' : 'var(--border)';
       var s = '<div id="'+cardId+'" style="background:var(--surface2);border:1.5px solid '+border+';border-radius:12px;overflow:hidden;transition:border-color .15s">';
-      /* Фото — клік активує цей рівень */
-      var navFn = fieldType==='room' ? 'nav2SetActiveLevel(\'room\')' : fieldType==='cell' ? 'nav2SetActiveLevel(\'cell\')' : 'nav2SetActiveLevel(\'con\')';
-      s += '<div onclick="'+navFn+'" style="width:100%;aspect-ratio:16/9;background:var(--bg);position:relative;overflow:hidden;cursor:pointer">';
+      var pkId2 = 'npk2_'+(Math.random()*1e9|0); window[pkId2] = photoKey;
+      var phSrcId = 'nps_'+(Math.random()*1e9|0); window[phSrcId] = photo;
+      /* Фото — клік на порожнє місце відкриває вибір файлу, на фото — повноекранний перегляд */
+      var photoClickFn = photo
+        ? 'nav2PhotoFullscreen(window[\''+phSrcId+'\'])'
+        : 'nav2PhotoForKey(window[\''+pkId2+'\'])';
+      s += '<div onclick="event.stopPropagation();'+photoClickFn+'" style="width:100%;aspect-ratio:16/9;background:var(--bg);position:relative;overflow:hidden;cursor:pointer">';
       if(photo){
         s += '<img src="'+photo+'" style="width:100%;height:100%;object-fit:cover;display:block">';
       } else {
@@ -3573,6 +3575,7 @@ function nav2HandlePhoto(e) {
         console.log('[NAV PHOTO] Cloudinary result:', url ? 'OK: '+url.substring(0,60) : 'FAILED');
         if(url){
           locationPhotos[key] = url;
+          _fbNavPhotos[key] = url; // зберігаємо в кеш Firebase
           _saveNavPhotoToLocations(key, url);
           try { localStorage.setItem('nav_photo_'+key, url); } catch(le) {}
           nav2Render();
@@ -3652,6 +3655,8 @@ function _loadNavPhotosFromLocations() {
   });
   // Поверх накладаємо збережені в localStorage (як item_photo_N для товарів)
   _restoreNavPhotosFromLocal();
+  // Поверх накладаємо фото з Firebase (мають найвищий пріоритет)
+  Object.keys(_fbNavPhotos).forEach(function(k){ if(_fbNavPhotos[k]) locationPhotos[k]=_fbNavPhotos[k]; });
 }
 
 /* Іконка-кнопка перейменування */
