@@ -2150,11 +2150,11 @@ function handleOpPhoto(type, input) {
       var prev = document.getElementById(type+'PhotoPreview');
       var imgEl = document.getElementById(type+'PhotoImg');
       if(prev && imgEl){ imgEl.src=b64; prev.style.display='block'; }
+      input.value='';
     };
     img.src = ev.target.result;
   };
   reader.readAsDataURL(file);
-  input.value='';
 }
 
 function _saveOpPhotoToSheets(type, key) {
