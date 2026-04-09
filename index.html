@@ -1436,7 +1436,7 @@ function _updateNewCatSelect(){
   sel.innerHTML=cats.map(function(c){return'<option value="'+c+'"'+(c===cur?' selected':'')+'>'+c+'</option>';}).join('');
 }
 function saveLocalCache(){try{const sc=stock.map(function(i){const c=Object.assign({},i);if(c.photo&&!c.photo.startsWith('http'))delete c.photo;if(c.mapPhotos)c.mapPhotos=c.mapPhotos.filter(function(p){return p&&p.startsWith('http');});if(c.mapPhoto&&!c.mapPhoto.startsWith('http'))delete c.mapPhoto;delete c.mapPhoto2;return c;});// Зберігаємо тільки HTTP URL фото навігації (не base64 щоб не перевищити квоту)
-var lpClean={};Object.keys(locationPhotos||{}).forEach(function(k){var v=locationPhotos[k];if(v&&v.startsWith('http'))lpClean[k]=v;});localStorage.setItem('ds_cache',JSON.stringify({stock:sc,history:history,categories:categories,catGroups:catGroups,locations:locations,locationPhotos:lpClean}));}catch(e){console.warn('[cache]',e);}}function loadLocalCache(){try{const r=localStorage.getItem('ds_cache');return r?JSON.parse(r):null;}catch(e){return null;}}function _saveItemPhotoLocal(id,photo){try{localStorage.setItem('item_photo_'+id,photo);}catch(e){console.warn('[photo save]',e);}}function _restorePhotosFromLocal(){try{stock.forEach(function(x){var p=localStorage.getItem('item_photo_'+x.id);if(p){if(!x.photo||(p.startsWith('http')&&(!x.photo||!x.photo.startsWith('http')))){x.photo=p;}}});}catch(e){}} function jsonp(url,ms){ms=ms||12000;return new Promise((resolve,reject)=>{const cb='_dscb_'+Date.now()+'_'+Math.random().toString(36).slice(2);const s=document.createElement('script');let done=false;const timer=setTimeout(()=>{if(done)return;done=true;delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);reject(new Error('JSONP timeout'));},ms);window[cb]=data=>{if(done)return;done=true;clearTimeout(timer);delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);resolve(data);};s.onerror=()=>{if(done)return;done=true;clearTimeout(timer);delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);reject(new Error('JSONP error'));};s.src=SCRIPT_URL+(SCRIPT_URL.includes('?')?'&':'?')+'callback='+cb+'&t='+Date.now();document.head.appendChild(s);});}
+var lpClean={};Object.keys(locationPhotos||{}).forEach(function(k){var v=locationPhotos[k];if(v&&v.startsWith('http'))lpClean[k]=v;});localStorage.setItem('ds_cache',JSON.stringify({stock:sc,history:history,categories:categories,catGroups:catGroups,locations:locations,locationPhotos:lpClean}));}catch(e){console.warn('[cache]',e);}}function loadLocalCache(){try{const r=localStorage.getItem('ds_cache');return r?JSON.parse(r):null;}catch(e){return null;}}function _saveItemPhotoLocal(id,photo){try{localStorage.setItem('item_photo_'+id,photo);}catch(e){console.warn('[photo save]',e);}}function _restorePhotosFromLocal(){try{stock.forEach(function(x){var p=localStorage.getItem('item_photo_'+x.id);if(p){if(!x.photo||(p.startsWith('http')&&(!x.photo||!x.photo.startsWith('http')))){x.photo=p;}}});}catch(e){}}function _restoreNavPhotosFromLocal(){try{for(var k in localStorage){if(k.indexOf('nav_photo_')===-1)continue;var key=k.replace('nav_photo_','');var p=localStorage.getItem(k);if(p&&(!locationPhotos[key]||(p.startsWith('http')&&!locationPhotos[key].startsWith('http')))){locationPhotos[key]=p;}}}catch(e){}} function jsonp(url,ms){ms=ms||12000;return new Promise((resolve,reject)=>{const cb='_dscb_'+Date.now()+'_'+Math.random().toString(36).slice(2);const s=document.createElement('script');let done=false;const timer=setTimeout(()=>{if(done)return;done=true;delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);reject(new Error('JSONP timeout'));},ms);window[cb]=data=>{if(done)return;done=true;clearTimeout(timer);delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);resolve(data);};s.onerror=()=>{if(done)return;done=true;clearTimeout(timer);delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);reject(new Error('JSONP error'));};s.src=SCRIPT_URL+(SCRIPT_URL.includes('?')?'&':'?')+'callback='+cb+'&t='+Date.now();document.head.appendChild(s);});}
 function postNoCors(payload){
   return new Promise(resolve=>{
     try{
@@ -1508,7 +1508,7 @@ function _restoreSuppDataFromStock(){
 }
 async function loadFromSheets(){
   const cached=loadLocalCache();
-  if(cached){stock=(cached.stock||[]).map(normalizeItem);history=cached.history||[];categories=cached.categories&&cached.categories.length?cached.categories:categories;if(cached.catGroups)Object.assign(catGroups,cached.catGroups);if(cached.locations&&cached.locations.length){locations=cached.locations;_loadNavPhotosFromLocations();}if(cached.locationPhotos)Object.assign(locationPhotos,cached.locationPhotos);_restorePhotosFromLocal();renderAll();renderHistory();setPreloaderStatus('Оновлення даних...');}
+  if(cached){stock=(cached.stock||[]).map(normalizeItem);history=cached.history||[];categories=cached.categories&&cached.categories.length?cached.categories:categories;if(cached.catGroups)Object.assign(catGroups,cached.catGroups);if(cached.locations&&cached.locations.length){locations=cached.locations;_loadNavPhotosFromLocations();}if(cached.locationPhotos)Object.assign(locationPhotos,cached.locationPhotos);_restoreNavPhotosFromLocal();_restorePhotosFromLocal();renderAll();renderHistory();setPreloaderStatus('Оновлення даних...');}
   showSyncStatus('loading');setPreloaderStatus('Підключення до Firebase...');
   try{
     const data=await _fbLoad();
@@ -1524,7 +1524,7 @@ async function loadFromSheets(){
       // Спочатку заповнюємо з locations (base64 або старі URL), потім Cloudinary URL мають пріоритет
       _loadNavPhotosFromLocations();
       if(data.navPhotos)Object.assign(locationPhotos,data.navPhotos);
-      _restorePhotosFromLocal();saveLocalCache();showSyncStatus('ok');setPreloaderStatus('Синхронізовано ✓');
+      _restoreNavPhotosFromLocal();_restorePhotosFromLocal();saveLocalCache();showSyncStatus('ok');setPreloaderStatus('Синхронізовано ✓');
     }else{showSyncStatus('ok');setPreloaderStatus('Готово');}
   }catch(e){
     console.warn('[FB] load error:',e);
@@ -3520,7 +3520,6 @@ function nav2HandlePhoto(e) {
   var reader = new FileReader();
   reader.onload = function(ev) {
     var key = _nav2PhotoTargetKey || (!NAV2.room ? '__global__' : (!NAV2.cell ? NAV2.room : (!NAV2.con ? NAV2.room+'::'+NAV2.cell : NAV2.room+'::'+NAV2.cell+'::'+NAV2.con)));
-    // Compress
     var img = new Image();
     img.onload = function() {
       var canvas = document.createElement('canvas');
@@ -3530,18 +3529,25 @@ function nav2HandlePhoto(e) {
       canvas.width = w; canvas.height = h;
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
       var _navB64 = canvas.toDataURL('image/jpeg', 0.7);
+      // 1) Одразу показуємо base64 — як у картці товару
       locationPhotos[key] = _navB64;
-      // Завантажуємо на Cloudinary у фоні
+      _saveNavPhotoToLocations(key, _navB64);
+      try { localStorage.setItem('nav_photo_'+key, _navB64); } catch(le) {}
+      nav2Render();
+      toast('Фото оновлено, завантажую...');
+      // 2) Cloudinary у фоні — замінюємо на URL коли готово
       var _navKey = key.replace(/::/g,'__');
       _cldUpload(_navB64, 'nav_'+_navKey).then(function(url){
-        if(url){ locationPhotos[key]=url; }
+        if(url){
+          locationPhotos[key] = url;
+          _saveNavPhotoToLocations(key, url);
+          try { localStorage.setItem('nav_photo_'+key, url); } catch(le) {}
+          nav2Render();
+          toast('\u2713 Фото збережено');
+        }
         forceSyncToSheets();
       });
-      // Save to locations data
-      _saveNavPhotoToLocations(key, locationPhotos[key]);
       forceSyncToSheets();
-      nav2Render();
-      toast('✓ Фото додано');
     };
     img.src = ev.target.result;
   };
