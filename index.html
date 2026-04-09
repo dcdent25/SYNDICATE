@@ -1097,7 +1097,7 @@ function _saveItemPhotoLocal(id,photo){try{localStorage.setItem('item_photo_'+id
   toast('Фото оновлено, завантажую...');
   // Завантажуємо на Cloudinary у фоні
   var _uploadedItemId = i.id;
-  _cldUpload(compressed, 'item_'+_uploadedItemId).then(function(url){
+  _cldUpload(compressed, 'item_'+_uploadedItemId+'_'+Date.now()).then(function(url){
     if(url){
       // Знаходимо елемент знову — stock міг бути перезавантажений під час upload
       var fresh = stock.find(function(x){ return x.id === _uploadedItemId; });
