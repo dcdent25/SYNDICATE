@@ -3871,15 +3871,38 @@ function nav2AddNew() {
     if(!room){ toast('⚠ Оберіть приміщення'); return; }
     var roomObj = locations.find(function(r){return r.name===room;});
     if(!roomObj){ roomObj={name:room,cells:[]}; locations.push(roomObj); }
-    if(photos.room) roomObj.photo = photos.room;
+
+    // Зберігаємо фото — як nav2HandlePhoto: base64 одразу, Cloudinary у фоні
+    function _saveNavPhoto(key, b64) {
+      if(!b64) return;
+      locationPhotos[key] = b64;
+      _fbNavPhotos[key] = b64;
+      _saveNavPhotoToLocations(key, b64);
+      try { localStorage.setItem('nav_photo_'+key, b64); } catch(e) {}
+      // Cloudinary у фоні
+      var cldKey = key.replace(/::/g,'__');
+      _cldUpload(b64, 'nav_'+cldKey).then(function(url){
+        if(url){
+          locationPhotos[key] = url;
+          _fbNavPhotos[key] = url;
+          _saveNavPhotoToLocations(key, url);
+          try { localStorage.setItem('nav_photo_'+key, url); } catch(e) {}
+        }
+        forceSyncToSheets();
+      });
+    }
+
+    if(photos.room) _saveNavPhoto(room, photos.room);
+    else if(roomObj.photo === undefined) {} // не чіпаємо
+
     if(vals.cell.trim()){
       var cellObj = roomObj.cells&&roomObj.cells.find(function(c){return c.name===vals.cell.trim();});
       if(!cellObj){ cellObj={name:vals.cell.trim(),containers:[]}; if(!roomObj.cells)roomObj.cells=[]; roomObj.cells.push(cellObj); }
-      if(photos.cell) cellObj.photo = photos.cell;
+      if(photos.cell) _saveNavPhoto(room+'::'+vals.cell.trim(), photos.cell);
       if(vals.con.trim()){
         if(!cellObj.containers)cellObj.containers=[];
         if(cellObj.containers.indexOf(vals.con.trim())===-1) cellObj.containers.push(vals.con.trim());
-        if(photos.con){ if(!cellObj.containerPhotos)cellObj.containerPhotos={}; cellObj.containerPhotos[vals.con.trim()]=photos.con; }
+        if(photos.con) _saveNavPhoto(room+'::'+vals.cell.trim()+'::'+vals.con.trim(), photos.con);
       }
     }
     document.body.removeChild(ov);
