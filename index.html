@@ -699,8 +699,6 @@ var _fbApp = null, _fbDb = null, _fbReady = false, _fbQueue = [];
         _fbQueue.forEach(function(fn){ fn(); });
         _fbQueue = [];
         console.log('[FB] Firebase готовий');
-        // Очищаємо зіпсовані записи фото з localStorage
-        try{for(var _k in localStorage){if(_k.indexOf('item_photo_')===0){var _v=localStorage.getItem(_k);if(_v&&!_v.startsWith('http')&&!_v.startsWith('data:')){localStorage.removeItem(_k);console.log('[cleanup] removed bad photo:',_k);}}}}catch(e){}
       }
     };
     s.onerror = function(){ console.warn('[FB] Помилка SDK:', url); };
@@ -714,7 +712,18 @@ async function _fbLoad(){
   return new Promise(function(resolve, reject){
     _fbWhenReady(function(){
       _fbDb.ref('/sklad').once('value').then(function(snap){
-        resolve(snap.val() || {});
+        var data = snap.val() || {};
+        // Firebase зберігає масиви як об'єкти {0:..., 1:...} — конвертуємо назад
+        function toArr(v){
+          if(!v||typeof v!=='object'||Array.isArray(v)) return v;
+          var keys=Object.keys(v);
+          var isArr=keys.length>0&&keys.every(function(k){return /^\d+$/.test(k);});
+          if(isArr) return keys.sort(function(a,b){return+a-+b;}).map(function(k){return toArr(v[k]);});
+          var r={};keys.forEach(function(k){r[k]=toArr(v[k]);});return r;
+        }
+        data = toArr(data);
+        console.log('[FB] Завантажено: stock=',data.stock&&data.stock.length,'history=',data.history&&data.history.length);
+        resolve(data);
       }).catch(function(e){ console.warn('[FB] Читання:', e); reject(e); });
     });
   });
@@ -1428,20 +1437,7 @@ function _updateNewCatSelect(){
   if(!cats.length)cats=categories.slice();
   sel.innerHTML=cats.map(function(c){return'<option value="'+c+'"'+(c===cur?' selected':'')+'>'+c+'</option>';}).join('');
 }
-function saveLocalCache(){try{const sc=stock.map(function(i){const c=Object.assign({},i);delete c.photo;delete c.mapPhotos;delete c.mapPhoto;delete c.mapPhoto2;return c;});localStorage.setItem('ds_cache',JSON.stringify({stock:sc,history:history,categories:categories,catGroups:catGroups,locations:locations}));}catch(e){console.warn('[cache]',e);}}function loadLocalCache(){try{const r=localStorage.getItem('ds_cache');return r?JSON.parse(r):null;}catch(e){return null;}}function _saveItemPhotoLocal(id,photo){try{localStorage.setItem('item_photo_'+id,photo);}catch(e){console.warn('[photo save]',e);}}function _restorePhotosFromLocal(){
-  try{
-    stock.forEach(function(x){
-      if(!x.photo){
-        var p=localStorage.getItem('item_photo_'+x.id);
-        // Валідуємо — тільки реальні URL або base64
-        if(p&&(p.startsWith('http')||p.startsWith('data:'))) x.photo=p;
-        else if(p) localStorage.removeItem('item_photo_'+x.id); // видаляємо зіпсований запис
-      } else if(x.photo&&!x.photo.startsWith('http')&&!x.photo.startsWith('data:')){
-        delete x.photo; // очищаємо некоректне фото
-      }
-    });
-  }catch(e){}
-} function jsonp(url,ms){ms=ms||12000;return new Promise((resolve,reject)=>{const cb='_dscb_'+Date.now()+'_'+Math.random().toString(36).slice(2);const s=document.createElement('script');let done=false;const timer=setTimeout(()=>{if(done)return;done=true;delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);reject(new Error('JSONP timeout'));},ms);window[cb]=data=>{if(done)return;done=true;clearTimeout(timer);delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);resolve(data);};s.onerror=()=>{if(done)return;done=true;clearTimeout(timer);delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);reject(new Error('JSONP error'));};s.src=SCRIPT_URL+(SCRIPT_URL.includes('?')?'&':'?')+'callback='+cb+'&t='+Date.now();document.head.appendChild(s);});}
+function saveLocalCache(){try{const sc=stock.map(function(i){const c=Object.assign({},i);delete c.photo;delete c.mapPhotos;delete c.mapPhoto;delete c.mapPhoto2;return c;});localStorage.setItem('ds_cache',JSON.stringify({stock:sc,history:history,categories:categories,catGroups:catGroups,locations:locations}));}catch(e){console.warn('[cache]',e);}}function loadLocalCache(){try{const r=localStorage.getItem('ds_cache');return r?JSON.parse(r):null;}catch(e){return null;}}function _saveItemPhotoLocal(id,photo){try{localStorage.setItem('item_photo_'+id,photo);}catch(e){console.warn('[photo save]',e);}}function _restorePhotosFromLocal(){try{stock.forEach(function(x){if(!x.photo){var p=localStorage.getItem('item_photo_'+x.id);if(p)x.photo=p;}});}catch(e){}} function jsonp(url,ms){ms=ms||12000;return new Promise((resolve,reject)=>{const cb='_dscb_'+Date.now()+'_'+Math.random().toString(36).slice(2);const s=document.createElement('script');let done=false;const timer=setTimeout(()=>{if(done)return;done=true;delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);reject(new Error('JSONP timeout'));},ms);window[cb]=data=>{if(done)return;done=true;clearTimeout(timer);delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);resolve(data);};s.onerror=()=>{if(done)return;done=true;clearTimeout(timer);delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);reject(new Error('JSONP error'));};s.src=SCRIPT_URL+(SCRIPT_URL.includes('?')?'&':'?')+'callback='+cb+'&t='+Date.now();document.head.appendChild(s);});}
 function postNoCors(payload){
   return new Promise(resolve=>{
     try{
@@ -1527,10 +1523,7 @@ async function loadFromSheets(){
       if(data.opPhotos)window._allOpPhotos=data.opPhotos;
       if(data.suppData&&typeof data.suppData==='object'){Object.keys(data.suppData).forEach(function(n){if(n)localStorage.setItem('suppData_'+n,JSON.stringify(data.suppData[n]));});}
       _restoreSuppDataFromStock();
-      _loadNavPhotosFromLocations();
-      // Очищаємо некоректні фото з Firebase
-      stock.forEach(function(x){if(x.photo&&!x.photo.startsWith('http')&&!x.photo.startsWith('data:')){delete x.photo;}});
-      _restorePhotosFromLocal();saveLocalCache();showSyncStatus('ok');setPreloaderStatus('Синхронізовано ✓');
+      _loadNavPhotosFromLocations();_restorePhotosFromLocal();saveLocalCache();showSyncStatus('ok');setPreloaderStatus('Синхронізовано ✓');
     }else{showSyncStatus('ok');setPreloaderStatus('Готово');}
   }catch(e){
     console.warn('[FB] load error:',e);
@@ -1539,9 +1532,7 @@ async function loadFromSheets(){
   }
   _restorePhotosFromLocal();renderAll();renderHistory();hidePreloader();
 }
-function normalizeItem(i){const n={...i,id:+i.id||0,qty:+i.qty||0,min:+i.min||1,price:+i.price||0};if(n.stockQty==null)n.stockQty=n.qty;else n.stockQty=+n.stockQty;if(!n.marketPrice)n.marketPrice=n.price;if(n.portions!=null&&n.portions>0)n._portionsManual=true;if(!n.mapPhotos&&n.mapPhoto)n.mapPhotos=[n.mapPhoto];if(!n.photo){try{var _lp=localStorage.getItem('item_photo_'+n.id);if(_lp&&(_lp.startsWith('http')||_lp.startsWith('data:')))n.photo=_lp;}catch(e){}}
-  // Валідація фото — відкидаємо некоректні значення
-  if(n.photo&&!n.photo.startsWith('http')&&!n.photo.startsWith('data:')){delete n.photo;}  
+function normalizeItem(i){const n={...i,id:+i.id||0,qty:+i.qty||0,min:+i.min||1,price:+i.price||0};if(n.stockQty==null)n.stockQty=n.qty;else n.stockQty=+n.stockQty;if(!n.marketPrice)n.marketPrice=n.price;if(n.portions!=null&&n.portions>0)n._portionsManual=true;if(!n.mapPhotos&&n.mapPhoto)n.mapPhotos=[n.mapPhoto];if(!n.photo){try{var _lp=localStorage.getItem('item_photo_'+n.id);if(_lp)n.photo=_lp;}catch(e){}}  
   /* Міграція: якщо i.con порожній а i.sup є контейнером — переносимо */
   if(!n.con && n.sup && n.sup!=='—') {
     var isContainer = false;
