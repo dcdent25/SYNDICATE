@@ -808,7 +808,7 @@ const dcs=document.getElementById('desktopCatSelect');if(dcs){_updateGroupDropdo
 function openHistoryDetail(idx) {
   var h = history[idx];
   if(!h) return;
-  var photo = h.photoKey && window._allOpPhotos && window._allOpPhotos[h.photoKey] ? window._allOpPhotos[h.photoKey] : null;
+  var photo = h.photoKey && window._allOpPhotos && window._allOpPhotos[h.photoKey] ? window._allOpPhotos[h.photoKey] : (h._photoB64 || null);
   var typeLabel = h.type==='in' ? '📦 Прийом' : h.type==='give' ? '👨‍⚕️ Видача' : '✂ Списання';
   var typeColor = h.type==='in' ? 'var(--green)' : h.type==='give' ? 'var(--blue)' : 'var(--red)';
 
@@ -1854,6 +1854,7 @@ function syncToSheets(){if(syncPending)return;syncPending=true;showSyncStatus('s
     const histClean=history.slice(0,200).map(function(h){
       var hc=Object.assign({},h);
       if(hc.photo&&hc.photo.startsWith('data:')) delete hc.photo;
+      delete hc._photoB64; // не зберігаємо base64 в Firebase
       return hc;
     });
     const suppDataAll={};
@@ -2165,12 +2166,18 @@ function _saveOpPhotoToSheets(type, key) {
   if(!window._allOpPhotos) window._allOpPhotos = {};
   // Зберігаємо base64 локально одразу
   window._allOpPhotos[key] = _opPhotos[type];
+  // Також зберігаємо base64 прямо в запис історії (запасний варіант)
+  var histEntry = history.find(function(h){ return h.photoKey === key; });
+  if(histEntry) histEntry._photoB64 = _opPhotos[type];
   var _b64 = _opPhotos[type];
   _opPhotos[type] = null;
   // Завантажуємо на Cloudinary у фоні, потім зберігаємо URL в Firebase
-  _cldUpload(_b64, 'op_'+key).then(function(url){
+  _cldUpload(_b64, 'op_'+key+'_'+Date.now()).then(function(url){
     var photo = url || _b64; // якщо Cloudinary не спрацював — зберігаємо base64
     window._allOpPhotos[key] = photo;
+    // Оновлюємо запис в історії з фінальним URL
+    var fresh = history.find(function(h){ return h.photoKey === key; });
+    if(fresh) { fresh._photoB64 = null; }
     // Записуємо одразу в Firebase окремо
     _fbWhenReady(function(){
       var fbKey = _fbOpKey(key);
