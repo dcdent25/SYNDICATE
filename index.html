@@ -1525,7 +1525,14 @@ async function loadFromSheets(){
         // Ключі в Firebase зберігаються з __ замість :: (через обмеження Firebase)
         Object.keys(data.navPhotos).forEach(function(fbKey){
           var key = fbKey.replace(/__/g, '::');
-          if(data.navPhotos[fbKey]) locationPhotos[key] = data.navPhotos[fbKey];
+          var val = data.navPhotos[fbKey];
+          // Фільтруємо зіпсовані значення (рядок '+photo+' або порожні)
+          if(val && typeof val==='string' && val.length>10 && !val.includes("'+photo+'") && !val.includes("'+p+'")) {
+            locationPhotos[key] = val;
+          } else if(val) {
+            // Видаляємо зіпсований запис з Firebase
+            _fbWhenReady(function(){ _fbDb.ref('/sklad/navPhotos/'+fbKey).remove().catch(function(){}); });
+          }
         });
       }
       _restorePhotosFromLocal();saveLocalCache();showSyncStatus('ok');setPreloaderStatus('Синхронізовано ✓');
@@ -3606,6 +3613,10 @@ function _restoreNavPhotosFromLocal() {
       var key = k.replace('nav_photo_', '');
       var p = localStorage.getItem(k);
       if (!p) continue;
+      // Фільтруємо зіпсовані значення
+      if (p.includes("'+photo+'") || p.includes("'+p+'") || p.length < 10) {
+        localStorage.removeItem(k); continue;
+      }
       var cur = locationPhotos[key];
       // HTTP URL завжди має пріоритет; base64 — якщо немає нічого
       if (p.startsWith('http') || !cur) { locationPhotos[key] = p; }
