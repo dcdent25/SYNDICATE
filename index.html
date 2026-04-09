@@ -3358,14 +3358,14 @@ function nav2EditCardSimple(ft) {
         canvas.getContext('2d').drawImage(img,0,0,w,h);
         curPhoto=canvas.toDataURL('image/jpeg',0.75);
         renderPhoto();
+        e.target.value='';
       };
       img.src=ev.target.result;
     };
     reader.readAsDataURL(file);
-    e.target.value='';
   });
   photoDiv.appendChild(fileInp);
-  photoDiv.addEventListener('click', function(){ fileInp.click(); });
+  photoDiv.addEventListener('click', function(){ fileInp.value=''; fileInp.click(); });
 
   /* Назва */
   var label = document.createElement('div');
@@ -3390,7 +3390,7 @@ function nav2EditCardSimple(ft) {
       try { localStorage.setItem('nav_photo_'+photoKey, curPhoto); } catch(e) {}
       // Cloudinary у фоні
       var _cldKey = photoKey.replace(/::/g,'__');
-      _cldUpload(curPhoto, 'nav_'+_cldKey).then(function(url){
+      _cldUpload(curPhoto, 'nav_'+_cldKey+'_'+Date.now()).then(function(url){
         if(url){
           locationPhotos[photoKey] = url;
           _fbNavPhotos[photoKey] = url;
