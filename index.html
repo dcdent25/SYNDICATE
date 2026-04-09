@@ -2237,15 +2237,26 @@ function renderStorageCards(i) {
 
   wrap.innerHTML = card('Приміщення', room, photoRoom, 'room') + card('Комірка', cell, photoCell, 'cell') + conCardHtml;
 
+  function openLocPhoto(photo) {
+    var ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.93);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;animation:fadeIn .18s ease';
+    ov.innerHTML = '<img src="'+photo+'" style="max-width:100%;max-height:90vh;object-fit:contain;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,.7)">'
+      +'<button style="position:fixed;top:16px;right:16px;width:40px;height:40px;background:rgba(255,255,255,.15);border:none;border-radius:50%;color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)" onclick="this.parentNode.remove()">✕</button>';
+    ov.addEventListener('click', function(e){ if(e.target===ov) ov.remove(); });
+    document.body.appendChild(ov);
+  }
+
   ['room','cell'].forEach(function(type) {
     var el = document.getElementById('dStorCard_'+type);
+    var photo = type==='room' ? photoRoom : photoCell;
     if(el) {
       el.style.cursor = 'pointer';
       el.addEventListener('mouseover', function(){ this.style.borderColor='var(--blue)'; });
       el.addEventListener('mouseout',  function(){ this.style.borderColor='var(--border)'; });
       el.addEventListener('click', function(){
         var editing = document.querySelector('#ov-detail .modal') && document.querySelector('#ov-detail .modal').classList.contains('detail-edit-mode');
-        if(editing) dStoragePick(type);
+        if(editing) { dStoragePick(type); return; }
+        if(photo) openLocPhoto(photo);
       });
     }
   });
@@ -2257,7 +2268,8 @@ function renderStorageCards(i) {
     conCard.addEventListener('mouseout',  function(){ this.style.borderColor='var(--border)'; });
     conCard.addEventListener('click', function(){
       var editing = document.querySelector('#ov-detail .modal') && document.querySelector('#ov-detail .modal').classList.contains('detail-edit-mode');
-      if(editing) dStoragePick('con');
+      if(editing) { dStoragePick('con'); return; }
+      if(photoCon) openLocPhoto(photoCon);
     });
   }
 }
