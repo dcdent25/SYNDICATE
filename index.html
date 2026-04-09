@@ -1388,7 +1388,7 @@ async function loadFromSheets(){const cached=loadLocalCache();if(cached){stock=(
 if(data.suppData&&typeof data.suppData==='object'){Object.keys(data.suppData).forEach(function(n){if(n)localStorage.setItem('suppData_'+n,JSON.stringify(data.suppData[n]));});}
 _restoreSuppDataFromStock();
 _loadNavPhotosFromLocations();_restorePhotosFromLocal();showSyncStatus('ok');setPreloaderStatus('Синхронізовано ✓');}else{showSyncStatus('error',data?data.error:'empty');setPreloaderStatus('Помилка синхронізації');}_restorePhotosFromLocal();renderAll();renderHistory();hidePreloader();}
-function normalizeItem(i){const n={...i,id:+i.id||0,qty:+i.qty||0,min:+i.min||1,price:+i.price||0};if(n.stockQty==null)n.stockQty=n.qty;else n.stockQty=+n.stockQty;if(!n.marketPrice)n.marketPrice=n.price;if(n.portions!=null&&n.portions>0)n._portionsManual=true;if(!n.mapPhotos&&n.mapPhoto)n.mapPhotos=[n.mapPhoto];
+function normalizeItem(i){const n={...i,id:+i.id||0,qty:+i.qty||0,min:+i.min||1,price:+i.price||0};if(n.stockQty==null)n.stockQty=n.qty;else n.stockQty=+n.stockQty;if(!n.marketPrice)n.marketPrice=n.price;if(n.portions!=null&&n.portions>0)n._portionsManual=true;if(!n.mapPhotos&&n.mapPhoto)n.mapPhotos=[n.mapPhoto];if(!n.photo){try{var _lp=localStorage.getItem('item_photo_'+n.id);if(_lp)n.photo=_lp;}catch(e){}}  
   /* Міграція: якщо i.con порожній а i.sup є контейнером — переносимо */
   if(!n.con && n.sup && n.sup!=='—') {
     var isContainer = false;
