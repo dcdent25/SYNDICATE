@@ -3120,10 +3120,23 @@ function nav2EditCardSimple(ft) {
 
   saveBtn.addEventListener('click', function(){
     var newName = nameInp.value.trim();
-    /* Зберігаємо фото */
-    if(curPhoto !== (locationPhotos[photoKey]||null)) {
-      _saveNavPhotoToLocations(photoKey, curPhoto);
+    /* Зберігаємо фото — як nav2HandlePhoto */
+    if(curPhoto && curPhoto !== (locationPhotos[photoKey]||null)) {
       locationPhotos[photoKey] = curPhoto;
+      _fbNavPhotos[photoKey] = curPhoto;
+      _saveNavPhotoToLocations(photoKey, curPhoto);
+      try { localStorage.setItem('nav_photo_'+photoKey, curPhoto); } catch(e) {}
+      // Cloudinary у фоні
+      var _cldKey = photoKey.replace(/::/g,'__');
+      _cldUpload(curPhoto, 'nav_'+_cldKey).then(function(url){
+        if(url){
+          locationPhotos[photoKey] = url;
+          _fbNavPhotos[photoKey] = url;
+          _saveNavPhotoToLocations(photoKey, url);
+          try { localStorage.setItem('nav_photo_'+photoKey, url); } catch(e) {}
+        }
+        forceSyncToSheets();
+      });
     }
     /* Зберігаємо назву */
     if(newName && newName !== curVal) {
