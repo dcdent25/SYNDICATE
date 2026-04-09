@@ -1603,12 +1603,12 @@ function syncToSheets(){if(syncPending)return;syncPending=true;showSyncStatus('s
     for(var k in localStorage){
       if(k.indexOf('suppData_')===0){var sn=k.replace('suppData_','');try{suppDataAll[sn]=JSON.parse(localStorage.getItem(k));}catch(e){}}
     }
-    // navPhotos — всі фото (base64 тимчасово, Cloudinary URL постійно)
+    // navPhotos — тільки Cloudinary HTTP URLs (як item.photo у товарів)
     // Ключі екрануємо для Firebase: :: -> __
     var navPhotosClean={};
     Object.keys(locationPhotos).forEach(function(k){
       var v=locationPhotos[k];
-      if(v&&typeof v==='string'&&v.length>0){
+      if(v&&typeof v==='string'&&v.startsWith('http')){
         var fbKey=k.replace(/[.#$[\]/]/g,'__');
         navPhotosClean[fbKey]=v;
       }
@@ -3544,29 +3544,26 @@ function nav2HandlePhoto(e) {
       canvas.width = w; canvas.height = h;
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
       var _navB64 = canvas.toDataURL('image/jpeg', 0.7);
-      // 1) Одразу показуємо — як у картці товару
+      // 1) Одразу показуємо локально — як у картці товару
       locationPhotos[key] = _navB64;
       _saveNavPhotoToLocations(key, _navB64);
       try { localStorage.setItem('nav_photo_'+key, _navB64); } catch(le) {}
       nav2Render();
       toast('Фото оновлено, завантажую...');
-      // 2) Одразу зберігаємо base64 в Firebase щоб інші пристрої бачили
-      _fbSaveNavPhoto(key, _navB64);
-      // 3) Cloudinary у фоні — замінюємо на URL коли готово
+      // 2) Cloudinary у фоні — тільки після успіху синхронізуємо з Firebase
+      // (як handleImgUpload для товарів: fresh.photo = url → forceSyncToSheets)
       var _navKey = key.replace(/::/g,'__');
       _cldUpload(_navB64, 'nav_'+_navKey).then(function(url){
         if(url){
           locationPhotos[key] = url;
           _saveNavPhotoToLocations(key, url);
           try { localStorage.setItem('nav_photo_'+key, url); } catch(le) {}
-          // Замінюємо base64 на Cloudinary URL в Firebase
-          _fbSaveNavPhoto(key, url);
           nav2Render();
           toast('\u2713 Фото збережено');
         }
+        // Синхронізуємо тільки тут — як forceSyncToSheets після _cldUpload у товарів
         forceSyncToSheets();
       });
-      forceSyncToSheets();
     };
     img.src = ev.target.result;
   };
