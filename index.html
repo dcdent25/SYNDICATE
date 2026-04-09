@@ -1513,6 +1513,10 @@ async function loadFromSheets(){
     const data=await _fbLoad();
     if(data&&(data.stock||data.history||data.categories)){
       if(Array.isArray(data.stock)&&data.stock.length>=0){stock=data.stock.map(normalizeItem);}
+      // Очищаємо зіпсовані фото з stock (рядки типу '+photo+')
+      stock.forEach(function(i){
+        if(i.photo && typeof i.photo==='string' && (i.photo.includes("'+")||i.photo.includes("+'"))) { i.photo=null; }
+      });
       if(Array.isArray(data.history))history=data.history;
       if(Array.isArray(data.categories)&&data.categories.length>0)categories=data.categories;
       if(data.catGroups)Object.assign(catGroups,data.catGroups);
@@ -1522,14 +1526,28 @@ async function loadFromSheets(){
       _restoreSuppDataFromStock();
       _loadNavPhotosFromLocations();
       if(data.navPhotos){
+        var _navDirty = false;
         Object.keys(data.navPhotos).forEach(function(fbKey){
           var val = data.navPhotos[fbKey];
           // Фільтруємо зіпсовані значення
           if(val && typeof val==='string' && val.length>10 && !val.includes("'+photo+'")) {
             locationPhotos[fbKey] = val;
+          } else {
+            _navDirty = true; // є зіпсовані — треба перезберегти
           }
         });
       }
+      // Очищаємо зіпсовані фото з locations ('+photo+', '+compressed+' тощо)
+      var _locDirty = false;
+      function _isCorrupt(v){ return v && typeof v==='string' && (v.includes("'+")||v.includes("+'")||(!v.startsWith('http')&&!v.startsWith('data:')&&v.length<200&&v.length>0)); }
+      locations.forEach(function(r){
+        if(_isCorrupt(r.photo)){ r.photo=null; _locDirty=true; }
+        (r.cells||[]).forEach(function(c){
+          if(_isCorrupt(c.photo)){ c.photo=null; _locDirty=true; }
+          if(c.containerPhotos){ Object.keys(c.containerPhotos).forEach(function(k){ if(_isCorrupt(c.containerPhotos[k])){ delete c.containerPhotos[k]; _locDirty=true; } }); }
+        });
+      });
+      if(_locDirty){ console.log('[FB] Cleaned corrupted location photos, resyncing...'); setTimeout(forceSyncToSheets, 1000); }
       _restorePhotosFromLocal();saveLocalCache();showSyncStatus('ok');setPreloaderStatus('Синхронізовано ✓');
     }else{showSyncStatus('ok');setPreloaderStatus('Готово');}
   }catch(e){
