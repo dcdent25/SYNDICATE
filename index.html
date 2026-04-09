@@ -3447,11 +3447,16 @@ function nav2AddNew() {
     modal.querySelector('#nadd_grid').innerHTML = defs.map(function(d){
       var val = vals[d.ft];
       var photo = photos[d.ft];
-      return '<div id="nadd_card_'+d.ft+'" style="background:var(--surface2);border:1.5px solid '+(val?'var(--blue)':'var(--border)')+';border-radius:12px;overflow:hidden;cursor:pointer;transition:border-color .15s">'
-        +'<div style="width:100%;aspect-ratio:16/9;background:var(--bg);position:relative;overflow:hidden">'
-        +(photo?'<img src="'+photo+'" style="width:100%;height:100%;object-fit:cover;display:block">':'<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="color:var(--muted)"><path d="M12 15.2A3.2 3.2 0 1 1 12 8.8a3.2 3.2 0 0 1 0 6.4zM9 2L7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.17L15 2H9z"/></svg><div style="font-size:10px;color:var(--muted);font-family:var(--font-d)">Фото</div></div>')
+      var photoZone = photo
+        ? '<img src="'+photo+'" style="width:100%;height:100%;object-fit:cover;display:block">'
+          +'<div id="nadd_rmphoto_'+d.ft+'" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.55);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2" title="Видалити фото"><svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></div>'
+        : '<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="color:var(--muted)"><path d="M12 15.2A3.2 3.2 0 1 1 12 8.8a3.2 3.2 0 0 1 0 6.4zM9 2L7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.17L15 2H9z"/></svg><div style="font-size:9px;color:var(--muted);font-family:var(--font-d)">Додати фото</div></div>';
+      return '<div style="background:var(--surface2);border:1.5px solid '+(val?'var(--blue)':'var(--border)')+';border-radius:12px;overflow:hidden;transition:border-color .15s">'
+        +'<div id="nadd_photo_'+d.ft+'" style="width:100%;aspect-ratio:16/9;background:var(--bg);position:relative;overflow:hidden;cursor:pointer">'
+        +photoZone
         +'</div>'
-        +'<div style="padding:8px 10px">'
+        +'<input type="file" id="nadd_file_'+d.ft+'" accept="image/*" style="display:none">'
+        +'<div id="nadd_card_'+d.ft+'" style="padding:8px 10px;cursor:pointer">'
         +'<div style="font-size:9px;color:var(--sub);font-family:var(--font-d);font-weight:500;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">'+d.label+'</div>'
         +'<div style="font-family:var(--font-d);font-size:13px;font-weight:600;color:'+(val?'var(--text)':'var(--muted)')+'">'+_esc(val||'—')+'</div>'
         +'</div></div>';
@@ -3460,23 +3465,46 @@ function nav2AddNew() {
   }
 
   function bindCards() {
-    /* Приміщення */
-    var cardRoom = modal.querySelector('#nadd_card_room');
-    if(cardRoom) cardRoom.addEventListener('click', function(){
-      showNavPicker('Приміщення', getNavItems('room'), function(name){ vals.room=name; if(!vals.cell) vals.cell=''; renderCards(); });
-    });
-    /* Комірка */
-    var cardCell = modal.querySelector('#nadd_card_cell');
-    if(cardCell) cardCell.addEventListener('click', function(){
-      if(!vals.room){ toast('⚠ Спочатку оберіть приміщення'); return; }
-      showNavPicker('Комірка', getNavItems('cell'), function(name){ vals.cell=name; vals.con=''; renderCards(); });
-    });
-    /* Контейнер */
-    var cardCon = modal.querySelector('#nadd_card_con');
-    if(cardCon) cardCon.addEventListener('click', function(){
-      if(!vals.room){ toast('⚠ Спочатку оберіть приміщення'); return; }
-      if(!vals.cell){ toast('⚠ Спочатку оберіть комірку'); return; }
-      showNavPicker('Контейнер', getNavItems('con'), function(name){ vals.con=name; renderCards(); });
+    var defs = [{ft:'room',label:'Приміщення'},{ft:'cell',label:'Комірка'},{ft:'con',label:'Контейнер'}];
+    defs.forEach(function(d){
+      /* Фото зона — відкриває file picker */
+      var photoZone = modal.querySelector('#nadd_photo_'+d.ft);
+      var fileInput = modal.querySelector('#nadd_file_'+d.ft);
+      if(photoZone && fileInput){
+        photoZone.addEventListener('click', function(e){
+          /* Якщо клік по кнопці видалення */
+          if(e.target.closest && e.target.closest('#nadd_rmphoto_'+d.ft)){
+            photos[d.ft]=null; renderCards(); return;
+          }
+          fileInput.click();
+        });
+        fileInput.addEventListener('change', function(e){
+          var file = e.target.files[0]; if(!file) return;
+          var reader = new FileReader();
+          reader.onload = async function(ev){
+            photos[d.ft] = await compressImage(ev.target.result, 800, 600, 0.75);
+            renderCards();
+          };
+          reader.readAsDataURL(file);
+          e.target.value='';
+        });
+      }
+      /* Текст зона — відкриває picker назви */
+      var card = modal.querySelector('#nadd_card_'+d.ft);
+      if(card){
+        card.addEventListener('click', function(){
+          if(d.ft==='room'){
+            showNavPicker('Приміщення', getNavItems('room'), function(name){ vals.room=name; if(!vals.cell) vals.cell=''; renderCards(); });
+          } else if(d.ft==='cell'){
+            if(!vals.room){ toast('⚠ Спочатку оберіть приміщення'); return; }
+            showNavPicker('Комірка', getNavItems('cell'), function(name){ vals.cell=name; vals.con=''; renderCards(); });
+          } else {
+            if(!vals.room){ toast('⚠ Спочатку оберіть приміщення'); return; }
+            if(!vals.cell){ toast('⚠ Спочатку оберіть комірку'); return; }
+            showNavPicker('Контейнер', getNavItems('con'), function(name){ vals.con=name; renderCards(); });
+          }
+        });
+      }
     });
   }
 
