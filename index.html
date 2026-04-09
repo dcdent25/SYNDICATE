@@ -1435,7 +1435,7 @@ function _updateNewCatSelect(){
   if(!cats.length)cats=categories.slice();
   sel.innerHTML=cats.map(function(c){return'<option value="'+c+'"'+(c===cur?' selected':'')+'>'+c+'</option>';}).join('');
 }
-function saveLocalCache(){try{const sc=stock.map(function(i){const c=Object.assign({},i);if(c.photo&&!c.photo.startsWith('http'))delete c.photo;if(c.mapPhotos)c.mapPhotos=c.mapPhotos.filter(function(p){return p&&p.startsWith('http');});if(c.mapPhoto&&!c.mapPhoto.startsWith('http'))delete c.mapPhoto;delete c.mapPhoto2;return c;});var lpClean={};Object.keys(locationPhotos||{}).forEach(function(k){var v=locationPhotos[k];if(v&&v.startsWith('http'))lpClean[k]=v;});localStorage.setItem('ds_cache',JSON.stringify({stock:sc,history:history,categories:categories,catGroups:catGroups,locations:locations,locationPhotos:lpClean}));}catch(e){console.warn('[cache]',e);}}function loadLocalCache(){try{const r=localStorage.getItem('ds_cache');return r?JSON.parse(r):null;}catch(e){return null;}}function _saveItemPhotoLocal(id,photo){try{localStorage.setItem('item_photo_'+id,photo);}catch(e){console.warn('[photo save]',e);}}function _restorePhotosFromLocal(){try{stock.forEach(function(x){var p=localStorage.getItem('item_photo_'+x.id);if(p){if(!x.photo||(p.startsWith('http')&&(!x.photo||!x.photo.startsWith('http')))){x.photo=p;}}});}catch(e){}}function _restoreNavPhotosFromLocal(){try{for(var k in localStorage){if(k.indexOf('nav_photo_')===-1)continue;var key=k.replace('nav_photo_','');var p=localStorage.getItem(k);if(!p)continue;var cur=locationPhotos[key];if(!cur||(p.startsWith('http')&&!cur.startsWith('http'))||(!cur.startsWith('http')&&p)){locationPhotos[key]=p;}}}catch(e){}} function jsonp(url,ms){ms=ms||12000;return new Promise((resolve,reject)=>{const cb='_dscb_'+Date.now()+'_'+Math.random().toString(36).slice(2);const s=document.createElement('script');let done=false;const timer=setTimeout(()=>{if(done)return;done=true;delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);reject(new Error('JSONP timeout'));},ms);window[cb]=data=>{if(done)return;done=true;clearTimeout(timer);delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);resolve(data);};s.onerror=()=>{if(done)return;done=true;clearTimeout(timer);delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);reject(new Error('JSONP error'));};s.src=SCRIPT_URL+(SCRIPT_URL.includes('?')?'&':'?')+'callback='+cb+'&t='+Date.now();document.head.appendChild(s);});}
+function saveLocalCache(){try{const sc=stock.map(function(i){const c=Object.assign({},i);if(c.photo&&!c.photo.startsWith('http'))delete c.photo;if(c.mapPhotos)c.mapPhotos=c.mapPhotos.filter(function(p){return p&&p.startsWith('http');});if(c.mapPhoto&&!c.mapPhoto.startsWith('http'))delete c.mapPhoto;delete c.mapPhoto2;return c;});var _lpCache={};Object.keys(locationPhotos||{}).forEach(function(k){var v=locationPhotos[k];if(v&&v.startsWith('http'))_lpCache[k]=v;});localStorage.setItem('ds_cache',JSON.stringify({stock:sc,history:history,categories:categories,catGroups:catGroups,locations:locations,locationPhotos:_lpCache}));}catch(e){console.warn('[cache]',e);}}function loadLocalCache(){try{const r=localStorage.getItem('ds_cache');return r?JSON.parse(r):null;}catch(e){return null;}}function _saveItemPhotoLocal(id,photo){try{localStorage.setItem('item_photo_'+id,photo);}catch(e){console.warn('[photo save]',e);}}function _restorePhotosFromLocal(){try{stock.forEach(function(x){var p=localStorage.getItem('item_photo_'+x.id);if(p){if(!x.photo||(p.startsWith('http')&&(!x.photo||!x.photo.startsWith('http')))){x.photo=p;}}});}catch(e){}} function jsonp(url,ms){ms=ms||12000;return new Promise((resolve,reject)=>{const cb='_dscb_'+Date.now()+'_'+Math.random().toString(36).slice(2);const s=document.createElement('script');let done=false;const timer=setTimeout(()=>{if(done)return;done=true;delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);reject(new Error('JSONP timeout'));},ms);window[cb]=data=>{if(done)return;done=true;clearTimeout(timer);delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);resolve(data);};s.onerror=()=>{if(done)return;done=true;clearTimeout(timer);delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);reject(new Error('JSONP error'));};s.src=SCRIPT_URL+(SCRIPT_URL.includes('?')?'&':'?')+'callback='+cb+'&t='+Date.now();document.head.appendChild(s);});}
 function postNoCors(payload){
   return new Promise(resolve=>{
     try{
@@ -1596,9 +1596,13 @@ function syncToSheets(){if(syncPending)return;syncPending=true;showSyncStatus('s
     });
     // locations — видаляємо base64 фото
     var locClean=locations.map(function(r){
-      var rc=Object.assign({},r); delete rc.photo;
+      var rc=Object.assign({},r);
+      if(rc.photo&&!rc.photo.startsWith('http')) delete rc.photo;
       if(rc.cells) rc.cells=rc.cells.map(function(c){
-        var cc=Object.assign({},c); delete cc.photo; delete cc.containerPhotos; return cc;
+        var cc=Object.assign({},c);
+        if(cc.photo&&!cc.photo.startsWith('http')) delete cc.photo;
+        if(cc.containerPhotos){var _cp={};Object.keys(cc.containerPhotos).forEach(function(k){var v=cc.containerPhotos[k];if(v&&v.startsWith('http'))_cp[k]=v;});cc.containerPhotos=_cp;}
+        return cc;
       });
       return rc;
     });
@@ -3531,7 +3535,7 @@ function nav2HandlePhoto(e) {
       try { localStorage.setItem('nav_photo_'+key, _navB64); } catch(le) {}
       nav2Render();
       toast('Фото оновлено, завантажую...');
-      // 2) Cloudinary у фоні — замінюємо на URL
+      // 2) Cloudinary у фоні — замінюємо на URL коли готово
       var _navKey = key.replace(/::/g,'__');
       _cldUpload(_navB64, 'nav_'+_navKey).then(function(url){
         if(url){
@@ -3539,7 +3543,7 @@ function nav2HandlePhoto(e) {
           _saveNavPhotoToLocations(key, url);
           try { localStorage.setItem('nav_photo_'+key, url); } catch(le) {}
           nav2Render();
-          toast('✓ Фото збережено');
+          toast('\u2713 Фото збережено');
         }
         forceSyncToSheets();
       });
@@ -3573,6 +3577,19 @@ function _saveNavPhotoToLocations(key, photo) {
     }
   }
 }
+function _restoreNavPhotosFromLocal() {
+  try {
+    for (var k in localStorage) {
+      if (k.indexOf('nav_photo_') !== 0) continue;
+      var key = k.replace('nav_photo_', '');
+      var p = localStorage.getItem(k);
+      if (!p) continue;
+      var cur = locationPhotos[key];
+      // HTTP URL завжди має пріоритет; base64 — якщо немає нічого
+      if (p.startsWith('http') || !cur) { locationPhotos[key] = p; }
+    }
+  } catch(e) {}
+}
 function _loadNavPhotosFromLocations() {
   locationPhotos = {};
   locations.forEach(function(r) {
@@ -3586,6 +3603,7 @@ function _loadNavPhotosFromLocations() {
       }
     });
   });
+  // Поверх накладаємо збережені в localStorage (як item_photo_N для товарів)
   _restoreNavPhotosFromLocal();
 }
 
@@ -3972,7 +3990,6 @@ window.addEventListener('load',fixMobilePadding);window.addEventListener('resize
 document.addEventListener("DOMContentLoaded",function(){
   var pre=document.getElementById("preloader");
   if(pre){pre.style.transition="opacity 0.3s";pre.style.opacity="0";setTimeout(function(){pre.style.display="none";},350);}
-  try{localStorage.clear();}catch(e){}
   renderAll();renderHistory();window._preHidden=true;setTimeout(loadFromSheets,100);
 });
 document.addEventListener("click",function(e){
