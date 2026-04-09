@@ -1743,9 +1743,11 @@ async function loadFromSheets(){
     if(data&&(data.stock||data.history||data.categories)){
       if(Array.isArray(data.stock)&&data.stock.length>=0){stock=data.stock.map(normalizeItem);}
       // Очищаємо зіпсовані фото з stock (рядки типу '+photo+')
+      var _stockDirty = false;
       stock.forEach(function(i){
-        if(i.photo && typeof i.photo==='string' && (i.photo.includes("'+")||i.photo.includes("+'"))) { i.photo=null; }
+        if(i.photo && typeof i.photo==='string' && (i.photo.includes("'+")||i.photo.includes("+'"))) { i.photo=null; _stockDirty=true; }
       });
+      if(_stockDirty){ console.log('[FB] Cleaned corrupted item photos, resyncing...'); setTimeout(forceSyncToSheets, 1000); }
       if(Array.isArray(data.history))history=data.history;
       if(Array.isArray(data.categories)&&data.categories.length>0)categories=data.categories;
       if(data.catGroups)Object.assign(catGroups,data.catGroups);
