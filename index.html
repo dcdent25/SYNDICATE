@@ -776,7 +776,6 @@ let currentDetailId = null;
 let activeFilter = 'all';
 let syncPending = false;
 let stock = [];
-try{var _oc=localStorage.getItem('orderCart');var _cc=localStorage.getItem('checkedCart');if(_oc)orderCart=JSON.parse(_oc);if(_cc)checkedCart=JSON.parse(_cc);}catch(e){}
 let history = [];
 let categories = ['Анестезія','Композит','Ендодонтія','Гігієна','Рентген','Стерилізація','Інструмент'];
 let newItemPhoto = null;
@@ -2163,8 +2162,8 @@ function openHistoryModal(){histFilter='all';document.querySelectorAll('#ov-hist
 function setHistFilter(f,el){histFilter=f;document.querySelectorAll('#ov-history .fchip').forEach(b=>b.classList.remove('active'));if(el)el.classList.add('active');renderHistModal();}
 
 // ===== ЛИСТ ЗАМОВЛЕННЯ =====
-var orderCart={};
-var checkedCart={};
+var orderCart=(function(){try{var v=localStorage.getItem('orderCart');return v?JSON.parse(v):{}}catch(e){return{}}})();
+var checkedCart=(function(){try{var v=localStorage.getItem('checkedCart');return v?JSON.parse(v):{}}catch(e){return{}}})();
 var orderFilter='all';
 function openOrderModal(){orderFilter='all';document.querySelectorAll('#ov-order .fchip').forEach(b=>b.classList.remove('active'));var a=document.getElementById('of-all');if(a)a.classList.add('active');renderOrderModal();document.getElementById('ov-order').classList.add('open');var fab=document.getElementById('orderCartFab');if(fab)fab.style.display='flex';}
 function setOrderFilter(f,el){
