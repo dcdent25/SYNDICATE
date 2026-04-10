@@ -1281,7 +1281,7 @@ function bindTouchGlow(){document.querySelectorAll('.ai-glow').forEach(el=>{if(e
 document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
 function updateFAB(){}
 updateFAB();window.addEventListener('resize',updateFAB);
-function hidePreloader(){const pre=document.getElementById('preloader');if(!pre)return;const st=document.getElementById('preStatus');if(st){st.style.color='var(--green)';st.textContent='Готово ✓';}setTimeout(()=>pre.classList.add('hidden'),600);}
+function hidePreloader(){const pre=document.getElementById('preloader');if(!pre)return;const st=document.getElementById('preStatus');if(st){st.style.color='var(--green)';st.textContent='Готово ✓';}setTimeout(()=>{pre.classList.add('hidden');if(typeof updateCartFabBadge==='function')updateCartFabBadge();},600);}
 function exportToExcel() {
   try {
     var wb = XLSX.utils.book_new();
@@ -4673,4 +4673,4 @@ function doCartOrder(){
   closeModal('cart');
 }
 
-</script></body></html>
+</body></html>
