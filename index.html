@@ -2152,18 +2152,28 @@ function setHistFilter(f,el){histFilter=f;document.querySelectorAll('#ov-history
 var orderCart={};
 var orderFilter='all';
 function openOrderModal(){orderFilter='all';document.querySelectorAll('#ov-order .fchip').forEach(b=>b.classList.remove('active'));var a=document.getElementById('of-all');if(a)a.classList.add('active');renderOrderModal();document.getElementById('ov-order').classList.add('open');}
-function setOrderFilter(f,el){orderFilter=f;document.querySelectorAll('#ov-order .fchip').forEach(b=>b.classList.remove('active'));if(el)el.classList.add('active');renderOrderModal();}
+function setOrderFilter(f,el){
+  orderFilter=f;
+  document.querySelectorAll('#ov-order .fchip').forEach(b=>b.classList.remove('active'));
+  if(el){el.classList.add('active');}
+  else{
+    var map={'all':'of-all','crit':'of-crit','low':'of-low','ok':'of-all'};
+    var chip=document.getElementById(map[f]||'of-all');
+    if(chip)chip.classList.add('active');
+  }
+  renderOrderModal();
+}
 function renderOrderModal(){
-  var _oq=(document.getElementById('orderSearch')||{}).value||'';var _oql=_oq.toLowerCase();  var items=stock.filter(function(i){var sq=i.stockQty!=null?i.stockQty:i.qty;var r=sq/Math.max(i.min,1);var matchFilter=orderFilter==='crit'?r<0.5:orderFilter==='low'?(r>=0.5&&r<1):r<1;var matchSearch=!_oql||i.name.toLowerCase().includes(_oql)||(i.cat||'').toLowerCase().includes(_oql);return matchFilter&&matchSearch;}).sort(function(a,b){var ra=(a.stockQty!=null?a.stockQty:a.qty)/Math.max(a.min,1);var rb=(b.stockQty!=null?b.stockQty:b.qty)/Math.max(b.min,1);return ra-rb;});
+  var _oq=(document.getElementById('orderSearch')||{}).value||'';var _oql=_oq.toLowerCase();  var items=stock.filter(function(i){var sq=i.stockQty!=null?i.stockQty:i.qty;var r=sq/Math.max(i.min,1);var matchFilter=orderFilter==='crit'?r<0.5:orderFilter==='low'?(r>=0.5&&r<1):orderFilter==='ok'?r>=1:r<1;var matchSearch=!_oql||i.name.toLowerCase().includes(_oql)||(i.cat||'').toLowerCase().includes(_oql);return matchFilter&&matchSearch;}).sort(function(a,b){var ra=(a.stockQty!=null?a.stockQty:a.qty)/Math.max(a.min,1);var rb=(b.stockQty!=null?b.stockQty:b.qty)/Math.max(b.min,1);return ra-rb;});
   var crit=stock.filter(function(i){var sq=i.stockQty!=null?i.stockQty:i.qty;return sq/Math.max(i.min,1)<0.5;}).length;
   var low=stock.filter(function(i){var sq=i.stockQty!=null?i.stockQty:i.qty;var r=sq/Math.max(i.min,1);return r>=0.5&&r<1;}).length;
   var ok=stock.filter(function(i){var sq=i.stockQty!=null?i.stockQty:i.qty;return sq/Math.max(i.min,1)>=1;}).length;
   var totalCost=stock.reduce(function(s,i){return s+(i.stockQty!=null?i.stockQty:i.qty||0)*(i.price||0);},0);
   var mc=document.getElementById('orderMetrics');
   if(mc)mc.innerHTML=
-    '<div style="background:var(--red-s);border:1.5px solid rgba(242,139,130,.2);border-radius:12px;padding:12px 14px"><div style="font-size:11px;color:var(--sub);font-family:var(--font-d);margin-bottom:4px">Критичний рівень</div><div style="font-size:24px;font-weight:700;font-family:var(--font-d);color:var(--red);line-height:1">'+crit+'</div><div style="font-size:10px;color:var(--sub);margin-top:2px">необхідне замовлення</div></div>'
-    +'<div style="background:var(--amber-s);border:1.5px solid rgba(253,214,99,.2);border-radius:12px;padding:12px 14px"><div style="font-size:11px;color:var(--sub);font-family:var(--font-d);margin-bottom:4px">Мало залишків</div><div style="font-size:24px;font-weight:700;font-family:var(--font-d);color:var(--amber);line-height:1">'+low+'</div><div style="font-size:10px;color:var(--sub);margin-top:2px">потребують поповнення</div></div>'
-    +'<div style="background:var(--green-s);border:1.5px solid rgba(129,201,149,.2);border-radius:12px;padding:12px 14px"><div style="font-size:11px;color:var(--sub);font-family:var(--font-d);margin-bottom:4px">В нормі</div><div style="font-size:24px;font-weight:700;font-family:var(--font-d);color:var(--green);line-height:1">'+ok+'</div><div style="font-size:10px;color:var(--sub);margin-top:2px">позицій в нормі</div></div>'
+    '<div onclick="setOrderFilter(\'crit\',null)" style="background:var(--red-s);border:1.5px solid '+(orderFilter==='crit'?'var(--red)':'rgba(242,139,130,.2)')+';border-radius:12px;padding:12px 14px;cursor:pointer"><div style="font-size:11px;color:var(--sub);font-family:var(--font-d);margin-bottom:4px">Критичний рівень</div><div style="font-size:24px;font-weight:700;font-family:var(--font-d);color:var(--red);line-height:1">'+crit+'</div><div style="font-size:10px;color:var(--sub);margin-top:2px">необхідне замовлення</div></div>'
+    +'<div onclick="setOrderFilter(\'low\',null)" style="background:var(--amber-s);border:1.5px solid '+(orderFilter==='low'?'var(--amber)':'rgba(253,214,99,.2)')+';border-radius:12px;padding:12px 14px;cursor:pointer"><div style="font-size:11px;color:var(--sub);font-family:var(--font-d);margin-bottom:4px">Мало залишків</div><div style="font-size:24px;font-weight:700;font-family:var(--font-d);color:var(--amber);line-height:1">'+low+'</div><div style="font-size:10px;color:var(--sub);margin-top:2px">потребують поповнення</div></div>'
+    +'<div onclick="setOrderFilter(\'ok\',null)" style="background:var(--green-s);border:1.5px solid '+(orderFilter==='ok'?'var(--green)':'rgba(129,201,149,.2)')+';border-radius:12px;padding:12px 14px;cursor:pointer"><div style="font-size:11px;color:var(--sub);font-family:var(--font-d);margin-bottom:4px">В нормі</div><div style="font-size:24px;font-weight:700;font-family:var(--font-d);color:var(--green);line-height:1">'+ok+'</div><div style="font-size:10px;color:var(--sub);margin-top:2px">позицій в нормі</div></div>'
     +'<div style="background:var(--blue-s);border:1.5px solid rgba(138,180,248,.2);border-radius:12px;padding:12px 14px"><div style="font-size:11px;color:var(--sub);font-family:var(--font-d);margin-bottom:4px">Всього залишків</div><div style="font-size:18px;font-weight:700;font-family:var(--font-d);color:var(--blue);line-height:1.2">'+totalCost.toLocaleString('uk')+'</div><div style="font-size:10px;color:var(--sub);margin-top:2px">₴ вартість на складі</div></div>';
   var cnt=document.getElementById('orderModalCount');
   if(cnt)cnt.textContent=items.length+' позицій · '+Object.keys(orderCart).length+' у кошику';
