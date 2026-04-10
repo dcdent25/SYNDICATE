@@ -776,6 +776,7 @@ let currentDetailId = null;
 let activeFilter = 'all';
 let syncPending = false;
 let stock = [];
+try{var _oc=localStorage.getItem('orderCart');var _cc=localStorage.getItem('checkedCart');if(_oc)orderCart=JSON.parse(_oc);if(_cc)checkedCart=JSON.parse(_cc);}catch(e){}
 let history = [];
 let categories = ['Анестезія','Композит','Ендодонтія','Гігієна','Рентген','Стерилізація','Інструмент'];
 let newItemPhoto = null;
@@ -2209,7 +2210,19 @@ function renderOrderModal(){
     return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 14px 14px 10px;display:flex;align-items:center;gap:14px;transition:box-shadow .15s" onmouseover="this.style.boxShadow=\'var(--shadow2)\'" onmouseout="this.style.boxShadow=\'\'">'+(item.photo?'<img src="'+item.photo+'" style="width:58px;height:58px;border-radius:10px;object-fit:cover;flex-shrink:0;border:1px solid var(--border)">':('<div style="width:58px;height:58px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px">') + '📦</div>')+ '<div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="font-family:var(--font-d);font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">'+item.name+'</span><span style="flex-shrink:0;background:'+statusBg+';color:'+statusColor+';border-radius:100px;font-family:var(--font-d);font-size:11px;font-weight:600;padding:2px 9px">'+statusLabel+'</span></div><div style="font-size:12px;color:var(--sub);margin-bottom:8px">'+(item.cat||'—')+'</div><div style="height:4px;background:var(--border2);border-radius:4px;overflow:hidden;margin-bottom:6px"><div style="height:100%;background:'+barColor+';border-radius:4px;width:'+barW+'%"></div></div><div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:12px;color:var(--sub)">Залишок: <b style="color:var(--text)">'+sq+'</b> / мін: '+item.min+'</span><span style="font-family:var(--font-d);font-size:13px;font-weight:600;color:var(--amber)">₴ '+((item.price||0)*need).toLocaleString('uk')+'</span></div></div><div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0">'+(inCart>0?'<span style="font-size:11px;font-weight:700;color:var(--blue);font-family:var(--font-d)">+'+inCart+'</span>':'<span style="font-size:11px;color:transparent">0</span>')+'<button onclick="orderCartAdd('+item.id+')" style="width:38px;height:38px;border-radius:50%;background:var(--green);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#1c1f26;box-shadow:0 2px 8px rgba(129,201,149,.4);transition:opacity .15s" onmouseover="this.style.opacity=\'.8\'" onmouseout="this.style.opacity=\'1\'"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button></div></div>';
   }).join('');
 }
-function orderCartAdd(id){orderCart[id]=(orderCart[id]||0)+1;renderOrderModal();updateCartFabBadge();var item=stock.find(function(x){return x.id===id;});if(item)toast('🛒 '+item.name+' додано до кошика');}
+function orderCartAdd(id){orderCart[id]=(orderCart[id]||0)+1;saveCartToStorage();renderOrderModal();updateCartFabBadge();var item=stock.find(function(x){return x.id===id;});if(item)toast('🛒 '+item.name+' додано до кошика');}
+function saveCartToStorage(){
+  try{localStorage.setItem('orderCart',JSON.stringify(orderCart));localStorage.setItem('checkedCart',JSON.stringify(checkedCart));}catch(e){}
+}
+function loadCartFromStorage(){
+  try{
+    var oc=localStorage.getItem('orderCart');
+    var cc=localStorage.getItem('checkedCart');
+    if(oc)orderCart=JSON.parse(oc);
+    if(cc)checkedCart=JSON.parse(cc);
+    updateCartFabBadge();
+  }catch(e){}
+}
 function updateCartFabBadge(){var n=Object.keys(orderCart).length;var fab=document.getElementById('orderCartFab');if(!fab)return;var badge=document.getElementById('cartFabBadge');if(n>0){if(!badge){badge=document.createElement('span');badge.id='cartFabBadge';badge.style.cssText='position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;border-radius:50%;width:18px;height:18px;font-size:11px;font-weight:700;font-family:var(--font-d);display:flex;align-items:center;justify-content:center;pointer-events:none';fab.style.position='fixed';fab.appendChild(badge);}badge.textContent=n;}else if(badge){badge.remove();}}
 function clearOrderCart(){orderCart={};renderOrderModal();toast('Кошик очищено');}
 
@@ -4581,7 +4594,7 @@ function renderCartModal(){
     var statusLabel=isCrit?'Критично':'Мало';
     var statusColor=isCrit?'var(--red)':'var(--amber)';
     var statusBg=isCrit?'var(--red-s)':'var(--amber-s)';
-    var isChecked = checkedCart[id] !== false;
+    var isChecked = checkedCart[id] === true;
     return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px;display:flex;align-items:center;gap:10px">'
 
       +(item.photo
@@ -4615,15 +4628,18 @@ function cartQtyChange(id, delta){
   var next=cur+delta;
   if(next<=0){cartRemove(id);return;}
   orderCart[id]=next;
+  saveCartToStorage();
   renderCartModal();
 }
 
 function toggleCartCheck(id){
-  checkedCart[id] = checkedCart[id] === false ? true : false;
+  checkedCart[id] = checkedCart[id] === true ? false : true;
   renderCartModal();
 }
 function cartRemove(id){
   delete orderCart[id];
+  delete checkedCart[id];
+  saveCartToStorage();
   renderCartModal();
   updateCartFabBadge();
   if(Object.keys(orderCart).length===0){
