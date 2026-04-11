@@ -4118,6 +4118,15 @@ function _saveNavPhotoToLocations(key, photo) {
       }
     }
   }
+  // Always sync to open detail card
+  try {
+    if(currentDetailId) {
+      var _sdi = stock.find(function(x){return x.id===currentDetailId;});
+      if(_sdi && document.getElementById('ov-detail') && document.getElementById('ov-detail').classList.contains('open')) {
+        renderStorageCards(_sdi);
+      }
+    }
+  } catch(e) {}
 }
 function _restoreNavPhotosFromLocal() {
   try {
