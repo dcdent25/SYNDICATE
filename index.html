@@ -3067,6 +3067,9 @@ function nav2PhotoFullscreen(src) {
   document.body.appendChild(ov);
 }
 function nav2Render() {
+  _loadNavPhotosFromLocations();
+  // Also overlay localStorage nav photos
+  try{for(var _nk in localStorage){if(_nk.indexOf('nav_photo_')!==0)continue;var _nv=localStorage.getItem(_nk);if(_nv&&_nv.length>10&&!_nv.includes("'+photo+'")){locationPhotos[_nk.replace('nav_photo_','')]=_nv;}}}catch(e){}
   var body = document.getElementById('nav2-body');
   var bc   = document.getElementById('nav2-breadcrumb');
   var inp  = document.getElementById('nav2-inp');
