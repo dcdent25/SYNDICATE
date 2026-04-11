@@ -2865,12 +2865,22 @@ function renderStorageCards(i) {
   var cell = i ? (i.storage||'') : '';
   var con  = i ? (i.con||'') : '';
   var isEditMode = document.querySelector('#ov-detail .modal') && document.querySelector('#ov-detail .modal').classList.contains('detail-edit-mode');
-  _loadNavPhotosFromLocations();
-  // Overlay with localStorage nav photos (may be newer than locations array)
-  try{for(var _k in localStorage){if(_k.indexOf('nav_photo_')!==0)continue;var _v=localStorage.getItem(_k);if(_v&&_v.length>10&&!_v.includes("'+photo+'")){locationPhotos[_k.replace('nav_photo_','')]=_v;}}}catch(e){}
-  var photoRoom = room ? (locationPhotos[room]||null) : null;
-  var photoCell = (room&&cell) ? (locationPhotos[room+'::'+cell]||null) : null;
-  var photoCon  = (room&&cell&&con) ? (locationPhotos[room+'::'+cell+'::'+con]||null) : null;
+  // Always read fresh from localStorage first, then overlay locationPhotos
+  var _freshPhotos = {};
+  try{
+    for(var _k in localStorage){
+      if(_k.indexOf('nav_photo_')!==0)continue;
+      var _v=localStorage.getItem(_k);
+      if(_v&&_v.length>10&&!_v.includes("'+photo+'")&&!_v.includes("'+p+'")){
+        _freshPhotos[_k.replace('nav_photo_','')]=_v;
+      }
+    }
+  }catch(e){}
+  // Merge: locationPhotos (already updated by _saveNavPhotoToLocations) wins over localStorage
+  Object.keys(locationPhotos).forEach(function(k){if(locationPhotos[k])_freshPhotos[k]=locationPhotos[k];});
+  var photoRoom = room ? (_freshPhotos[room]||locationPhotos[room]||null) : null;
+  var photoCell = (room&&cell) ? (_freshPhotos[room+'::'+cell]||locationPhotos[room+'::'+cell]||null) : null;
+  var photoCon  = (room&&cell&&con) ? (_freshPhotos[room+'::'+cell+'::'+con]||locationPhotos[room+'::'+cell+'::'+con]||null) : null;
 
   function card(label, val, photo, type) {
     var s = '<div id="dStorCard_'+type+'" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color .15s'+(isEditMode?';cursor:pointer':'')+'">';
@@ -4120,12 +4130,14 @@ function _saveNavPhotoToLocations(key, photo) {
   }
   // Always sync to open detail card
   try {
-    if(currentDetailId) {
-      var _sdi = stock.find(function(x){return x.id===currentDetailId;});
-      if(_sdi && document.getElementById('ov-detail') && document.getElementById('ov-detail').classList.contains('open')) {
-        renderStorageCards(_sdi);
+    setTimeout(function(){
+      if(currentDetailId) {
+        var _sdi = stock.find(function(x){return x.id===currentDetailId;});
+        if(_sdi && document.getElementById('ov-detail') && document.getElementById('ov-detail').classList.contains('open')) {
+          renderStorageCards(_sdi);
+        }
       }
-    }
+    }, 50);
   } catch(e) {}
 }
 function _restoreNavPhotosFromLocal() {
