@@ -3610,9 +3610,13 @@ function nav2EditCardSimple(ft) {
           _saveNavPhotoToLocations(photoKey, url);
           try { localStorage.setItem('nav_photo_'+photoKey, url); } catch(e) {}
         }
+        // Sync to open detail card
+        if(currentDetailId){var _si=stock.find(function(x){return x.id===currentDetailId;});if(_si)renderStorageCards(_si);}
         forceSyncToSheets();
       });
     }
+    // Sync immediately with base64
+    if(currentDetailId){var _si2=stock.find(function(x){return x.id===currentDetailId;});if(_si2)renderStorageCards(_si2);}
     /* Зберігаємо назву */
     if(newName && newName !== curVal) {
       nav2SaveOneField(ft, newName);
