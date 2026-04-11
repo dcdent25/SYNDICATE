@@ -1074,7 +1074,8 @@ function openModal(type){
   }
   document.getElementById('ov-'+type).classList.add('open');
 }
-function closeModal(t){document.getElementById('ov-'+t).classList.remove('open');if(t==='order'){var fab=document.getElementById('orderCartFab');if(fab)fab.style.display='none';}if(t==='detail'){var ef=document.getElementById('dEditFab');if(ef)ef.style.display='none';var modal=document.querySelector('#ov-detail .modal');if(modal)modal.classList.remove('detail-edit-mode');}}
+function closeModal(t){document.getElementById('ov-'+t).classList.remove('open');if(t==='order'){var fab=document.getElementById('orderCartFab');if(fab)fab.style.display='none';}if(t==='detail'){var ef=document.getElementById('dEditFab');if(ef)ef.style.display='none';var modal=document.querySelector('#ov-detail .modal');if(modal)modal.classList.remove('detail-edit-mode');}if(t==='nav'){// Sync nav photos to open detail card
+var _di=currentDetailId?stock.find(function(x){return x.id===currentDetailId;}):null;if(_di&&document.getElementById('ov-detail').classList.contains('open'))renderStorageCards(_di);}}
 function preIn(id){openModal('in');document.getElementById('inItem').value=id;}
 function preOut(id){openModal('out');document.getElementById('outItem').value=id;}
 function preGive(id){openModal('give');document.getElementById('giveItem').value=id;}
@@ -2911,7 +2912,18 @@ function renderStorageCards(i) {
       el.addEventListener('click', function(){
         var editing = document.querySelector('#ov-detail .modal') && document.querySelector('#ov-detail .modal').classList.contains('detail-edit-mode');
         if(editing) { dStoragePick(type); return; }
-        if(photo) openLocPhoto(photo);
+        if(photo) { openLocPhoto(photo); return; }
+        // No photo - open nav modal to upload photo for this cell
+        if(type==='cell' && room && cell) {
+          var _ni=stock.find(function(x){return x.id===currentDetailId;});
+          if(_ni){
+            NAV2.level=2; NAV2.room=room; NAV2.cell=cell; NAV2.con='';
+            NAV2._storageMode=false; NAV2._detail=false;
+            _loadNavPhotosFromLocations();
+            nav2Render();
+            document.getElementById('ov-nav').classList.add('open');
+          }
+        }
       });
     }
   });
