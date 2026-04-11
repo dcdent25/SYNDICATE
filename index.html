@@ -2891,7 +2891,19 @@ function renderStorageCards(i) {
   conCardHtml += '</div><div style="padding:8px 10px"><div style="font-size:9px;color:var(--sub);font-family:var(--font-d);font-weight:500;margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px">Контейнер</div>';
   conCardHtml += '<div style="font-family:var(--font-d);font-size:13px;font-weight:600;color:'+(con?'var(--text)':'var(--muted)')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(con||'—')+'</div></div></div>';
 
-  wrap.innerHTML = card('Приміщення', room, photoRoom, 'room') + card('Комірка', cell, photoCell, 'cell') + conCardHtml;
+    // Build Мапа card - shows cell photo, syncs with navigation
+  var mapPhoto = photoCell || photoRoom || null;
+  var mapCardHtml = '<div id="dMapCard" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color .15s;cursor:pointer">';
+  mapCardHtml += '<div style="width:100%;aspect-ratio:16/9;background:var(--bg);position:relative;overflow:hidden">';
+  if(mapPhoto){ mapCardHtml += '<img src="'+mapPhoto+'" style="width:100%;height:100%;object-fit:cover;display:block">'; }
+  else { mapCardHtml += '<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="color:var(--muted)"><path d="M12 15.2A3.2 3.2 0 1 1 12 8.8a3.2 3.2 0 0 1 0 6.4zM9 2L7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.17L15 2H9z"/></svg><div style="font-size:10px;color:var(--muted);font-family:var(--font-d)">Фото</div></div>'; }
+  mapCardHtml += '</div><div style="padding:8px 10px">';
+  mapCardHtml += '<div style="font-size:9px;color:var(--sub);font-family:var(--font-d);font-weight:500;margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px">Мапа</div>';
+  mapCardHtml += '<div style="font-family:var(--font-d);font-size:13px;font-weight:600;color:'+(mapPhoto?'var(--text)':'var(--muted)')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(cell||'—')+'</div>';
+  mapCardHtml += '</div></div>';
+
+  wrap.style.gridTemplateColumns = '1fr 1fr 1fr 1fr';
+  wrap.innerHTML = card('Приміщення', room, photoRoom, 'room') + card('Комірка', cell, photoCell, 'cell') + conCardHtml + mapCardHtml;
 
   function openLocPhoto(photo) {
     var ov = document.createElement('div');
@@ -2900,6 +2912,30 @@ function renderStorageCards(i) {
       +'<button style="position:fixed;top:16px;right:16px;width:40px;height:40px;background:rgba(255,255,255,.15);border:none;border-radius:50%;color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)" onclick="this.parentNode.remove()">✕</button>';
     ov.addEventListener('click', function(e){ if(e.target===ov) ov.remove(); });
     document.body.appendChild(ov);
+  }
+
+  // Мапа card click handler
+  var mapCard = document.getElementById('dMapCard');
+  if(mapCard) {
+    mapCard.addEventListener('mouseover', function(){ this.style.borderColor='var(--blue)'; });
+    mapCard.addEventListener('mouseout',  function(){ this.style.borderColor='var(--border)'; });
+    mapCard.addEventListener('click', function(){
+      var mPhoto = locationPhotos[(room&&cell)?room+'::'+cell:room] || null;
+      if(mPhoto){ openLocPhoto(mPhoto); return; }
+      // No photo - open nav on this cell
+      if(room && cell){
+        NAV2.level=2; NAV2.room=room; NAV2.cell=cell; NAV2.con='';
+        NAV2._storageMode=false; NAV2._detail=false;
+        _loadNavPhotosFromLocations();
+        nav2Render();
+        document.getElementById('ov-nav').classList.add('open');
+      } else if(room){
+        NAV2.level=1; NAV2.room=room; NAV2.cell=''; NAV2.con='';
+        _loadNavPhotosFromLocations();
+        nav2Render();
+        document.getElementById('ov-nav').classList.add('open');
+      }
+    });
   }
 
   ['room','cell'].forEach(function(type) {
