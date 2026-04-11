@@ -2865,6 +2865,8 @@ function renderStorageCards(i) {
   var con  = i ? (i.con||'') : '';
   var isEditMode = document.querySelector('#ov-detail .modal') && document.querySelector('#ov-detail .modal').classList.contains('detail-edit-mode');
   _loadNavPhotosFromLocations();
+  // Overlay with localStorage nav photos (may be newer than locations array)
+  try{for(var _k in localStorage){if(_k.indexOf('nav_photo_')!==0)continue;var _v=localStorage.getItem(_k);if(_v&&_v.length>10&&!_v.includes("'+photo+'")){locationPhotos[_k.replace('nav_photo_','')]=_v;}}}catch(e){}
   var photoRoom = room ? (locationPhotos[room]||null) : null;
   var photoCell = (room&&cell) ? (locationPhotos[room+'::'+cell]||null) : null;
   var photoCon  = (room&&cell&&con) ? (locationPhotos[room+'::'+cell+'::'+con]||null) : null;
@@ -4001,6 +4003,8 @@ function nav2HandlePhoto(e) {
       locationPhotos[key] = _navB64;
       _saveNavPhotoToLocations(key, _navB64);
       try { localStorage.setItem('nav_photo_'+key, _navB64); } catch(le) {}
+      // Sync to detail card if open
+      if(currentDetailId){var _ci2=stock.find(function(x){return x.id===currentDetailId;});if(_ci2)renderStorageCards(_ci2);}
       nav2Render();
       toast('Фото оновлено, завантажую...');
       e.target.value = '';
@@ -4015,6 +4019,8 @@ function nav2HandlePhoto(e) {
           _saveNavPhotoToLocations(key, url);
           try { localStorage.setItem('nav_photo_'+key, url); } catch(le) {}
           nav2Render();
+          // Sync to detail card if open
+          if(currentDetailId){var _ci=stock.find(function(x){return x.id===currentDetailId;});if(_ci)renderStorageCards(_ci);}
           toast('\u2713 Фото збережено');
         }
         // Синхронізуємо тільки тут — як forceSyncToSheets після _cldUpload у товарів
