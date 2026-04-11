@@ -1848,8 +1848,9 @@ async function loadFromSheets(){
         Object.keys(data.navPhotos).forEach(function(fbKey){
           var val = data.navPhotos[fbKey];
           if(val && typeof val==='string' && val.length>10 && !val.includes("'+photo+'")) {
-            locationPhotos[fbKey] = val;
-            _fbNavPhotos[fbKey] = val; // зберігаємо окремо — не стирається при _loadNavPhotosFromLocations
+            var normalKey = fbKey.replace(/__/g,'::');
+            locationPhotos[normalKey] = val;
+            _fbNavPhotos[normalKey] = val; // зберігаємо окремо — не стирається при _loadNavPhotosFromLocations
           }
         });
       }
