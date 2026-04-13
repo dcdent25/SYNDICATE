@@ -365,6 +365,7 @@ html,body{background:#1c1f26!important;overflow-x:hidden!important}.t-container,
   <button class="gfbtn" id="catgfb-general" onclick="setCatGroupFilter('general',this)" style="flex:1;height:34px;font-size:12px">📦 Загальні</button>
 </div>
 <div style="font-size:11px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;font-family:var(--font-d)">Існуючі категорії</div><div id="catListWrap" style="display:flex;flex-direction:column;gap:6px"></div>
+<button onclick="toggleCatSortMode()" style="position:fixed;bottom:96px;right:32px;width:52px;height:52px;border-radius:50%;background:var(--surface2);border:1.5px solid var(--border);color:var(--sub);display:none;align-items:center;justify-content:center;cursor:pointer;box-shadow:var(--shadow2);z-index:9999" id="catSortFab"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>
 <button onclick="openNewCatModal()" style="position:fixed;bottom:32px;right:32px;width:52px;height:52px;border-radius:50%;background:var(--blue);border:none;color:#1c1f26;display:none;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 16px rgba(138,180,248,.4);z-index:9999" id="catFabBtn"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>
 </div>
 </div>
@@ -796,14 +797,14 @@ var _fbApp = null, _fbDb = null, _fbReady = false, _fbQueue = [];
             } else {
               // Firebase каже null - пробуємо авто-логін через збережені credentials
               try {
-                var savedEmail = localStorage.getItem('_savedEmail');
-                var savedPass = localStorage.getItem('_savedPass');
+                var savedEmail = _getCookie('_se') || localStorage.getItem('_savedEmail');
+                var savedPass = _getCookie('_sp') || localStorage.getItem('_savedPass');
                 if(savedEmail && savedPass && _fbAuth) {
                   _fbAuth.signInWithEmailAndPassword(savedEmail, savedPass)
                     .then(function(cred){ onUserSignedIn(cred.user); })
                     .catch(function(){
-                      localStorage.removeItem('_savedEmail');
-                      localStorage.removeItem('_savedPass');
+                      _deleteCookie('_se');localStorage.removeItem('_savedEmail');
+                      _deleteCookie('_sp');localStorage.removeItem('_savedPass');
                       _currentUser = null;
                       window._appStarted = false;
                       document.getElementById('authScreen').style.display = 'flex';
@@ -1019,7 +1020,7 @@ function openAddCatModal(){
   var _pb=document.getElementById('newCatType-'+preType);if(_pb)_pb.classList.add('active');
   renderCatList();
   document.getElementById('ov-addcat').classList.add('open');
-  var fab=document.getElementById('catFabBtn');if(fab)fab.style.display='flex';
+  var fab=document.getElementById('catFabBtn');if(fab)fab.style.display='flex';var sfab=document.getElementById('catSortFab');if(sfab)sfab.style.display='flex';
 }
 var _detailCatFilter='all';
 
@@ -1072,7 +1073,35 @@ function renderCatList(){const wrap=document.getElementById('catListWrap');if(!w
     return true;
   });
   if(!visCats.length){wrap.innerHTML='<div style="color:var(--sub);font-size:13px;padding:8px 0">Немає категорій у цій групі</div>';return;}
-  if(!categories.length){wrap.innerHTML='<div style="color:var(--sub);font-size:13px;padding:8px 0">Категорій ще немає</div>';return;}wrap.innerHTML=visCats.map((cat,ci)=>{const idx=categories.indexOf(cat);const count=stock.filter(s=>s.cat===cat).length;const _cid='catrow_'+ci;return '<div style="display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px"><span onclick="openCatItemsPicker(this.getAttribute(\'data-c\'))" data-c="'+cat.replace(/"/g,'&quot;')+'" style="font-family:var(--font-d);font-size:13px;font-weight:500;flex:1;color:var(--text);cursor:pointer;text-decoration:underline;text-decoration-color:var(--border)">'+cat+'</span><span style="font-family:var(--font-d);font-size:11px;color:var(--sub);background:var(--bg);padding:2px 8px;border-radius:100px;border:1px solid var(--border)">'+count+' поз.</span><button onclick="renameCat('+idx+')" style="height:28px;padding:0 10px;border-radius:100px;border:1.5px solid var(--border);background:transparent;color:var(--sub);font-family:var(--font-d);font-size:11px;cursor:pointer" onmouseover="this.style.color=\'var(--blue)\';this.style.borderColor=\'var(--blue)\'" onmouseout="this.style.color=\'var(--sub)\';this.style.borderColor=\'var(--border)\'">Перейменувати</button>'+(count===0?'<button onclick="deleteCat('+idx+')" style="height:28px;padding:0 10px;border-radius:100px;border:1.5px solid var(--border);background:transparent;color:var(--red);font-family:var(--font-d);font-size:11px;cursor:pointer" onmouseover="this.style.background=\'var(--red-s)\'" onmouseout="this.style.background=\'transparent\'">Видалити</button>':'')+'</div>';}).join('');}
+  if(!categories.length){wrap.innerHTML='<div style="color:var(--sub);font-size:13px;padding:8px 0">Категорій ще немає</div>';return;}if(window._catSortMode) {
+  // Sort mode - show draggable rows
+  wrap.innerHTML = visCats.map((cat,ci)=>{
+    const idx=categories.indexOf(cat);
+    const count=stock.filter(s=>s.cat===cat).length;
+    return '<div draggable="true" data-cat="'+cat.replace(/"/g,'&quot;')+'" data-idx="'+idx+'" ondragstart="catDragStart(event)" ondragover="catDragOver(event)" ondrop="catDrop(event)" style="display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;cursor:grab;user-select:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="color:var(--muted);flex-shrink:0"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg><span style="font-family:var(--font-d);font-size:13px;font-weight:500;flex:1">'+cat+'</span><span style="font-size:11px;color:var(--sub)">'+count+' поз.</span></div>';
+  }).join('');
+  // Add drag handlers
+  window.catDragStart = function(e){ e.dataTransfer.setData('text/plain', e.currentTarget.dataset.cat); e.currentTarget.style.opacity='.5'; };
+  window.catDragOver = function(e){ e.preventDefault(); e.currentTarget.style.borderColor='var(--blue)'; };
+  window.catDrop = function(e){
+    e.preventDefault();
+    var fromCat = e.dataTransfer.getData('text/plain');
+    var toCat = e.currentTarget.dataset.cat;
+    e.currentTarget.style.borderColor='var(--border)';
+    if(fromCat===toCat) return;
+    var fromI = categories.indexOf(fromCat);
+    var toI = categories.indexOf(toCat);
+    if(fromI===-1||toI===-1) return;
+    categories.splice(fromI,1);
+    categories.splice(toI,0,fromCat);
+    renderCatList();
+    renderAll();
+  };
+  // Reset opacity after drag
+  setTimeout(function(){ wrap.querySelectorAll('[draggable]').forEach(function(el){el.style.opacity='1';el.addEventListener('dragend',function(){this.style.opacity='1';});});},50);
+  return;
+}
+wrap.innerHTML=visCats.map((cat,ci)=>{const idx=categories.indexOf(cat);const count=stock.filter(s=>s.cat===cat).length;return '<div style="display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px"><span onclick="openCatItemsPicker(this.getAttribute(\'data-c\'))" data-c="'+cat.replace(/"/g,'&quot;')+'" style="font-family:var(--font-d);font-size:13px;font-weight:500;flex:1;color:var(--text);cursor:pointer;text-decoration:underline;text-decoration-color:var(--border)">'+cat+'</span><span style="font-family:var(--font-d);font-size:11px;color:var(--sub);background:var(--bg);padding:2px 8px;border-radius:100px;border:1px solid var(--border)">'+count+' поз.</span><button onclick="renameCat('+idx+')" style="height:28px;padding:0 10px;border-radius:100px;border:1.5px solid var(--border);background:transparent;color:var(--sub);font-family:var(--font-d);font-size:11px;cursor:pointer" onmouseover="this.style.color=\'var(--blue)\';this.style.borderColor=\'var(--blue)\'" onmouseout="this.style.color=\'var(--sub)\';this.style.borderColor=\'var(--border)\'">Перейменувати</button>'+(count===0?'<button onclick="deleteCat('+idx+')" style="height:28px;padding:0 10px;border-radius:100px;border:1.5px solid var(--border);background:transparent;color:var(--red);font-family:var(--font-d);font-size:11px;cursor:pointer" onmouseover="this.style.background=\'var(--red-s)\'" onmouseout="this.style.background=\'transparent\'">Видалити</button>':'')+'</div>';}).join('');}
 function renameCat(idx){const oldName=categories[idx];const newName=prompt('Нова назва категорії:',oldName);if(!newName||!newName.trim()||newName.trim()===oldName)return;const trimmed=newName.trim();if(categories.includes(trimmed)){toast('⚠ Така категорія вже існує');return;}stock.forEach(s=>{if(s.cat===oldName)s.cat=trimmed;});categories[idx]=trimmed;if(activeFilter===oldName)activeFilter=trimmed;renderCatList();renderAll();forceSyncToSheets();toast('✓ Перейменовано: '+trimmed);}
 function deleteCat(idx){const name=categories[idx];const count=stock.filter(s=>s.cat===name).length;if(count>0){toast('⚠ Є позиції з цією категорією');return;}if(!confirm('Видалити категорію "'+name+'"?'))return;categories.splice(idx,1);if(activeFilter===name)activeFilter='all';renderCatList();renderAll();forceSyncToSheets();toast('✓ Категорію видалено');}
 function openOpSuppPicker(inputId) {
@@ -4706,16 +4735,26 @@ window.addEventListener('load',fixMobilePadding);window.addEventListener('resize
 </script>
 <script>
 document.addEventListener("DOMContentLoaded",function(){
-  try {
-    if(localStorage.getItem('_authOk')==='1' || sessionStorage.getItem('_authOk')==='1') {
-      _currentUser = {email:'local', uid:'local', displayName:'Користувач'};
-      window._appStarted = true;
-      renderAll();
-      renderHistory();
-      setTimeout(loadFromSheets, 100);
-      return;
-    }
-  } catch(e) {}
+  // Відкриваємо IndexedDB і перевіряємо збережені credentials
+  _idbOpen(function(){
+    _idbGet('_se', function(se) {
+      _idbGet('_sp', function(sp) {
+        var fallbackSe = se || _getCookie('_se') || localStorage.getItem('_savedEmail');
+        var fallbackSp = sp || _getCookie('_sp') || localStorage.getItem('_savedPass');
+        if(fallbackSe && fallbackSp) {
+          _currentUser = {email: fallbackSe, uid: 'cached'};
+          window._appStarted = true;
+          renderAll();
+          renderHistory();
+          setTimeout(loadFromSheets, 100);
+          setTimeout(function(){
+            if(_fbAuth) _fbAuth.signInWithEmailAndPassword(fallbackSe, fallbackSp).catch(function(){});
+          }, 2000);
+        }
+        // Якщо нема - Firebase onAuthStateChanged покаже екран входу
+      });
+    });
+  });
   // Нема кешу - чекаємо Firebase
 });
 document.addEventListener("click",function(e){
@@ -4896,6 +4935,26 @@ function doCartOrder(){
 var _catItemsTarget = '';
 var _catItemsSelected = {};
 
+function toggleCatSortMode() {
+  window._catSortMode = !window._catSortMode;
+  var fab = document.getElementById('catSortFab');
+  if(fab) {
+    fab.style.background = window._catSortMode ? 'var(--green)' : 'var(--surface2)';
+    fab.style.color = window._catSortMode ? '#1c1f26' : 'var(--sub)';
+    fab.style.borderColor = window._catSortMode ? 'var(--green)' : 'var(--border)';
+    fab.innerHTML = window._catSortMode
+      ? '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>'
+      : '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>';
+  }
+  if(window._catSortMode) {
+    toast('Перетягуй категорії для сортування');
+  } else {
+    forceSyncToSheets();
+    toast('✓ Порядок збережено');
+  }
+  renderCatList();
+}
+
 function openCatItemsPicker(cat) {
   _catItemsTarget = cat;
   _catItemsSelected = {};
@@ -4960,7 +5019,61 @@ function saveCatItems() {
 // ===== АВТОРИЗАЦІЯ =====
 var _fbAuth = null;
 var _currentUser = null;
-var _AUTH_PASSWORD = 'dcdent2024'; // Пароль для входу
+
+function _setCookie(name, value, days) {
+  try {
+    var d = new Date();
+    d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+    document.cookie = name + '=' + encodeURIComponent(value) + ';expires=' + d.toUTCString() + ';path=/;SameSite=Lax';
+  } catch(e) {}
+}
+function _getCookie(name) {
+  try {
+    var ca = document.cookie.split(';');
+    for(var i=0;i<ca.length;i++){
+      var c = ca[i].trim();
+      if(c.indexOf(name+'=')==0) return decodeURIComponent(c.substring(name.length+1));
+    }
+  } catch(e) {}
+  return null;
+}
+function _deleteCookie(name) {
+  try { document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;'; } catch(e) {}
+}
+
+// IndexedDB для стійкого зберігання на iOS
+var _idb = null;
+function _idbOpen(cb) {
+  try {
+    var req = indexedDB.open('authdb', 1);
+    req.onupgradeneeded = function(e) { e.target.result.createObjectStore('kv'); };
+    req.onsuccess = function(e) { _idb = e.target.result; cb && cb(); };
+    req.onerror = function() { cb && cb(); };
+  } catch(e) { cb && cb(); }
+}
+function _idbSet(key, val) {
+  try {
+    if(!_idb) return;
+    var tx = _idb.transaction('kv', 'readwrite');
+    tx.objectStore('kv').put(val, key);
+  } catch(e) {}
+}
+function _idbGet(key, cb) {
+  try {
+    if(!_idb) { cb(null); return; }
+    var tx = _idb.transaction('kv', 'readonly');
+    var req = tx.objectStore('kv').get(key);
+    req.onsuccess = function() { cb(req.result || null); };
+    req.onerror = function() { cb(null); };
+  } catch(e) { cb(null); }
+}
+function _idbDel(key) {
+  try {
+    if(!_idb) return;
+    var tx = _idb.transaction('kv', 'readwrite');
+    tx.objectStore('kv').delete(key);
+  } catch(e) {}
+}
 
 function showAuthScreen() {
   try {
@@ -4999,8 +5112,8 @@ function authSignIn() {
       .then(function(cred){
         // Зберігаємо credentials для авто-логіну на iOS
         try {
-          localStorage.setItem('_savedEmail', email);
-          localStorage.setItem('_savedPass', pass);
+          _setCookie('_se', email, 365);
+          _setCookie('_sp', pass, 365);
         } catch(e) {}
         onUserSignedIn(cred.user);
       })
@@ -5060,12 +5173,12 @@ function authSignOut() {
   _currentUser = null;
   window._appStarted = false;
   try {
-    localStorage.removeItem('_authOk');
+    localStorage.removeItem('_authOk');_deleteCookie('_authOk');
     sessionStorage.removeItem('_authOk');
     localStorage.removeItem('_authUser');
     sessionStorage.removeItem('_authUser');
-    localStorage.removeItem('_savedEmail');
-    localStorage.removeItem('_savedPass');
+    _deleteCookie('_se');localStorage.removeItem('_savedEmail');
+    _deleteCookie('_sp');localStorage.removeItem('_savedPass');
   } catch(e) {}
   if(_fbAuth) _fbAuth.signOut().catch(function(){});
   showAuthScreen();
@@ -5076,7 +5189,7 @@ function authSignOut() {
 function onUserSignedIn(user) {
   _currentUser = user;
   try {
-    localStorage.setItem('_authOk', '1');
+    localStorage.setItem('_authOk', '1');_setCookie('_authOk','1',365);
     sessionStorage.setItem('_authOk', '1');
   } catch(e) {}
   hideAuthScreen();
