@@ -4671,9 +4671,8 @@ window.addEventListener('load',fixMobilePadding);window.addEventListener('resize
 </script>
 <script>
 document.addEventListener("DOMContentLoaded",function(){
-  var pre=document.getElementById("preloader");
-  if(pre){pre.style.transition="opacity 0.3s";pre.style.opacity="0";setTimeout(function(){pre.style.display="none";},350);}
-  renderAll();renderHistory();window._preHidden=true;setTimeout(loadFromSheets,100);
+  // Data loading is triggered after auth check in onUserSignedIn
+  // Preloader stays visible until auth state is known
 });
 document.addEventListener("click",function(e){
   var card=e.target.closest(".mob-card");if(!card)return;
@@ -4994,5 +4993,12 @@ function onUserSignedIn(user) {
   // Show user info in settings
   var userInfo = document.getElementById('authUserInfo');
   if(userInfo) userInfo.textContent = user.email || user.displayName || '';
+  // Load data if not already loaded
+  if(!window._appStarted) {
+    window._appStarted = true;
+    renderAll();
+    renderHistory();
+    setTimeout(loadFromSheets, 100);
+  }
 }
 </script></body></html>
