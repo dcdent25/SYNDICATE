@@ -782,9 +782,17 @@ var _fbApp = null, _fbDb = null, _fbReady = false, _fbQueue = [];
         _fbApp = firebase.initializeApp(_FB_CONFIG);
         _fbDb = firebase.database();
         _fbAuth = firebase.auth();
-        _fbAuth.onAuthStateChanged(function(user){
-          if(user){ onUserSignedIn(user); }
-          else { showAuthScreen(); }
+        // Зберігати сесію в localStorage (залишається після закриття вкладки)
+        _fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(function(){
+          _fbAuth.onAuthStateChanged(function(user){
+            if(user){ onUserSignedIn(user); }
+            else { showAuthScreen(); }
+          });
+        }).catch(function(){
+          _fbAuth.onAuthStateChanged(function(user){
+            if(user){ onUserSignedIn(user); }
+            else { showAuthScreen(); }
+          });
         });
         _fbReady = true;
         _fbQueue.forEach(function(fn){ fn(); });
