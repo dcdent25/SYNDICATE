@@ -1020,7 +1020,7 @@ function openAddCatModal(){
   var _pb=document.getElementById('newCatType-'+preType);if(_pb)_pb.classList.add('active');
   renderCatList();
   document.getElementById('ov-addcat').classList.add('open');
-  var fab=document.getElementById('catFabBtn');if(fab)fab.style.display='flex';var sfab=document.getElementById('catSortFab');if(sfab)sfab.style.display='flex';
+  var fab=document.getElementById('catFabBtn');if(fab)fab.style.display='flex';var sfab=document.getElementById('catSortFab');if(sfab){sfab.style.display='flex';sfab.style.background='var(--surface2)';sfab.style.color='var(--sub)';sfab.style.borderColor='var(--border)';sfab.innerHTML='<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>';}window._catSortMode=false;
 }
 var _detailCatFilter='all';
 
