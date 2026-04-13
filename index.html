@@ -784,15 +784,21 @@ var _fbApp = null, _fbDb = null, _fbReady = false, _fbQueue = [];
         _fbDb = firebase.database();
         _fbAuth = firebase.auth();
         // Persistence LOCAL — сесія зберігається між перезавантаженнями
-        _fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(function(){
-          // Спочатку перевіряємо redirect result (для Safari)
+        // Визначаємо persistence залежно від браузера
+        var _isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+        var _persistence = _isSafari
+          ? firebase.auth.Auth.Persistence.SESSION
+          : firebase.auth.Auth.Persistence.LOCAL;
+
+        _fbAuth.setPersistence(_persistence).then(function(){
           _fbAuth.getRedirectResult().then(function(result){
             if(result && result.user){ onUserSignedIn(result.user); }
           }).catch(function(){});
-          // Потім слухаємо зміни стану
+
           _fbAuth.onAuthStateChanged(function(user){
-            if(user){ onUserSignedIn(user); }
-            else {
+            if(user){
+              onUserSignedIn(user);
+            } else {
               try { localStorage.removeItem('_authUser'); sessionStorage.removeItem('_authUser'); } catch(e) {}
               _currentUser = null;
               window._appStarted = false;
@@ -801,6 +807,7 @@ var _fbApp = null, _fbDb = null, _fbReady = false, _fbQueue = [];
             }
           });
         }).catch(function(e){
+          // Якщо setPersistence не спрацювало - просто слухаємо
           _fbAuth.onAuthStateChanged(function(user){
             if(user){ onUserSignedIn(user); }
             else {
@@ -4991,16 +4998,18 @@ function authGoogleSignIn() {
   authClearError();
   if(!_fbAuth){ authShowError('Firebase не готовий'); return; }
   var provider = new firebase.auth.GoogleAuthProvider();
-  // Safari та мобільні не підтримують popup - використовуємо redirect
-  var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-  var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  if(isSafari || isMobile) {
-    _fbAuth.signInWithRedirect(provider).catch(function(err){ authShowError(err.message); });
-  } else {
-    _fbAuth.signInWithPopup(provider)
-      .then(function(result){ onUserSignedIn(result.user); })
-      .catch(function(err){ authShowError(err.message); });
-  }
+  provider.addScope('email');
+  provider.addScope('profile');
+  _fbAuth.signInWithPopup(provider)
+    .then(function(result){ onUserSignedIn(result.user); })
+    .catch(function(err){
+      // Якщо popup заблоковано - пробуємо redirect
+      if(err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user') {
+        _fbAuth.signInWithRedirect(provider).catch(function(e){ authShowError(e.message); });
+      } else {
+        authShowError(err.message);
+      }
+    });
 }
 
 function authShowRegister() {
