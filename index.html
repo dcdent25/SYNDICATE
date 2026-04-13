@@ -32,7 +32,28 @@ html,body{background:#1c1f26!important;overflow-x:hidden!important}.t-container,
   .gfbtn{height:34px;font-size:11px;padding:0;border-radius:8px;}
   .cat-col-sel{display:none!important;}
 }
-</style></head><body><div id="preloader"><img class="pre-logo" src="https://static.tildacdn.com/tild3762-6261-4437-b437-326433616365/DC_DENT-12.png" alt="D.C.DENT" crossorigin="anonymous" onerror="this.style.display='none';document.getElementById('preFallback').style.display='block'"><div id="preFallback" style="display:none;font-family:var(--font-d);font-size:28px;font-weight:700;color:var(--sub);letter-spacing:3px">D.C.DENT</div><div id="preStatus" style="font-family:var(--font-d);font-size:13px;color:var(--sub);margin-top:-10px">Синхронізація...</div><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div></div><div class="shell"><div class="main"><div class="topbar"><div class="mob-title" style="text-align:left;flex:1">Склад витратників</div><button onclick="openNavModal()" id="mobNavBtn" title="Навігація"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg><span style="font-size:9px;font-family:var(--font-d);font-weight:500;line-height:1">Навіг.</span></button><button onclick="openCartModal()" id="mobCartBtn" title="Кошик" style="position:relative"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M7 18c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-1.45-5H8.53l-1.4-8H18l-1.45 8zM2 2h2l.73 4H21l-2.54 12H6L3.27 4H2V2z"/></svg><span id="mobCartBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;border-radius:50%;width:14px;height:14px;font-size:9px;font-weight:700;font-family:var(--font-d);align-items:center;justify-content:center"></span><span style="font-size:9px;font-family:var(--font-d);font-weight:500;line-height:1">Кошик</span></button><button onclick="openHistoryModal()" id="mobHistBtn" title="Історія"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg><span style="font-size:9px;font-family:var(--font-d);font-weight:500;line-height:1">Історія</span></button><button onclick="openStatsModal()" id="mobStatsBtn" title="Статистика"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/></svg><span style="font-size:9px;font-family:var(--font-d);font-weight:500;line-height:1">Стат</span></button><div class="settings-wrap" id="settingsWrap">
+</style></head><body><div id="authScreen" style="display:none;position:fixed;inset:0;z-index:99998;background:#1c1f26;align-items:center;justify-content:center;flex-direction:column;gap:0">
+  <div style="width:100%;max-width:400px;padding:32px 24px;box-sizing:border-box">
+    <div style="text-align:center;margin-bottom:32px">
+      <div style="font-family:var(--font-d);font-size:28px;font-weight:700;color:var(--text);letter-spacing:1px">D.C.DENT</div>
+      <div style="font-size:13px;color:var(--sub);margin-top:6px">Склад витратників</div>
+    </div>
+    <div id="authError" style="display:none;background:var(--red-s);border:1px solid rgba(242,139,130,.3);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--red);margin-bottom:14px;font-family:var(--font-d)"></div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <input id="authEmail" type="email" placeholder="Email" style="height:48px;padding:0 16px;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;color:var(--text);font-family:var(--font);font-size:15px;outline:none;transition:border-color .15s" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'" onkeydown="if(event.key==='Enter')document.getElementById('authPass').focus()">
+      <input id="authPass" type="password" placeholder="Пароль" style="height:48px;padding:0 16px;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;color:var(--text);font-family:var(--font);font-size:15px;outline:none;transition:border-color .15s" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'" onkeydown="if(event.key==='Enter')authSignIn()">
+      <button onclick="authSignIn()" style="height:50px;background:var(--blue);border:none;border-radius:12px;color:#1c1f26;font-family:var(--font-d);font-size:15px;font-weight:700;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.9'" onmouseout="this.style.opacity='1'">Увійти</button>
+      <div style="display:flex;align-items:center;gap:10px;margin:4px 0"><div style="flex:1;height:1px;background:var(--border)"></div><span style="font-size:12px;color:var(--muted);font-family:var(--font-d)">або</span><div style="flex:1;height:1px;background:var(--border)"></div></div>
+      <button onclick="authGoogleSignIn()" style="height:50px;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;color:var(--text);font-family:var(--font-d);font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:border-color .15s" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--border)'">
+        <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        Увійти через Google
+      </button>
+      <button onclick="authShowRegister()" style="background:transparent;border:none;color:var(--sub);font-family:var(--font-d);font-size:13px;cursor:pointer;padding:4px 0" onmouseover="this.style.color='var(--blue)'" onmouseout="this.style.color='var(--sub)'">Немає акаунту? Зареєструватись</button>
+    </div>
+  </div>
+</div>
+
+<div id="preloader"><img class="pre-logo" src="https://static.tildacdn.com/tild3762-6261-4437-b437-326433616365/DC_DENT-12.png" alt="D.C.DENT" crossorigin="anonymous" onerror="this.style.display='none';document.getElementById('preFallback').style.display='block'"><div id="preFallback" style="display:none;font-family:var(--font-d);font-size:28px;font-weight:700;color:var(--sub);letter-spacing:3px">D.C.DENT</div><div id="preStatus" style="font-family:var(--font-d);font-size:13px;color:var(--sub);margin-top:-10px">Синхронізація...</div><div class="pre-dots"><div class="pre-dot"></div><div class="pre-dot"></div><div class="pre-dot"></div></div></div><div class="shell"><div class="main"><div class="topbar"><div class="mob-title" style="text-align:left;flex:1">Склад витратників</div><button onclick="openNavModal()" id="mobNavBtn" title="Навігація"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg><span style="font-size:9px;font-family:var(--font-d);font-weight:500;line-height:1">Навіг.</span></button><button onclick="openCartModal()" id="mobCartBtn" title="Кошик" style="position:relative"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M7 18c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-1.45-5H8.53l-1.4-8H18l-1.45 8zM2 2h2l.73 4H21l-2.54 12H6L3.27 4H2V2z"/></svg><span id="mobCartBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;border-radius:50%;width:14px;height:14px;font-size:9px;font-weight:700;font-family:var(--font-d);align-items:center;justify-content:center"></span><span style="font-size:9px;font-family:var(--font-d);font-weight:500;line-height:1">Кошик</span></button><button onclick="openHistoryModal()" id="mobHistBtn" title="Історія"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg><span style="font-size:9px;font-family:var(--font-d);font-weight:500;line-height:1">Історія</span></button><button onclick="openStatsModal()" id="mobStatsBtn" title="Статистика"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/></svg><span style="font-size:9px;font-family:var(--font-d);font-weight:500;line-height:1">Стат</span></button><div class="settings-wrap" id="settingsWrap">
   <button class="settings-btn" id="settingsBtn" onclick="toggleSettings()" title="Налаштування">
     <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
   </button>
@@ -72,6 +93,12 @@ html,body{background:#1c1f26!important;overflow-x:hidden!important}.t-container,
     <button class="settings-item" style="color:var(--red)" onclick="clearHistoryWithPassword();toggleSettings()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
       Очистити історію
+    </button>
+    <div class="settings-sep"></div>
+    <div style="padding:8px 16px 4px;font-size:11px;color:var(--muted);font-family:var(--font-d)" id="authUserInfo"></div>
+    <button class="settings-item" onclick="authSignOut();toggleSettings()" style="color:var(--red)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+      Вийти з акаунту
     </button>
   </div>
 </div>
@@ -748,15 +775,26 @@ var _fbApp = null, _fbDb = null, _fbReady = false, _fbQueue = [];
     var s2 = document.createElement('script');
     s2.src = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js';
     s2.onload = function(){
+      var s3 = document.createElement('script');
+      s3.src = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js';
+      s3.onload = function(){
       try {
         _fbApp = firebase.initializeApp(_FB_CONFIG);
         _fbDb = firebase.database();
+        _fbAuth = firebase.auth();
+        _fbAuth.onAuthStateChanged(function(user){
+          if(user){ onUserSignedIn(user); }
+          else { showAuthScreen(); }
+        });
         _fbReady = true;
         _fbQueue.forEach(function(fn){ fn(); });
         _fbQueue = [];
         console.log('[FB] Firebase готовий');
         try{for(var _k in localStorage){if(_k.indexOf('item_photo_')===0){var _v=localStorage.getItem(_k);if(_v&&!_v.startsWith('http')&&!_v.startsWith('data:')){localStorage.removeItem(_k);}}}}catch(e){}
       } catch(err) { console.warn('[FB] Помилка ініціалізації:', err); }
+      }; // end s3.onload
+      s3.onerror = function(){ console.warn('[FB] Помилка auth SDK'); };
+      document.head.appendChild(s3);
     };
     s2.onerror = function(){ console.warn('[FB] Помилка database SDK'); };
     document.head.appendChild(s2);
@@ -4866,5 +4904,87 @@ function saveCatItems() {
   forceSyncToSheets();
   toast('✓ Збережено ' + count + ' позицій у «' + _catItemsTarget + '»');
   closeModal('cat-items');
+}
+
+// ===== АВТОРИЗАЦІЯ =====
+var _fbAuth = null;
+var _currentUser = null;
+
+function showAuthScreen() {
+  document.getElementById('authScreen').style.display = 'flex';
+  document.getElementById('preloader').classList.add('hidden');
+}
+
+function hideAuthScreen() {
+  document.getElementById('authScreen').style.display = 'none';
+}
+
+function authShowError(msg) {
+  var el = document.getElementById('authError');
+  if(el){ el.textContent = msg; el.style.display = 'block'; }
+}
+
+function authClearError() {
+  var el = document.getElementById('authError');
+  if(el) el.style.display = 'none';
+}
+
+function authSignIn() {
+  authClearError();
+  var email = document.getElementById('authEmail').value.trim();
+  var pass = document.getElementById('authPass').value;
+  if(!email || !pass){ authShowError('Введіть email і пароль'); return; }
+  if(!_fbAuth){ authShowError('Firebase не готовий'); return; }
+  _fbAuth.signInWithEmailAndPassword(email, pass)
+    .then(function(cred){ onUserSignedIn(cred.user); })
+    .catch(function(err){
+      var msgs = {
+        'auth/user-not-found': 'Користувача не знайдено',
+        'auth/wrong-password': 'Невірний пароль',
+        'auth/invalid-email': 'Невірний формат email',
+        'auth/too-many-requests': 'Забагато спроб. Спробуйте пізніше'
+      };
+      authShowError(msgs[err.code] || err.message);
+    });
+}
+
+function authGoogleSignIn() {
+  authClearError();
+  if(!_fbAuth){ authShowError('Firebase не готовий'); return; }
+  var provider = new firebase.auth.GoogleAuthProvider();
+  _fbAuth.signInWithPopup(provider)
+    .then(function(result){ onUserSignedIn(result.user); })
+    .catch(function(err){ authShowError(err.message); });
+}
+
+function authShowRegister() {
+  authClearError();
+  var email = document.getElementById('authEmail').value.trim();
+  var pass = document.getElementById('authPass').value;
+  if(!email || !pass){ authShowError('Введіть email і пароль для реєстрації'); return; }
+  if(pass.length < 6){ authShowError('Пароль мінімум 6 символів'); return; }
+  if(!_fbAuth){ authShowError('Firebase не готовий'); return; }
+  _fbAuth.createUserWithEmailAndPassword(email, pass)
+    .then(function(cred){ onUserSignedIn(cred.user); })
+    .catch(function(err){
+      var msgs = {
+        'auth/email-already-in-use': 'Email вже використовується',
+        'auth/invalid-email': 'Невірний формат email',
+        'auth/weak-password': 'Пароль занадто простий'
+      };
+      authShowError(msgs[err.code] || err.message);
+    });
+}
+
+function authSignOut() {
+  if(_fbAuth) _fbAuth.signOut();
+}
+
+function onUserSignedIn(user) {
+  _currentUser = user;
+  hideAuthScreen();
+  // Show user info in settings
+  var userInfo = document.getElementById('authUserInfo');
+  if(userInfo) userInfo.textContent = user.email || user.displayName || '';
 }
 </script></body></html>
