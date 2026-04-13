@@ -779,19 +779,27 @@ var _fbApp = null, _fbDb = null, _fbReady = false, _fbQueue = [];
       s3.src = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js';
       s3.onload = function(){
       try {
-        _fbApp = firebase.initializeApp(_FB_CONFIG);
+        // Уникаємо повторної ініціалізації
+        _fbApp = firebase.apps.length ? firebase.apps[0] : firebase.initializeApp(_FB_CONFIG);
         _fbDb = firebase.database();
         _fbAuth = firebase.auth();
-        // Зберігати сесію в localStorage (залишається після закриття вкладки)
+        // Persistence LOCAL — сесія зберігається між перезавантаженнями
         _fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(function(){
           _fbAuth.onAuthStateChanged(function(user){
+            console.log('[AUTH] state:', user ? user.email : 'null');
             if(user){ onUserSignedIn(user); }
-            else { showAuthScreen(); }
+            else {
+              // Даємо 3 сек щоб Firebase перевірив токен перед показом екрану входу
+              setTimeout(function(){
+                if(!_currentUser) showAuthScreen();
+              }, 500);
+            }
           });
-        }).catch(function(){
+        }).catch(function(e){
+          console.warn('[AUTH] persistence error:', e);
           _fbAuth.onAuthStateChanged(function(user){
             if(user){ onUserSignedIn(user); }
-            else { showAuthScreen(); }
+            else { setTimeout(function(){ if(!_currentUser) showAuthScreen(); }, 500); }
           });
         });
         _fbReady = true;
@@ -4984,7 +4992,9 @@ function authShowRegister() {
 }
 
 function authSignOut() {
-  if(_fbAuth) _fbAuth.signOut();
+  _currentUser = null;
+  window._appStarted = false;
+  if(_fbAuth) _fbAuth.signOut().then(function(){ showAuthScreen(); });
 }
 
 function onUserSignedIn(user) {
