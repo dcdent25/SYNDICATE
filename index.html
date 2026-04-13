@@ -1075,34 +1075,22 @@ function renderCatList(){const wrap=document.getElementById('catListWrap');if(!w
   });
   if(!visCats.length){wrap.innerHTML='<div style="color:var(--sub);font-size:13px;padding:8px 0">Немає категорій у цій групі</div>';return;}
   if(!categories.length){wrap.innerHTML='<div style="color:var(--sub);font-size:13px;padding:8px 0">Категорій ще немає</div>';return;}if(window._catSortMode) {
-  var _selCats = window._selCats || {};
-  var selCount = Object.keys(_selCats).filter(function(k){ return _selCats[k]; }).length;
+  // Step 1: show categories to pick from
   wrap.innerHTML = visCats.map(function(cat){
-    var checked = !!_selCats[cat];
     var count = stock.filter(function(s){ return s.cat===cat; }).length;
-    return '<div onclick="toggleSelCat(this)" data-cat="'+cat.replace(/"/g,'&quot;')+'" style="display:flex;align-items:center;gap:10px;background:var(--surface2);border:1.5px solid '+(checked?'var(--blue)':'var(--border)')+';border-radius:10px;padding:10px 12px;cursor:pointer;transition:border-color .15s">'
-      +'<div style="width:24px;height:24px;border-radius:6px;border:2px solid '+(checked?'var(--blue)':'var(--border2)')+';background:'+(checked?'var(--blue)':'transparent')+';display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s">'
-      +(checked?'<svg width="13" height="13" viewBox="0 0 24 24" fill="#1c1f26"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>':'')
-      +'</div>'
+    return '<div onclick="openSortCatItems(this.dataset.c)" data-c="'+cat.replace(/"/g,'&quot;')+'" style="display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;cursor:pointer">'
       +'<span style="font-family:var(--font-d);font-size:13px;font-weight:500;flex:1;color:var(--text)">'+cat+'</span>'
       +'<span style="font-size:11px;color:var(--sub);background:var(--bg);padding:2px 8px;border-radius:100px;border:1px solid var(--border)">'+count+' поз.</span>'
+      +'<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="color:var(--muted)"><path d="M9 18l6-6-6-6"/></svg>'
       +'</div>';
   }).join('');
-  // Show/hide move button
-  var moveBtn = document.getElementById('catSortMoveBtn');
-  if(!moveBtn) {
-    var btnWrap = document.createElement('div');
-    btnWrap.id = 'catSortMoveBtn';
-    btnWrap.style.cssText = 'margin-top:14px;display:none';
-    btnWrap.innerHTML = '<button onclick="showCatMoveTargets()" style="width:100%;height:46px;border-radius:12px;background:var(--blue);border:none;color:#1c1f26;font-family:var(--font-d);font-size:14px;font-weight:700;cursor:pointer">Перемістити товари →</button>';
-    wrap.parentNode.insertBefore(btnWrap, wrap.nextSibling);
-    moveBtn = btnWrap;
-  }
-  moveBtn.style.display = selCount > 0 ? 'block' : 'none';
+  var mb = document.getElementById('catSortMoveBtn');
+  if(mb) mb.style.display='none';
   return;
 }
-var moveBtn2 = document.getElementById('catSortMoveBtn');
-if(moveBtn2) moveBtn2.style.display = 'none';
+var mb2 = document.getElementById('catSortMoveBtn');
+if(mb2) mb2.style.display='none';
+
 wrap.innerHTML=visCats.map((cat,ci)=>{const idx=categories.indexOf(cat);const count=stock.filter(s=>s.cat===cat).length;return '<div style="display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px"><span onclick="openCatItemsPicker(this.getAttribute(\'data-c\'))" data-c="'+cat.replace(/"/g,'&quot;')+'" style="font-family:var(--font-d);font-size:13px;font-weight:500;flex:1;color:var(--text);cursor:pointer;text-decoration:underline;text-decoration-color:var(--border)">'+cat+'</span><span style="font-family:var(--font-d);font-size:11px;color:var(--sub);background:var(--bg);padding:2px 8px;border-radius:100px;border:1px solid var(--border)">'+count+' поз.</span><button onclick="renameCat('+idx+')" style="height:28px;padding:0 10px;border-radius:100px;border:1.5px solid var(--border);background:transparent;color:var(--sub);font-family:var(--font-d);font-size:11px;cursor:pointer" onmouseover="this.style.color=\'var(--blue)\';this.style.borderColor=\'var(--blue)\'" onmouseout="this.style.color=\'var(--sub)\';this.style.borderColor=\'var(--border)\'">Перейменувати</button>'+(count===0?'<button onclick="deleteCat('+idx+')" style="height:28px;padding:0 10px;border-radius:100px;border:1.5px solid var(--border);background:transparent;color:var(--red);font-family:var(--font-d);font-size:11px;cursor:pointer" onmouseover="this.style.background=\'var(--red-s)\'" onmouseout="this.style.background=\'transparent\'">Видалити</button>':'')+'</div>';}).join('');}
 function renameCat(idx){const oldName=categories[idx];const newName=prompt('Нова назва категорії:',oldName);if(!newName||!newName.trim()||newName.trim()===oldName)return;const trimmed=newName.trim();if(categories.includes(trimmed)){toast('⚠ Така категорія вже існує');return;}stock.forEach(s=>{if(s.cat===oldName)s.cat=trimmed;});categories[idx]=trimmed;if(activeFilter===oldName)activeFilter=trimmed;renderCatList();renderAll();forceSyncToSheets();toast('✓ Перейменовано: '+trimmed);}
 function deleteCat(idx){const name=categories[idx];const count=stock.filter(s=>s.cat===name).length;if(count>0){toast('⚠ Є позиції з цією категорією');return;}if(!confirm('Видалити категорію "'+name+'"?'))return;categories.splice(idx,1);if(activeFilter===name)activeFilter='all';renderCatList();renderAll();forceSyncToSheets();toast('✓ Категорію видалено');}
@@ -4937,16 +4925,29 @@ function doCartOrder(){
 var _catItemsTarget = '';
 var _catItemsSelected = {};
 
-function toggleSelCat(el) {
-  var cat = el.dataset.cat;
-  window._selCats = window._selCats || {};
-  window._selCats[cat] = !window._selCats[cat];
+function openSortCatItems(cat) {
+  // Open ov-cat-items in "move mode" for this category
+  _catItemsTarget = cat;
+  _catItemsSelected = {};
+  window._selItems = {};
+  var title = document.getElementById('catItemsTitle');
+  if(title) title.textContent = cat;
+  var si = document.getElementById('catItemsSearch');
+  if(si) si.value = '';
+  // Switch to move mode
+  window._catItemsMoveMode = true;
+  renderCatItemsList();
+  document.getElementById('ov-cat-items').classList.add('open');
+}
+
+function toggleSelItem(id) {
+  window._selItems = window._selItems || {};
+  window._selItems[id] = !window._selItems[id];
   renderCatList();
 }
 
 function showCatMoveTargets() {
-  var _selCats = window._selCats || {};
-  var selected = Object.keys(_selCats).filter(function(k){ return _selCats[k]; });
+  var selected = Object.keys(_catItemsSelected).filter(function(k){ return _catItemsSelected[k]; });
   if(!selected.length) return;
   // Show bottom sheet with target categories
   var existing = document.getElementById('catMoveSheet');
@@ -4957,7 +4958,7 @@ function showCatMoveTargets() {
   var targets = categories.filter(function(c){ return !_selCats[c]; });
   sheet.innerHTML = '<div style="width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px"></div>'
     +'<div style="font-family:var(--font-d);font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px">Перемістити товари в:</div>'
-    +'<div style="font-size:12px;color:var(--sub);margin-bottom:16px">Обрано категорій: '+selected.length+'</div>'
+    +'<div style="font-size:12px;color:var(--sub);margin-bottom:16px">Обрано товарів: '+selected.length+'</div>'
     +'<div style="display:flex;flex-direction:column;gap:8px;max-height:50vh;overflow-y:auto">'
     +targets.map(function(c){
       return '<button onclick="execCatMove(this.dataset.c)" data-c="'+c.replace(/"/g,'&quot;')+'" style="padding:12px 16px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text);font-family:var(--font-d);font-size:14px;text-align:left;cursor:pointer">'+c+'</button>';
@@ -4968,17 +4969,20 @@ function showCatMoveTargets() {
 }
 
 function closeCatMoveSheet(){ var s=document.getElementById('catMoveSheet');if(s)s.remove(); }
+function resetCatItemsMoveMode(){ window._catItemsMoveMode=false; _catItemsSelected={}; var mb=document.getElementById('catItemsMoveBtn');if(mb)mb.remove(); }
 function execCatMove(targetCat) {
-  var _selCats = window._selCats || {};
-  var selected = Object.keys(_selCats).filter(function(k){ return _selCats[k]; });
+  var selected = Object.keys(_catItemsSelected).filter(function(k){ return _catItemsSelected[k]; });
   var count = 0;
   stock.forEach(function(item){
-    if(selected.indexOf(item.cat) !== -1) {
+    if(selected.indexOf(String(item.id)) !== -1) {
       item.cat = targetCat;
       count++;
     }
   });
-  window._selCats = {};
+  _catItemsSelected = {};
+  window._catItemsMoveMode = false;
+  var mb = document.getElementById('catItemsMoveBtn');
+  if(mb) mb.remove();
   var sheet = document.getElementById('catMoveSheet');
   if(sheet) sheet.remove();
   renderAll();
@@ -5013,8 +5017,8 @@ function toggleCatSortMode() {
       : '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>';
   }
   if(window._catSortMode) {
-    window._selCats = {};
-    toast('Вибирай категорії для переміщення товарів');
+    window._selItems = {};
+    toast('Вибирай товари для переміщення в іншу категорію');
   } else {
     forceSyncToSheets();
     toast('✓ Порядок збережено');
@@ -5049,15 +5053,17 @@ function renderCatItemsList() {
   var selCount = Object.keys(_catItemsSelected).filter(function(id){ return _catItemsSelected[id]; }).length;
   if(cnt) cnt.textContent = items.length + ' позицій' + (selCount ? ' · ' + selCount + ' обрано' : '');
 
-  // Show/hide move bar
-  if(moveBar) moveBar.style.display = selCount > 0 ? 'flex' : 'none';
-
-  // Render move targets
-  if(moveTargets && selCount > 0) {
-    moveTargets.innerHTML = categories.filter(function(c){ return c !== _catItemsTarget; }).map(function(c){
-      var ec = c.replace(/"/g,'&quot;');
-      return '<button onclick="moveCatItems(this.dataset.c)" data-c="'+ec+'" style="padding:6px 14px;border-radius:100px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-family:var(--font-d);font-size:12px;cursor:pointer">'+c+'</button>';
-    }).join('');
+  // Move button
+  if(window._catItemsMoveMode) {
+    var existBtn = document.getElementById('catItemsMoveBtn');
+    if(!existBtn) {
+      var btnWrap = document.createElement('div');
+      btnWrap.id = 'catItemsMoveBtn';
+      btnWrap.style.cssText = 'padding:12px 24px 28px;border-top:1px solid var(--border);flex-shrink:0;display:none';
+      btnWrap.innerHTML = '<button onclick="showCatMoveTargets()" style="width:100%;height:46px;border-radius:12px;background:var(--blue);border:none;color:#1c1f26;font-family:var(--font-d);font-size:14px;font-weight:700;cursor:pointer">Перемістити →</button>';
+      body.parentNode.insertBefore(btnWrap, body.nextSibling);
+    }
+    document.getElementById('catItemsMoveBtn').style.display = selCount > 0 ? 'block' : 'none';
   }
 
   if(!items.length) {
@@ -5070,17 +5076,16 @@ function renderCatItemsList() {
     var sq = item.stockQty!=null?item.stockQty:item.qty;
     var statusColor = sq<=0?'var(--red)':sq<=(item.minQty||0)?'var(--yellow)':'var(--green)';
     return '<div onclick="toggleCatItem('+item.id+')" style="display:flex;align-items:center;gap:12px;background:var(--surface);border:1.5px solid '+(checked?'var(--blue)':'var(--border)')+';border-radius:12px;padding:10px 12px;cursor:pointer;transition:border-color .15s">'
-      +'<div style="width:24px;height:24px;border-radius:6px;border:2px solid '+(checked?'var(--blue)':'var(--border2)')+';background:'+(checked?'var(--blue)':'transparent')+';display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s">'
+      +'<div style="width:24px;height:24px;border-radius:6px;border:2px solid '+(checked?'var(--blue)':'var(--border2)')+';background:'+(checked?'var(--blue)':'transparent')+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'
       +(checked?'<svg width="13" height="13" viewBox="0 0 24 24" fill="#1c1f26"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>':'')
       +'</div>'
       +(item.photo?'<img src="'+item.photo+'" style="width:40px;height:40px;border-radius:8px;object-fit:cover;flex-shrink:0">':'')
       +'<div style="flex:1;min-width:0">'
       +'<div style="font-family:var(--font-d);font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+item.name+'</div>'
-      +'<div style="font-size:11px;color:var(--sub);margin-top:2px">залишок: <span style="color:'+statusColor+';font-weight:600">'+sq+'</span> '+(item.unit||'од.')+'</div>'
+      +'<div style="font-size:11px;color:var(--sub);margin-top:2px">залишок: <span style="color:'+statusColor+';font-weight:600">'+sq+'</span></div>'
       +'</div></div>';
   }).join('');
 }
-
 
 function moveCatItems(targetCat) {
   var count = 0;
@@ -5113,6 +5118,7 @@ function saveCatItems() {
   forceSyncToSheets();
   toast('✓ Збережено ' + count + ' позицій у «' + _catItemsTarget + '»');
   closeModal('cat-items');
+  renderCatList();
 }
 
 // ===== АВТОРИЗАЦІЯ =====
