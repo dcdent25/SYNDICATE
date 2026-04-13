@@ -382,10 +382,7 @@ html,body{background:#1c1f26!important;overflow-x:hidden!important}.t-container,
 <input type="text" id="catItemsSearch" placeholder="Пошук товару…" oninput="renderCatItemsList()" style="background:transparent;border:none;outline:none;font-family:var(--font);font-size:13.5px;color:var(--text);width:100%">
 </div>
 </div>
-<div id="catItemsList" style="flex:1;overflow-y:auto;padding:0 24px 16px;min-height:0;display:flex;flex-direction:column;gap:8px"></div>
-<div style="flex-shrink:0;padding:14px 24px 28px;border-top:1px solid var(--border);display:flex;justify-content:flex-end">
-<button onclick="saveCatItems()" style="width:52px;height:52px;border-radius:50%;background:var(--green);border:none;color:#1c1f26;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 14px rgba(129,201,149,.4)"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></button>
-</div>
+<div id="catItemsList" style="flex:1;overflow-y:auto;padding:0 24px 24px;min-height:0;display:flex;flex-direction:column;gap:8px"></div>
 </div></div>
 
 <div class="overlay" id="ov-addcat-new"><div class="modal" style="max-height:60vh"><div class="modal-handle"></div><div class="modal-head" style="margin-bottom:16px"><div class="modal-title">Нова категорія</div><button class="modal-close" onclick="closeModal('addcat-new')"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button></div>
@@ -1074,31 +1071,21 @@ function renderCatList(){const wrap=document.getElementById('catListWrap');if(!w
   });
   if(!visCats.length){wrap.innerHTML='<div style="color:var(--sub);font-size:13px;padding:8px 0">Немає категорій у цій групі</div>';return;}
   if(!categories.length){wrap.innerHTML='<div style="color:var(--sub);font-size:13px;padding:8px 0">Категорій ще немає</div>';return;}if(window._catSortMode) {
-  // Sort mode - show draggable rows
   wrap.innerHTML = visCats.map((cat,ci)=>{
-    const idx=categories.indexOf(cat);
-    const count=stock.filter(s=>s.cat===cat).length;
-    return '<div draggable="true" data-cat="'+cat.replace(/"/g,'&quot;')+'" data-idx="'+idx+'" ondragstart="catDragStart(event)" ondragover="catDragOver(event)" ondrop="catDrop(event)" style="display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;cursor:grab;user-select:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="color:var(--muted);flex-shrink:0"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg><span style="font-family:var(--font-d);font-size:13px;font-weight:500;flex:1">'+cat+'</span><span style="font-size:11px;color:var(--sub)">'+count+' поз.</span></div>';
+    const gi = categories.indexOf(cat);
+    const count = stock.filter(s=>s.cat===cat).length;
+    const isFirst = gi===0;
+    const isLast = gi===categories.length-1;
+    return '<div style="display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px">'
+      +'<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="color:var(--muted);flex-shrink:0"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>'
+      +'<span style="font-family:var(--font-d);font-size:13px;font-weight:500;flex:1">'+cat+'</span>'
+      +'<span style="font-size:11px;color:var(--sub);margin-right:6px">'+count+' поз.</span>'
+      +'<div style="display:flex;flex-direction:column;gap:3px">'
+      +'<button onclick="catMoveUp('+gi+')" '+(isFirst?'disabled style="opacity:.2;cursor:default"':'')+' style="width:26px;height:22px;border-radius:5px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M7 14l5-5 5 5z"/></svg></button>'
+      +'<button onclick="catMoveDown('+gi+')" '+(isLast?'disabled style="opacity:.2;cursor:default"':'')+' style="width:26px;height:22px;border-radius:5px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg></button>'
+      +'</div>'
+      +'</div>';
   }).join('');
-  // Add drag handlers
-  window.catDragStart = function(e){ e.dataTransfer.setData('text/plain', e.currentTarget.dataset.cat); e.currentTarget.style.opacity='.5'; };
-  window.catDragOver = function(e){ e.preventDefault(); e.currentTarget.style.borderColor='var(--blue)'; };
-  window.catDrop = function(e){
-    e.preventDefault();
-    var fromCat = e.dataTransfer.getData('text/plain');
-    var toCat = e.currentTarget.dataset.cat;
-    e.currentTarget.style.borderColor='var(--border)';
-    if(fromCat===toCat) return;
-    var fromI = categories.indexOf(fromCat);
-    var toI = categories.indexOf(toCat);
-    if(fromI===-1||toI===-1) return;
-    categories.splice(fromI,1);
-    categories.splice(toI,0,fromCat);
-    renderCatList();
-    renderAll();
-  };
-  // Reset opacity after drag
-  setTimeout(function(){ wrap.querySelectorAll('[draggable]').forEach(function(el){el.style.opacity='1';el.addEventListener('dragend',function(){this.style.opacity='1';});});},50);
   return;
 }
 wrap.innerHTML=visCats.map((cat,ci)=>{const idx=categories.indexOf(cat);const count=stock.filter(s=>s.cat===cat).length;return '<div style="display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px"><span onclick="openCatItemsPicker(this.getAttribute(\'data-c\'))" data-c="'+cat.replace(/"/g,'&quot;')+'" style="font-family:var(--font-d);font-size:13px;font-weight:500;flex:1;color:var(--text);cursor:pointer;text-decoration:underline;text-decoration-color:var(--border)">'+cat+'</span><span style="font-family:var(--font-d);font-size:11px;color:var(--sub);background:var(--bg);padding:2px 8px;border-radius:100px;border:1px solid var(--border)">'+count+' поз.</span><button onclick="renameCat('+idx+')" style="height:28px;padding:0 10px;border-radius:100px;border:1.5px solid var(--border);background:transparent;color:var(--sub);font-family:var(--font-d);font-size:11px;cursor:pointer" onmouseover="this.style.color=\'var(--blue)\';this.style.borderColor=\'var(--blue)\'" onmouseout="this.style.color=\'var(--sub)\';this.style.borderColor=\'var(--border)\'">Перейменувати</button>'+(count===0?'<button onclick="deleteCat('+idx+')" style="height:28px;padding:0 10px;border-radius:100px;border:1.5px solid var(--border);background:transparent;color:var(--red);font-family:var(--font-d);font-size:11px;cursor:pointer" onmouseover="this.style.background=\'var(--red-s)\'" onmouseout="this.style.background=\'transparent\'">Видалити</button>':'')+'</div>';}).join('');}
@@ -4935,6 +4922,20 @@ function doCartOrder(){
 var _catItemsTarget = '';
 var _catItemsSelected = {};
 
+function catMoveUp(idx) {
+  if(idx <= 0) return;
+  var tmp = categories[idx];
+  categories[idx] = categories[idx-1];
+  categories[idx-1] = tmp;
+  renderCatList();
+}
+function catMoveDown(idx) {
+  if(idx >= categories.length-1) return;
+  var tmp = categories[idx];
+  categories[idx] = categories[idx+1];
+  categories[idx+1] = tmp;
+  renderCatList();
+}
 function toggleCatSortMode() {
   window._catSortMode = !window._catSortMode;
   var fab = document.getElementById('catSortFab');
@@ -4957,9 +4958,6 @@ function toggleCatSortMode() {
 
 function openCatItemsPicker(cat) {
   _catItemsTarget = cat;
-  _catItemsSelected = {};
-  // Pre-select items already in this category
-  stock.forEach(function(i){ if(i.cat===cat) _catItemsSelected[i.id]=true; });
   var title = document.getElementById('catItemsTitle');
   if(title) title.textContent = cat;
   var si = document.getElementById('catItemsSearch');
@@ -4972,27 +4970,28 @@ function renderCatItemsList() {
   var body = document.getElementById('catItemsList');
   var cnt = document.getElementById('catItemsCount');
   if(!body) return;
-  var q = (document.getElementById('catItemsSearch')||{}).value||'';
-  var ql = q.toLowerCase();
+  var q = ((document.getElementById('catItemsSearch')||{}).value||'').toLowerCase();
   var items = stock.filter(function(i){
-    return !ql || i.name.toLowerCase().includes(ql) || (i.cat||'').toLowerCase().includes(ql);
+    return i.cat === _catItemsTarget && (!q || i.name.toLowerCase().includes(q));
   }).sort(function(a,b){ return a.name.localeCompare(b.name,'uk'); });
 
-  var sel = Object.keys(_catItemsSelected).filter(function(id){ return _catItemsSelected[id]; }).length;
-  if(cnt) cnt.textContent = sel + ' обрано · ' + items.length + ' позицій';
+  if(cnt) cnt.textContent = items.length + ' позицій';
+
+  if(!items.length) {
+    body.innerHTML = '<div style="color:var(--sub);font-size:13px;padding:16px 0;text-align:center">' + (q ? 'Нічого не знайдено' : 'Категорія порожня') + '</div>';
+    return;
+  }
 
   body.innerHTML = items.map(function(item){
-    var checked = _catItemsSelected[item.id] === true;
     var sq = item.stockQty!=null?item.stockQty:item.qty;
-    return '<div onclick="toggleCatItem('+item.id+')" style="display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid '+(checked?'var(--blue)':'var(--border)')+';border-radius:12px;padding:10px 12px;cursor:pointer;transition:all .15s">'
-      +'<div style="width:26px;height:26px;border-radius:6px;border:2px solid '+(checked?'var(--blue)':'var(--border2)')+';background:'+(checked?'var(--blue)':'transparent')+';display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s">'
-      +(checked?'<svg width="14" height="14" viewBox="0 0 24 24" fill="#1c1f26"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>':'')
-      +'</div>'
-      +(item.photo?'<img src="'+item.photo+'" style="width:40px;height:40px;border-radius:8px;object-fit:cover;flex-shrink:0">':'')
+    var status = sq <= 0 ? 'var(--red)' : sq <= (item.minQty||0) ? 'var(--yellow)' : 'var(--green)';
+    return '<div onclick="closeModal(\'cat-items\');setTimeout(function(){openDetail('+item.id+')},200)" style="display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 12px;cursor:pointer">'
+      +(item.photo?'<img src="'+item.photo+'" style="width:44px;height:44px;border-radius:8px;object-fit:cover;flex-shrink:0">':'<div style="width:44px;height:44px;border-radius:8px;background:var(--surface2);flex-shrink:0;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="color:var(--muted)"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div>')
       +'<div style="flex:1;min-width:0">'
       +'<div style="font-family:var(--font-d);font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+item.name+'</div>'
-      +'<div style="font-size:11px;color:var(--sub);margin-top:2px">'+(item.cat||'—')+' · залишок: '+sq+'</div>'
+      +'<div style="font-size:11px;color:var(--sub);margin-top:3px">залишок: <span style="color:'+status+';font-weight:600">'+sq+'</span> '+( item.unit||'од.')+'</div>'
       +'</div>'
+      +'<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="color:var(--muted);flex-shrink:0"><path d="M9 18l6-6-6-6"/></svg>'
       +'</div>';
   }).join('');
 }
