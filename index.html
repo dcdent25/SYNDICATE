@@ -785,12 +785,7 @@ var _fbApp = null, _fbDb = null, _fbReady = false, _fbQueue = [];
         _fbAuth = firebase.auth();
         // Persistence LOCAL — сесія зберігається між перезавантаженнями
         // Визначаємо persistence залежно від браузера
-        var _isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-        var _persistence = _isSafari
-          ? firebase.auth.Auth.Persistence.SESSION
-          : firebase.auth.Auth.Persistence.LOCAL;
-
-        _fbAuth.setPersistence(_persistence).then(function(){
+        _fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(function(){
           _fbAuth.getRedirectResult().then(function(result){
             if(result && result.user){ onUserSignedIn(result.user); }
           }).catch(function(){});
@@ -799,7 +794,24 @@ var _fbApp = null, _fbDb = null, _fbReady = false, _fbQueue = [];
             if(user){
               onUserSignedIn(user);
             } else {
-              try { localStorage.removeItem('_authUser'); sessionStorage.removeItem('_authUser'); } catch(e) {}
+              // Firebase каже null - пробуємо авто-логін через збережені credentials
+              try {
+                var savedEmail = localStorage.getItem('_savedEmail');
+                var savedPass = localStorage.getItem('_savedPass');
+                if(savedEmail && savedPass && _fbAuth) {
+                  _fbAuth.signInWithEmailAndPassword(savedEmail, savedPass)
+                    .then(function(cred){ onUserSignedIn(cred.user); })
+                    .catch(function(){
+                      localStorage.removeItem('_savedEmail');
+                      localStorage.removeItem('_savedPass');
+                      _currentUser = null;
+                      window._appStarted = false;
+                      document.getElementById('authScreen').style.display = 'flex';
+                      document.getElementById('preloader').classList.add('hidden');
+                    });
+                  return;
+                }
+              } catch(e) {}
               _currentUser = null;
               window._appStarted = false;
               document.getElementById('authScreen').style.display = 'flex';
@@ -4695,8 +4707,8 @@ window.addEventListener('load',fixMobilePadding);window.addEventListener('resize
 <script>
 document.addEventListener("DOMContentLoaded",function(){
   try {
-    var cached = localStorage.getItem('_authUser') || sessionStorage.getItem('_authUser');
-    if(cached && JSON.parse(cached).uid) {
+    if(localStorage.getItem('_authOk')==='1' || sessionStorage.getItem('_authOk')==='1') {
+      _currentUser = {email:'local', uid:'local', displayName:'Користувач'};
       window._appStarted = true;
       renderAll();
       renderHistory();
@@ -4948,6 +4960,7 @@ function saveCatItems() {
 // ===== АВТОРИЗАЦІЯ =====
 var _fbAuth = null;
 var _currentUser = null;
+var _AUTH_PASSWORD = 'dcdent2024'; // Пароль для входу
 
 function showAuthScreen() {
   try {
@@ -4980,18 +4993,30 @@ function authSignIn() {
   var email = document.getElementById('authEmail').value.trim();
   var pass = document.getElementById('authPass').value;
   if(!email || !pass){ authShowError('Введіть email і пароль'); return; }
-  if(!_fbAuth){ authShowError('Firebase не готовий'); return; }
-  _fbAuth.signInWithEmailAndPassword(email, pass)
-    .then(function(cred){ onUserSignedIn(cred.user); })
-    .catch(function(err){
-      var msgs = {
-        'auth/user-not-found': 'Користувача не знайдено',
-        'auth/wrong-password': 'Невірний пароль',
-        'auth/invalid-email': 'Невірний формат email',
-        'auth/too-many-requests': 'Забагато спроб. Спробуйте пізніше'
-      };
-      authShowError(msgs[err.code] || err.message);
-    });
+  // Спочатку пробуємо Firebase
+  if(_fbAuth) {
+    _fbAuth.signInWithEmailAndPassword(email, pass)
+      .then(function(cred){
+        // Зберігаємо credentials для авто-логіну на iOS
+        try {
+          localStorage.setItem('_savedEmail', email);
+          localStorage.setItem('_savedPass', pass);
+        } catch(e) {}
+        onUserSignedIn(cred.user);
+      })
+      .catch(function(err){
+        var msgs = {
+          'auth/user-not-found': 'Користувача не знайдено',
+          'auth/wrong-password': 'Невірний пароль',
+          'auth/invalid-email': 'Невірний формат email',
+          'auth/too-many-requests': 'Забагато спроб. Спробуйте пізніше',
+          'auth/invalid-credential': 'Невірний email або пароль'
+        };
+        authShowError(msgs[err.code] || err.message);
+      });
+  } else {
+    authShowError('Зачекайте, завантаження...');
+  }
 }
 
 function authGoogleSignIn() {
@@ -5034,21 +5059,29 @@ function authShowRegister() {
 function authSignOut() {
   _currentUser = null;
   window._appStarted = false;
-  try { localStorage.removeItem('_authUser'); sessionStorage.removeItem('_authUser'); } catch(e) {}
-  if(_fbAuth) _fbAuth.signOut().then(function(){ showAuthScreen(); });
+  try {
+    localStorage.removeItem('_authOk');
+    sessionStorage.removeItem('_authOk');
+    localStorage.removeItem('_authUser');
+    sessionStorage.removeItem('_authUser');
+    localStorage.removeItem('_savedEmail');
+    localStorage.removeItem('_savedPass');
+  } catch(e) {}
+  if(_fbAuth) _fbAuth.signOut().catch(function(){});
+  showAuthScreen();
+  document.getElementById('authScreen').style.display = 'flex';
+  document.getElementById('preloader').classList.add('hidden');
 }
 
 function onUserSignedIn(user) {
   _currentUser = user;
-  // Save to localStorage so next load knows user is logged in
   try {
-    var _ud = JSON.stringify({email:user.email, displayName:user.displayName, uid:user.uid});
-    localStorage.setItem('_authUser', _ud);
-    sessionStorage.setItem('_authUser', _ud);
+    localStorage.setItem('_authOk', '1');
+    sessionStorage.setItem('_authOk', '1');
   } catch(e) {}
   hideAuthScreen();
   var userInfo = document.getElementById('authUserInfo');
-  if(userInfo) userInfo.textContent = user.email || user.displayName || '';
+  if(userInfo) userInfo.textContent = user.email || user.displayName || 'Користувач';
   if(!window._appStarted) {
     window._appStarted = true;
     renderAll();
