@@ -789,10 +789,12 @@ var _fbApp = null, _fbDb = null, _fbReady = false, _fbQueue = [];
             console.log('[AUTH] state:', user ? user.email : 'null');
             if(user){ onUserSignedIn(user); }
             else {
-              // Даємо 3 сек щоб Firebase перевірив токен перед показом екрану входу
-              setTimeout(function(){
-                if(!_currentUser) showAuthScreen();
-              }, 500);
+              // Токен не валідний - видаляємо кеш і показуємо вхід
+              try { localStorage.removeItem('_authUser'); } catch(e) {}
+              _currentUser = null;
+              window._appStarted = false;
+              document.getElementById('authScreen').style.display = 'flex';
+              document.getElementById('preloader').classList.add('hidden');
             }
           });
         }).catch(function(e){
@@ -4679,22 +4681,19 @@ window.addEventListener('load',fixMobilePadding);window.addEventListener('resize
 </script>
 <script>
 document.addEventListener("DOMContentLoaded",function(){
-  // If user was previously logged in - start loading immediately
   try {
     var cached = localStorage.getItem('_authUser');
-    if(cached) {
-      var u = JSON.parse(cached);
-      if(u && u.uid) {
-        // Show preloader, start app, Firebase will confirm auth in background
-        if(!window._appStarted) {
-          window._appStarted = true;
-          renderAll();
-          renderHistory();
-          setTimeout(loadFromSheets, 100);
-        }
-      }
+    if(cached && JSON.parse(cached).uid) {
+      // Юзер вже авторизований - запускаємо одразу
+      window._appStarted = true;
+      renderAll();
+      renderHistory();
+      setTimeout(loadFromSheets, 100);
+      // Firebase перевірить токен у фоні
+      return;
     }
   } catch(e) {}
+  // Нема кешу - чекаємо Firebase
 });
 document.addEventListener("click",function(e){
   var card=e.target.closest(".mob-card");if(!card)return;
@@ -4940,11 +4939,10 @@ var _fbAuth = null;
 var _currentUser = null;
 
 function showAuthScreen() {
-  // Check localStorage cache first
   try {
     var cached = localStorage.getItem('_authUser');
-    if(cached) {
-      // User was logged in - wait more for Firebase to confirm
+    if(cached && JSON.parse(cached).uid) {
+      // Кеш є - не показуємо екран входу, Firebase ще перевіряє
       return;
     }
   } catch(e) {}
