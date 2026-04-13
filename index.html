@@ -785,12 +785,15 @@ var _fbApp = null, _fbDb = null, _fbReady = false, _fbQueue = [];
         _fbAuth = firebase.auth();
         // Persistence LOCAL — сесія зберігається між перезавантаженнями
         _fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(function(){
+          // Спочатку перевіряємо redirect result (для Safari)
+          _fbAuth.getRedirectResult().then(function(result){
+            if(result && result.user){ onUserSignedIn(result.user); }
+          }).catch(function(){});
+          // Потім слухаємо зміни стану
           _fbAuth.onAuthStateChanged(function(user){
-            console.log('[AUTH] state:', user ? user.email : 'null');
             if(user){ onUserSignedIn(user); }
             else {
-              // Токен не валідний - видаляємо кеш і показуємо вхід
-              try { localStorage.removeItem('_authUser'); } catch(e) {}
+              try { localStorage.removeItem('_authUser'); sessionStorage.removeItem('_authUser'); } catch(e) {}
               _currentUser = null;
               window._appStarted = false;
               document.getElementById('authScreen').style.display = 'flex';
@@ -798,10 +801,13 @@ var _fbApp = null, _fbDb = null, _fbReady = false, _fbQueue = [];
             }
           });
         }).catch(function(e){
-          console.warn('[AUTH] persistence error:', e);
           _fbAuth.onAuthStateChanged(function(user){
             if(user){ onUserSignedIn(user); }
-            else { setTimeout(function(){ if(!_currentUser) showAuthScreen(); }, 500); }
+            else {
+              try { localStorage.removeItem('_authUser'); sessionStorage.removeItem('_authUser'); } catch(e) {}
+              document.getElementById('authScreen').style.display = 'flex';
+              document.getElementById('preloader').classList.add('hidden');
+            }
           });
         });
         _fbReady = true;
@@ -4682,14 +4688,12 @@ window.addEventListener('load',fixMobilePadding);window.addEventListener('resize
 <script>
 document.addEventListener("DOMContentLoaded",function(){
   try {
-    var cached = localStorage.getItem('_authUser');
+    var cached = localStorage.getItem('_authUser') || sessionStorage.getItem('_authUser');
     if(cached && JSON.parse(cached).uid) {
-      // Юзер вже авторизований - запускаємо одразу
       window._appStarted = true;
       renderAll();
       renderHistory();
       setTimeout(loadFromSheets, 100);
-      // Firebase перевірить токен у фоні
       return;
     }
   } catch(e) {}
@@ -4987,9 +4991,16 @@ function authGoogleSignIn() {
   authClearError();
   if(!_fbAuth){ authShowError('Firebase не готовий'); return; }
   var provider = new firebase.auth.GoogleAuthProvider();
-  _fbAuth.signInWithPopup(provider)
-    .then(function(result){ onUserSignedIn(result.user); })
-    .catch(function(err){ authShowError(err.message); });
+  // Safari та мобільні не підтримують popup - використовуємо redirect
+  var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  if(isSafari || isMobile) {
+    _fbAuth.signInWithRedirect(provider).catch(function(err){ authShowError(err.message); });
+  } else {
+    _fbAuth.signInWithPopup(provider)
+      .then(function(result){ onUserSignedIn(result.user); })
+      .catch(function(err){ authShowError(err.message); });
+  }
 }
 
 function authShowRegister() {
@@ -5014,14 +5025,18 @@ function authShowRegister() {
 function authSignOut() {
   _currentUser = null;
   window._appStarted = false;
-  try { localStorage.removeItem('_authUser'); } catch(e) {}
+  try { localStorage.removeItem('_authUser'); sessionStorage.removeItem('_authUser'); } catch(e) {}
   if(_fbAuth) _fbAuth.signOut().then(function(){ showAuthScreen(); });
 }
 
 function onUserSignedIn(user) {
   _currentUser = user;
   // Save to localStorage so next load knows user is logged in
-  try { localStorage.setItem('_authUser', JSON.stringify({email:user.email, displayName:user.displayName, uid:user.uid})); } catch(e) {}
+  try {
+    var _ud = JSON.stringify({email:user.email, displayName:user.displayName, uid:user.uid});
+    localStorage.setItem('_authUser', _ud);
+    sessionStorage.setItem('_authUser', _ud);
+  } catch(e) {}
   hideAuthScreen();
   var userInfo = document.getElementById('authUserInfo');
   if(userInfo) userInfo.textContent = user.email || user.displayName || '';
