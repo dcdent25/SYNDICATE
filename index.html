@@ -4576,7 +4576,8 @@ function updateOpPreview(type) {
     if(pp) pp.textContent = prevPrice.toLocaleString('uk',{minimumFractionDigits:2}) + ' грн';
     document.getElementById('inPreviewTotal').textContent = total ? total.toLocaleString('uk',{minimumFractionDigits:2}) + ' грн' : '—';
   } else if (type === 'give') {
-    const unitPrice = +document.getElementById('givePrice').value || prevPrice;
+    var givePriceEl2 = document.getElementById('givePrice');
+    const unitPrice = (givePriceEl2 ? +givePriceEl2.value : 0) || prevPrice;
     const total = Math.round(qty * unitPrice * 100) / 100;
     wrap.style.display = 'block';
     var pp2 = document.getElementById('givePreviewPrevPrice');
